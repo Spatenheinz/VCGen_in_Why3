@@ -1,0 +1,61 @@
+#+title: Jacob - Articles (As notes.)
+
+* Weakest Precondition Calculus, Revisited in Why3
+** SUMMARY
+Weakest Precondition Calculus revisted in Why3, was written in 2012 merely a year after the initial release of Why3. This article presents a way to prove soundness of the predicate transformer semantics, Weakest Precondition Calculus, in Why3 using a blocking small step semantics. The article states that the entire formalisation of the while language is 390 lines of code, with 142 lines of Coq proofs. The authors at this time found this to be a high level of automation in proving correctness of such a specification. In the article they identified a set of shortcommings in terms of automation.
+Firstly, SMT solvers in general are not as expressive as Proof Assistants such as Coq. Hence some properties cannot simply (atleast at this time) be expressed in Why3.
+Mainly induction seems to be unexpressible for full automation. This is kind of problematic since we in many cases want to do structural induction on the program. Once again it is important to note that this article is 10 years old and Why3 and the backend SMT solvers have evolved a lot since then.
+
+
+** NOTES
+problems: outsourcing to coq. This is probably fixed now because of rec lemma???
+    - Also uses coq to develop (finding good lemmas)
+    - Coq is way more expressive than SMT solvers. Emphazises computations within proofs
+
+This article presents a way to prove soundness of the predicate transformer semantics, Weakest Precondition Calculus, in Why3 using a blocking small step semantics. This is done in `Why3` with quite a lot of `Coq` integration. It is important to note that this article was written in 2012 and some of the strategies and tools might be replaced with improved tools. Especially it is noticable that it uses CVC3 (now there is also CVC4 (is this an improvement??)) but also there is way more Automatic provers today.
+The article is structured in the following way:
+1. Syntax
+   The syntax of WHILE language is presented in WhyML. Nothing is proved
+2. Operational semantics
+   The operational semantics is presented. 2 of the 3 lemmas is automatically proved while a single lemma needs interaction with Coq.
+   The typing rules for the language is also defined.
+   Lastly the relation between the operational semantics and the typing is proved using a interesting interoperability between two Why3, Coq and Alt-Ergo.
+3. Alpha-conversion (is it called this in general or is it only in context to lambda calculus).
+   To define the weakest precondition calculus a substitution of variables is needed. This is where the amount of proofs starts to ramp up and the use of Coq gets more involved.
+4. Hoare logic
+   Since we per se, dont have to use Hoare logic directly, it might not be the most relevant, however there is a potential for some nice strategies or something similar.
+5. Weakest Precondition Calculus
+   This is WP as we know it, with some small caveats. Most of the Coq code for resides in the proof for the soundness of WP.
+
+Overall the article gives a good introduction in how the WP calculus can be defined in Why3. Most of the focus relies on this part and the language comes in second. I suggest we use this article for its presentation on WP, but it is quite old and we should be vary about the exact strategies. The entire formalisation is 390 lines, with 142 lines of Coq. Ideally we should have 0 lines of Coq. It generally seems like structural induction is a problem in Why3. Has this changed, or is it in general too hard to express without a more powerful language?
+Also there was a lemma steps_non_neg which seems uneccessary if there are Natural numbers.
+
+
+* Formalizing Semantics with an Automatic Program Verifier
+** SUMMARY
+Formalizing Semantics with an Automatic Program Verifier is from 2014 and tries to write a very basic interpreter in a direct style Why3 and an equivalent Continuation Passing Style interpreter. They prove the equivalence, correctness ???? IDK
+
+** NOTES
+
+Compared to the first article this article which is from 2014 is a more hands-on and more thoroughly explain why the code is structured the way it is. The style of programming is quite a lot different than the code in the 2012 article. The article explains in detail what is possible and what is not possible. For instance the Soundness lemma cannot be proved directly by an SMT solver, because it requires structural induction on the expression. It explains the given two ways to handle such inuctive proofs in Why3.
+
+1. Structural induction by dedicated transformations:
+    This is some transformation rules which is part of the Why3 kernel which splits up the proof into several subgoals (how is different from destruct in coq?). The subgoals are then either solvable by the external solvers, or can be subject to more transformations. The structural induction is on the constructors of an ADT. For the constructors (atleast for the language they present) it is easily solved. Probably more difficult control-flow is not as easy.
+
+2. General induction via lemma functions:
+    Using lemma functions it is possible to "simulate" induction. We do so by defining a function using `let` (why not function) and by introducing a well founded relation for termination and no side-effect. Giving the function a lemma attribute it will contract the program to a logical formula, which can be handled by an SMT solver. Hereby we can do induction on arguments which are structurally smaller. It is stated that for the case of their very minor language it is easily proven. Assumably it is more difficult for more complex structures?
+
+The following section talks about encoding of higher order functions. I dont think it is terribly relevant because we are probably not gonna make a CPS interpreter. They then defunctionalize the code and show the soundness. Again not too relevant in terms of Defunctionalization but clearly we need soundness.
+
+Then they mention inductive predicates which i have no idea what really means. But they mention that it should be future work to allow induction over inductive predicates. We should investigate this.
+
+Then for termination they state that it is not possible to do using an SMT solver since they cannot show a well founded relation on integers. Again check if there is an Nat type.
+
+
+Notes: Triggers/instantiation patterns are solver dependent
+
+
+* Ghost Code in Action: Automated Verification of a Symbolic Interpreter
+I find that most of this article seems unrelevant, since we dont need symbolic execution of our interpreter.
+It does however seem like Why3 is better at automatically prove stuff compared to the 2012. So we can probably investigate the strategies from this paper since this seems much more relevant than the old articles. Especially the ghost code might be very important in our formulation.
+Furthermore the ending of the article gives a highlevel overview of how to extract the Why3 code to OCaml. Furthermore i suspect there is a file in the repo which is linked for reproducability.
