@@ -19,8 +19,6 @@ module Length
     | Cons _ r -> length r + 1
   end
 
-  (* lemma length_nonnegative1: forall l: list 'a. length(l) >= 0 *)
-
   let rec lemma length_nonnegative2(l: list 'a)
       ensures{ length(l) >= 0 }
       variant{ l }
@@ -28,4 +26,7 @@ module Length
       | Nil -> ()
       | Cons _ r -> length_nonnegative2(r)
   end
+
+  lemma length_nonnegative1: forall l: list 'a. length(l) >= 0
+
 end
