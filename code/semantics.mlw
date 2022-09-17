@@ -1,0 +1,145 @@
+module Grammar
+
+  use map.Map
+  use option.Option
+
+  type id = Id int
+  (* type state = map id int *)
+  type state = id -> option int
+
+  type aexpr =
+      | Acst int
+      | Avar id
+      | Asub aexpr aexpr
+
+  type bexpr =
+      | Btrue
+      | Bfalse
+      | Bleq aexpr aexpr
+
+  type stmt =
+      | Sskip
+      | Sass id aexpr
+      | Sseq stmt stmt
+
+  type prog = stmt
+
+end
+
+module Semantics
+
+  use int.Int
+  use map.Map
+  use set.Fset
+  use Grammar
+  use option.Option
+
+  type e_behaviour = Eint int | Eunbound
+
+  inductive eval_aexpr aexpr state e_behaviour =
+    | eval_cst : forall n s.
+               eval_aexpr (Acst n) s (Eint n)
+    | eval_var : forall x n s.
+               s[x] = Some n ->
+               eval_aexpr (Avar x) s (Eint n)
+    | eval_var_err : forall x s.
+               s[x] = None ->
+               eval_aexpr (Avar x) s (Eunbound)
+    | eval_sub : forall a1 a2 n1 n2 s.
+               eval_aexpr a1 s (Eint n1) ->
+               eval_aexpr a2 s (Eint n2) ->
+               eval_aexpr (Asub a1 a2) s (Eint (n1 - n2))
+    | eval_sub_err1 : forall a1 a2 s.
+               eval_aexpr a1 s Eunbound ->
+               eval_aexpr (Asub a1 a2) s Eunbound
+    | eval_sub_err2 : forall a1 a2 s.           (* can we skip eval of a1? *)
+               (* eval_aexpr a1 s (Eint n1) -> *)
+               eval_aexpr a2 s Eunbound ->
+               eval_aexpr (Asub a1 a2) s Eunbound
+
+  let rec ghost function id_in_aexpr (a: aexpr) =
+      match a with
+      | Acst _ -> empty
+      | Avar v -> singleton v
+      | Asub a1 a2 -> union (id_in_aexpr a1) (id_in_aexpr a2)
+      end
+
+  let rec lemma eval_aexpr_fun (a: aexpr) (s: state)
+      variant { a }
+      ensures { forall b1 b2. eval_aexpr a s b1 ->
+                              eval_aexpr a s b2 ->
+                              b1 = b2
+      }
+    = match a with
+      | Acst _ | Avar _ -> ()
+      | Asub a1 a2 ->
+        eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
+      end
+
+  let rec lemma eval_aexpr_total (a: aexpr)
+      ensures { forall s:state.
+          eval_aexpr a s Eunbound \/ exists n. eval_aexpr a s (Eint n)
+      }
+    = match a with
+      | Acst _ | Avar _ -> ()
+      | Asub a1 a2 -> eval_aexpr_total a1; eval_aexpr_total a2
+      end
+
+  (*   goal A1: forall s. eval_aexpr (Acst 10) s (Eint 10) *)
+  (*   goal A2: forall n1 n2:int, s. eval_aexpr (Asub (Acst n1) (Acst n2)) s (Eint (n1 - n2)) *)
+  (*   goal A31: forall n1 n2:int. n1 - (-n2) = n1 + n2 *)
+  (*   goal A3: forall n1 n2:int, s:state. eval_aexpr (Asub (Acst n1) (Acst (-n2))) s (Eint (n1 + n2)) *)
+
+  (* inductive eval_bexpr bexpr state e_behaviour = *)
+  (*   | eval_true : forall s. *)
+  (*               eval_bexpr Btrue s (Ebool true) *)
+  (*   | eval_false : forall s. *)
+  (*               eval_bexpr Bfalse s (Ebool false) *)
+  (*   | eval_leq_true  : forall a1 a2 n1 n2 s. *)
+  (*               eval_aexpr a1 s (Eint n1) -> *)
+  (*               eval_aexpr a2 s (Eint n2) -> *)
+  (*               n1 <= n2 -> *)
+  (*               eval_bexpr (Bleq a1 a2) s (Ebool true) *)
+  (*   | eval_leq_false  : forall a1 a2 n1 n2 s. *)
+  (*               eval_aexpr a1 s (Eint n1) -> *)
+  (*               eval_aexpr a2 s (Eint n2) -> *)
+  (*               n1 > n2 -> *)
+  (*               eval_bexpr (Bleq a1 a2) s (Ebool false) *)
+  (*   | eval_leq_err1 : forall a1 a2 s. *)
+  (*               eval_aexpr a1 s Eunbound -> *)
+  (*               eval_bexpr (Bleq a1 a2) s Eunbound *)
+  (*   | eval_leq_err2 : forall a1 a2 n1 s. *)
+  (*               eval_aexpr a1 s (Eint n1) -> *)
+  (*               eval_aexpr a2 s Eunbound -> *)
+  (*               eval_bexpr (Bleq a1 a2) s Eunbound *)
+
+  (*   goal G1: forall s:state. eval_bexpr Btrue s (Ebool true) *)
+
+  (*   goal G2: forall n1 n2:int, s:state. eval_bexpr (Bleq (Acst n1) (Acst n2)) s (Ebool (n1 <= n2)) *)
+
+end
+
+module Evaluator
+  (* use Grammar *)
+  (* use int.Int *)
+  (* use map.Map *)
+
+  (* let rec function aeval (e: aexpr) (st: state) : int = match e with *)
+  (*   | Acst i -> i *)
+  (*   | Asub a1 a2 -> aeval a1 st - aeval a2 st *)
+  (* end *)
+
+  (* let rec function beval (e: bexpr) (st: state) : bool = match e with *)
+  (*   | Btrue -> true *)
+  (*   | Bfalse -> false *)
+  (*   | Bleq a1 a2 -> aeval a1 st <= aeval a2 st *)
+  (* end *)
+
+  (* inductive seval (sigma': state) (s: stmt) (sigma'': state) = *)
+  (*   | E_skip : forall sigma. seval sigma Sskip sigma *)
+  (*   | E_ass  : forall sigma x a. seval sigma (Sass x a) sigma[x <- aeval a sigma] *)
+  (*   | E_seq  : forall sigma0 s0 sigma1 s1 sigma2. *)
+  (*               seval sigma0 s0 sigma1 *)
+  (*               -> seval sigma1 s1 sigma2 *)
+  (*               -> seval sigma0 (Sseq s0 s1) sigma2 *)
+end

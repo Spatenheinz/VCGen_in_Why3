@@ -1,0 +1,22 @@
+theory Grammar
+
+type id = Id int
+type state = map id int
+
+type aexpr =
+     | Acst int
+     | Asub aexpr aexpr
+
+type bexpr =
+     | Btrue
+     | Bfalse
+     | Bleq aexpr aexpr
+
+type stmt =
+     | Sskip
+     | Sass id aexpr
+     | SSeq stmt stmt
+
+type prog = stmt
+
+end
