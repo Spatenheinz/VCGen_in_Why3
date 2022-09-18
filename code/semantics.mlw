@@ -64,6 +64,23 @@ module Semantics
       | Asub a1 a2 -> union (id_in_aexpr a1) (id_in_aexpr a2)
       end
 
+ (** Ken: We can describe evaluation of expressions as a total function *)
+  let rec lemma eval_aexpr_total_fun (a: aexpr) (s: state)
+       variant { a }
+       ensures { eval_aexpr a s result }
+     = match a with
+       | Acst n -> Eint n
+       | Avar v -> match s[v] with
+                     | Some n -> Eint n
+                     | None -> Eunbound
+                   end
+       | Asub a1 a2 ->
+         match eval_aexpr_total_fun a1 s, eval_aexpr_total_fun a2 s with
+           | Eint n1, Eint n2 -> Eint (n1 - n2)
+           | _ -> Eunbound
+         end
+       end
+
   let rec lemma eval_aexpr_fun (a: aexpr) (s: state)
       variant { a }
       ensures { forall b1 b2. eval_aexpr a s b1 ->
