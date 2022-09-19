@@ -14,7 +14,13 @@ module Length
   use List
   use int.Int
 
-  function length (l: list 'a) : int = match l with
+  (* let function length (l: list 'a) : int = match l with *)
+  (*   | Nil -> 0 *)
+  (*   | Cons _ r -> length r + 1 *)
+  (* end *)
+  function length (l: list 'a) : int
+    (* variant { l } *)
+  = match l with
     | Nil -> 0
     | Cons _ r -> length r + 1
   end
