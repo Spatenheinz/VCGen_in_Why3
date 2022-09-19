@@ -3,7 +3,7 @@ module Grammar
   use map.Map
   use option.Option
 
-  type id = Id int
+  type id
   (* type state = map id int *)
   type state = id -> option int
 
@@ -137,14 +137,26 @@ module Semantics
 end
 
 module Evaluator
-  (* use Grammar *)
-  (* use int.Int *)
-  (* use map.Map *)
+  use Grammar
+  use Semantics
+  use int.Int
+  use map.Map
+  use option.Option
 
-  (* let rec function aeval (e: aexpr) (st: state) : int = match e with *)
-  (*   | Acst i -> i *)
-  (*   | Asub a1 a2 -> aeval a1 st - aeval a2 st *)
-  (* end *)
+  exception Unbound
+
+  let rec aeval (a: aexpr) (st: state) : int
+    variant { a }
+    ensures { eval_aexpr a st (Eint result) }
+    raises { Unbound -> eval_aexpr a st Eunbound }
+  = match a with
+    | Acst i -> i
+    | Avar v -> match st[v] with
+                | None -> raise Unbound
+                | Some i -> i
+                end
+    | Asub a1 a2 -> aeval a1 st - aeval a2 st
+  end
 
   (* let rec function beval (e: bexpr) (st: state) : bool = match e with *)
   (*   | Btrue -> true *)
