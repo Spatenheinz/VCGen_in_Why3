@@ -1,37 +1,9 @@
-module Grammar
-
-  use map.Map
-  use option.Option
-
-  type id
-  (* type state = map id int *)
-  type state = id -> option int
-
-  type aexpr =
-      | Acst int
-      | Avar id
-      | Asub aexpr aexpr
-
-  type bexpr =
-      | Btrue
-      | Bfalse
-      | Bleq aexpr aexpr
-
-  type stmt =
-      | Sskip
-      | Sass id aexpr
-      | Sseq stmt stmt
-
-  type prog = stmt
-
-end
-
 module Semantics
 
   use int.Int
   use map.Map
   use set.Fset
-  use Grammar
+  use grammar.Grammar
   use option.Option
 
   type e_behaviour = Eint int | Eunbound
@@ -102,10 +74,28 @@ module Semantics
       | Asub a1 a2 -> eval_aexpr_total a1; eval_aexpr_total a2
       end
 
-  (*   goal A1: forall s. eval_aexpr (Acst 10) s (Eint 10) *)
-  (*   goal A2: forall n1 n2:int, s. eval_aexpr (Asub (Acst n1) (Acst n2)) s (Eint (n1 - n2)) *)
-  (*   goal A31: forall n1 n2:int. n1 - (-n2) = n1 + n2 *)
-  (*   goal A3: forall n1 n2:int, s:state. eval_aexpr (Asub (Acst n1) (Acst (-n2))) s (Eint (n1 + n2)) *)
+  type s_behaviour = Snormal | Sunbound
+
+  inductive eval_stmt state stmt state s_behaviour =
+    | eval_skip : forall st.
+          eval_stmt st Sskip st Snormal
+    | eval_ass  : forall st x e n.
+          eval_aexpr e st (Eint n) ->
+          let st' = st[x <- Some n] in
+          eval_stmt st (Sass x e) st' Snormal
+    | eval_ass_error  : forall st x e.
+          eval_aexpr e st Eunbound ->
+          eval_stmt st (Sass x e) st Sunbound
+    | eval_seq  : forall s1 s2 st st' st'' bhv.
+          eval_stmt st s1 st' Snormal ->
+          eval_stmt st' s2 st'' bhv ->
+          eval_stmt st (Sseq s1 s2) st'' bhv
+    | eval_seq_error  : forall s1 s2 st st' bhv.
+          eval_stmt st s1 st' bhv ->
+          bhv <> Snormal ->
+          eval_stmt st (Sseq s1 s2) st' bhv
+
+end
 
   (* inductive eval_bexpr bexpr state e_behaviour = *)
   (*   | eval_true : forall s. *)
@@ -133,42 +123,3 @@ module Semantics
   (*   goal G1: forall s:state. eval_bexpr Btrue s (Ebool true) *)
 
   (*   goal G2: forall n1 n2:int, s:state. eval_bexpr (Bleq (Acst n1) (Acst n2)) s (Ebool (n1 <= n2)) *)
-
-end
-
-module Evaluator
-  use Grammar
-  use Semantics
-  use int.Int
-  use map.Map
-  use option.Option
-
-  exception Unbound
-
-  let rec aeval (a: aexpr) (st: state) : int
-    variant { a }
-    ensures { eval_aexpr a st (Eint result) }
-    raises { Unbound -> eval_aexpr a st Eunbound }
-  = match a with
-    | Acst i -> i
-    | Avar v -> match st[v] with
-                | None -> raise Unbound
-                | Some i -> i
-                end
-    | Asub a1 a2 -> aeval a1 st - aeval a2 st
-  end
-
-  (* let rec function beval (e: bexpr) (st: state) : bool = match e with *)
-  (*   | Btrue -> true *)
-  (*   | Bfalse -> false *)
-  (*   | Bleq a1 a2 -> aeval a1 st <= aeval a2 st *)
-  (* end *)
-
-  (* inductive seval (sigma': state) (s: stmt) (sigma'': state) = *)
-  (*   | E_skip : forall sigma. seval sigma Sskip sigma *)
-  (*   | E_ass  : forall sigma x a. seval sigma (Sass x a) sigma[x <- aeval a sigma] *)
-  (*   | E_seq  : forall sigma0 s0 sigma1 s1 sigma2. *)
-  (*               seval sigma0 s0 sigma1 *)
-  (*               -> seval sigma1 s1 sigma2 *)
-  (*               -> seval sigma0 (Sseq s0 s1) sigma2 *)
-end

@@ -1,0 +1,46 @@
+module Evaluator
+  use grammar.Grammar
+  use semantics.Semantics
+  use int.Int
+  use fmap.MapImpInt as M
+  (* use map.Const *)
+  use option.Option
+  use ocaml.Exceptions
+
+  (* exception Unbound *)
+
+  type state' = M.t int
+
+  let sigma : state' = M.create ()
+
+  let rec aeval (a: aexpr) : int
+    variant { a }
+    ensures { eval_aexpr a sigma (Eint result) }
+    raises { Not_found -> eval_aexpr a sigma Eunbound }
+  = match a with
+    | Acst i -> i
+    | Avar v ->  M.find_exn v sigma
+    | Asub a1 a2 -> aeval a1 - aeval a2
+  end
+
+  let rec seval (s: stmt) : ()
+     diverges
+     ensures {
+       eval_stmt (old sigma) s sigma Snormal
+     }
+     raises {
+       Not_found -> eval_stmt (old sigma) s sigma Sunbound
+     }
+  = match s with
+    | Sskip -> ()
+    | Sass x a -> M.add x (aeval a) sigma
+    | Sseq s1 s2 -> seval s1; seval s2
+    end
+
+  (* let rec function beval (e: bexpr) (st: state) : bool = match e with *)
+  (*   | Btrue -> true *)
+  (*   | Bfalse -> false *)
+  (*   | Bleq a1 a2 -> aeval a1 st <= aeval a2 st *)
+  (* end *)
+
+end

@@ -1,22 +1,26 @@
-theory Grammar
+module Grammar
 
-type id = Id int
-type state = map id int
+  use option.Option
+  use fmap.MapImpInt as M
 
-type aexpr =
-     | Acst int
-     | Asub aexpr aexpr
+  type id = int
+  type state = id -> option int
 
-type bexpr =
-     | Btrue
-     | Bfalse
-     | Bleq aexpr aexpr
+  type aexpr =
+       | Acst int
+       | Avar id
+       | Asub aexpr aexpr
 
-type stmt =
-     | Sskip
-     | Sass id aexpr
-     | SSeq stmt stmt
+  type bexpr =
+       | Btrue
+       | Bfalse
+       | Bleq aexpr aexpr
 
-type prog = stmt
+  type stmt =
+       | Sskip
+       | Sass id aexpr
+       | Sseq stmt stmt
+
+  type prog = stmt
 
 end
