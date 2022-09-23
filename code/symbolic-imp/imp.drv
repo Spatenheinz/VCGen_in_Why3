@@ -1,0 +1,92 @@
+
+
+module dict.Imperative
+
+  prelude "exception Var_unbound"
+
+  syntax type t "(%1,%2) Hashtbl.t"
+
+  syntax val empty "Hashtbl.create 10"
+
+  syntax val clear "Hashtbl.clear %1"
+
+  syntax val set "Hashtbl.replace %1 %2 %3"
+
+  syntax val mem "Hashtbl.mem %1 %2"
+
+  syntax exception Var_unbound "Var_unbound"
+
+  syntax val find "(try Hashtbl.find %1 %2 with Not_found -> raise Dict__Imperative.Var_unbound)"
+
+  end
+
+
+module imp.Syntax
+  syntax type program_var "string"
+end
+
+module imp.Svar
+  syntax type svar "Svar.t"
+  syntax val eq "Svar.eq"
+  syntax type SvarSet.set "SvarSet.t"
+  syntax val SvarSet.singleton "SvarSet.(add %1 empty)"
+  syntax val SvarSet.mem "SvarSet.mem"
+  syntax val SvarSet.(==) "SvarSet.equal %1 %2"
+  syntax val SvarSet.subset "SvarSet.subset %1 %2"
+  syntax val SvarSet.empty "SvarSet.empty (* %1 *)"
+  syntax val SvarSet.is_empty "SvarSet.is_empty %1"
+  syntax val SvarSet.add "SvarSet.add %1 %2"
+  syntax val SvarSet.remove "SvarSet.remove %1 %2"
+  syntax val SvarSet.union "SvarSet.union %1 %2"
+  syntax val SvarSet.diff "SvarSet.diff %1 %2"
+  syntax val SvarSet.inter "SvarSet.inter %1 %2"
+  syntax val SvarSet.choose "SvarSet.choose %1"
+  syntax val SvarSet.disjoint "SvarSet.disjoint %1 %2"
+  syntax val SvarSet.cardinal "SvarSet.cardinal %1"
+end
+
+module imp.Constraint
+
+  prelude "module PVMap = Map.Make(struct type t = string let compare = compare end)"
+  syntax type Sigma.t "Svar.t Imp__Constraint.PVMap.t"
+  syntax val Sigma.empty "Imp__Constraint.PVMap.empty"
+  syntax val Sigma.mem "Imp__Constraint.PVMap.mem %1 %2"
+  syntax val Sigma.set "Imp__Constraint.PVMap.add %2 %3 %1"
+  syntax val Sigma.find "Imp__Constraint.PVMap.find %2 %1"
+  syntax exception Sigma.NotFound "Not_found"
+
+  syntax val check_sat "Check_sat.check_sat %1"
+end
+
+module imp.FreshSvar
+  syntax val fresh_svar "Svar.fresh ()"
+end
+
+module imp.SymState
+  syntax val eq "%1 = %2"
+end
+
+module imp.SymStateSet
+
+  syntax type set "SymStateSet.t"
+  syntax val mem "SymStateSet.mem"
+  syntax val singleton "SymStateSet.(add %1 empty)"
+  syntax val (==) "SymStateSet.equal %1 %2"
+  syntax val subset "SymStateSet.subset %1 %2"
+  syntax val empty "SymStateSet.empty (* %1 *)"
+  syntax val is_empty "SymStateSet.is_empty %1"
+  syntax val add "SymStateSet.add %1 %2"
+  syntax val remove "SymStateSet.remove %1 %2"
+  syntax val union "SymStateSet.union %1 %2"
+  syntax val diff "SymStateSet.diff %1 %2"
+  syntax val inter "SymStateSet.inter %1 %2"
+  syntax val choose "SymStateSet.choose %1"
+  syntax val disjoint "SymStateSet.disjoint %1 %2"
+  syntax val cardinal "SymStateSet.cardinal %1"
+  syntax val to_list "SymStateSet.elements %1"
+  syntax val of_list "SymStateSet.of_list %1"
+end
+
+module imp.SymbolicInterpreter
+  syntax val existentially_quantify "Imp__Constraint.Cexists(%1, %2)"
+end
