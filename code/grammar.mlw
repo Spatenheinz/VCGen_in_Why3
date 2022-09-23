@@ -1,9 +1,8 @@
 module Grammar
 
   use option.Option
-  use fmap.MapImpInt as M
 
-  type id = int
+  type id
   type state = id -> option int
 
   type aexpr =

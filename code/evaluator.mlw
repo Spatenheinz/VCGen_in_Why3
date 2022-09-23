@@ -6,20 +6,19 @@ module Evaluator
   (* use map.Const *)
   use option.Option
   use ocaml.Exceptions
-
+  use dict.Imperative as E
   (* exception Unbound *)
 
-  type state' = M.t int
-
-  let sigma : state' = M.create ()
+  type state' = E.t id int
+  let sigma : state' = E.empty ()
 
   let rec aeval (a: aexpr) : int
     variant { a }
     ensures { eval_aexpr a sigma (Eint result) }
-    raises { Not_found -> eval_aexpr a sigma Eunbound }
+    raises { E.Var_unbound -> eval_aexpr a sigma Eunbound }
   = match a with
     | Acst i -> i
-    | Avar v ->  M.find_exn v sigma
+    | Avar v ->  E.find sigma v
     | Asub a1 a2 -> aeval a1 - aeval a2
   end
 
@@ -29,11 +28,11 @@ module Evaluator
        eval_stmt (old sigma) s sigma Snormal
      }
      raises {
-       Not_found -> eval_stmt (old sigma) s sigma Sunbound
+       E.Var_unbound -> eval_stmt (old sigma) s sigma Sunbound
      }
   = match s with
     | Sskip -> ()
-    | Sass x a -> M.add x (aeval a) sigma
+    | Sass x a -> E.set sigma x (aeval a)
     | Sseq s1 s2 -> seval s1; seval s2
     end
 

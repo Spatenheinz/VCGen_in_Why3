@@ -1,0 +1,69 @@
+
+module Functional
+
+  use option.Option
+  use map.Map as M
+
+  type key
+  type value
+
+  type model = M.map key (option value)
+
+  type t = abstract { model: model }
+  meta coercion function model
+
+  val constant empty : t
+
+  axiom empty: forall k. M.get empty.model k = None
+
+  function get (d: t) (k: key) : option value =
+    M.get d.model k
+
+  val function set (d: t) (k: key) (v: value) : t
+    ensures { get result k = Some v }
+    ensures { forall k'. k' <> k -> get result k' = get d k' }
+
+  val mem (d: t) (k: key) : bool
+    ensures { result = True <-> get d k <> None }
+
+  exception NotFound
+
+  val find (d: t) (k: key) : value
+    ensures { match get d k with None -> false | Some v -> result = v end }
+    raises  { NotFound -> get d k = None }
+
+end
+
+
+
+module Imperative
+
+  use option.Option
+  use map.Map as M
+
+  type model 'key 'value = M.map 'key (option 'value)
+  type t 'key 'value = abstract { mutable model: model 'key 'value }
+  meta coercion function model
+
+  function get (d: t 'key 'value) (k: 'key) : option 'value = M.get d.model k
+
+  val empty (_:unit) : t 'key 'value
+    ensures { forall k: 'key. get result k = None }
+
+  val clear (d: t 'key 'value) : unit
+    writes  { d }
+    ensures { forall k: 'key. get d k = None }
+
+  val set (d: t 'key 'value) (k: 'key) (v: 'value) : unit
+    writes  { d }
+    ensures { d.model = M.((old d.model)[k <- Some v]) }
+
+  val mem (d: t 'key 'value) (k: 'key) : bool
+    ensures { result = True <-> get d k <> None }
+
+  exception Var_unbound
+
+  val find (d: t 'key 'value) (k: 'key) : 'value
+    ensures { match get d k with None -> false | Some v -> result = v end }
+    raises  { Var_unbound -> get d k = None }
+end
