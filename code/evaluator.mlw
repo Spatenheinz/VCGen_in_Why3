@@ -2,15 +2,19 @@ module Evaluator
   use grammar.Grammar
   use semantics.Semantics
   use int.Int
-  use fmap.MapImpInt as M
+  (* use fmap.MapImp as M *)
+  (* clone fmap.MapImp as M with type key = id, val eq = Int.(=) *)
   (* use map.Const *)
   use option.Option
-  use ocaml.Exceptions
+  (* use ocaml.Exceptions *)
   use dict.Imperative as E
+  use map.Map
   (* exception Unbound *)
 
   type state' = E.t id int
+  (* type state2 = M.t (option int) *)
   let sigma : state' = E.empty ()
+  (* let sigma2 : state2 = M.create () *)
 
   let rec aeval (a: aexpr) : int
     variant { a }
@@ -21,6 +25,21 @@ module Evaluator
     | Avar v ->  E.find sigma v
     | Asub a1 a2 -> aeval a1 - aeval a2
   end
+
+  (* can we not use finite maps???? *)
+  (* val myfind (d: state2) (k: id) : int *)
+  (*   ensures { match M.find k d with None -> false | Some v -> result = v end } *)
+  (*   raises  { Not_found -> M.find k d = None} *)
+
+  (* let rec aeval2 (a: aexpr) : int *)
+  (*   variant { a } *)
+  (*   ensures { eval_aexpr a sigma2 (Eint result) } *)
+  (*   raises { Not_found -> eval_aexpr a sigma2 Eunbound } *)
+  (* = match a with *)
+  (*   | Acst i -> i *)
+  (*   | Avar v ->  myfind sigma2 v *)
+  (*   | Asub a1 a2 -> aeval2 a1 - aeval2 a2 *)
+  (* end *)
 
   let rec seval (s: stmt) : ()
      diverges

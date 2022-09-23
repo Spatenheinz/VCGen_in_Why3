@@ -1,0 +1,127 @@
+#+title: Week3
+
+* In this week we have looked at and learned:
+
+** Predicates:
+Predicates is functions in the logical language of Why3.
+That is predicates `p`
+
+p :: T -> Prop
+
+where `T` is an arbitrary type (notice that why3 only allows ADT and basic types?? [[Let's Verify This][http://tertium.org/papers/sttt-14.pdf]])
+and `Prop` satisfies some property.
+
+It is important that predicate `p` is a function, thus it is a many-to-one relation.
+Maybe it is possible to define non-total predicates. DONT DO THAT!!!!!
+If we have non-determinism in our language we have to use either inductive predicates or lift the
+results to a Set?
+
+example: n ~> {n}
+         v ~> {??}
+        e1 + e2 ~> {e1}
+
+e1 ~> N_1  e2 ~> N_2
+------------------------------------
+e1 [] e2 ~> N_1 ∪ N_2
+
+
+*** TODO : We dont understand how we should create sets
+
+it seems like this is necessary if we have memory, or any other non-determinism.
+
+** Inductive predicates:
+
+An inductive predicate on the other hand is an inductive relation (not necessarily a function). With this we can
+express non-determinism.
+
+However in the first place we want to define a deterministic
+program and thus our evaluation will be a simple function
+mapping `state -> state`.
+
+
+** Problems this week:
+
+It seems for most lemmas, we have to do some sort of induction. In this case we need to define explicitly how to do the structural induction on a particular ADT. That is how we should reduce a particular expression (the variant of the recursive lemma).
+
+We learned that lemmas (also without any proof) can be used in following lemmas.
+
+It also became apparent that even after defining how to do the structural induction in one proof, this "strategy" might not carry over to other lemmas.
+Example:
+
+This recursive lemma shows aexpr to be a total function.
+#+begin_src
+  let rec lemma eval_aexpr_total_fun (a: aexpr) (s: state)
+       variant { a }
+       ensures { eval_aexpr a s result }
+     = match a with
+       | Acst n -> Eint n
+       | Avar v -> match s[v] with
+                     | Some n -> Eint n
+                     | None -> Eunbound
+                   end
+       | Asub a1 a2 ->
+         match eval_aexpr_total_fun a1 s, eval_aexpr_total_fun a2 s with
+           | Eint n1, Eint n2 -> Eint (n1 - n2)
+           | _ -> Eunbound
+         end
+       end
+#+end_src
+This lemma
+#+begin_src
+  lemma eval_aexpr_fun : forall a s b1 b2.
+     eval_aexpr a s b1 -> eval_aexpr a s b2 -> b1 = b2
+#+end_src
+Cannot be proved with the "standard" (Alt-ergo, cvc4, eprover, z3) (but there might be some way to do so) SMT solvers.
+But this lemma can be shown, because it again defines the behaviour of the variant:
+#+begin_src
+  let rec lemma eval_aexpr_fun (a: aexpr) (s: state)
+      variant { a }
+      ensures { forall b1 b2. eval_aexpr a s b1 ->
+                              eval_aexpr a s b2 ->
+                              b1 = b2
+      }
+    = match a with
+      | Acst _ | Avar _ -> ()
+      | Asub a1 a2 ->
+        eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
+      end
+#+end_src
+
+We found that to verify the VCgen of the evaluator functions
+`aeval` we would have to use the same imperative Dict as in the ghost code article, whereas using a finite Map (fmap.MapImp) would not verify.
+
+
+** For monday
+It would be really nice to have WP working for the small subset of the language we have now (we need ~ && (&& || ||))
+
+
+** Structure of the "final" language
+
+We need to decide if we want a typesystem (meaning also allow variables to be of bool)
+or if we still want a aexpr and a bexpr.
+For now a language to be total we want alteast the following:
+
+b ::= true
+      false
+      a1 ≤ a2
+      not b
+      b1 ∧ b2
+
+a ::= n         -- const
+      a1 - a2   -- plus can be defined
+      v         -- Var
+      a1 * a2   -- eventually ??
+      ghost     -- maybe ??
+
+f ::= b         -- term
+      not f
+      f1 ∧ f2
+      f1 ⟶ f2
+      ∀ v. f
+
+s ::= skip
+      s1 ; s2
+      x := a/b  -- either a var could be an aexpr or a bexpr
+      if b then s1 else s2
+      { f }     -- assertions
+      while b inv va s  --

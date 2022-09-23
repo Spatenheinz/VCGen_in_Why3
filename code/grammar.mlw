@@ -2,7 +2,7 @@ module Grammar
 
   use option.Option
 
-  type id
+  type id = int
   type state = id -> option int
 
   type aexpr =
@@ -21,5 +21,57 @@ module Grammar
        | Sseq stmt stmt
 
   type prog = stmt
+
+end
+
+module Formula
+
+  use Grammar
+
+  type value = Vint int | Vbool bool
+
+  (* type term = *)
+  (*   | Tvalue value *)
+  (*   | Tvar id *)
+  (*   | Tghost id *)
+    (* | Tbin *)
+
+  type formula =
+    | Fterm bexpr
+    | Fand formula formula
+    | Fnot formula
+    | Fimp formula formula
+    (* Flet = Fall *)
+    (* let x = t in f ≍ ∀ y. y = t → f[x ← y] *)
+    | Fall id formula
+
+  predicate fresh_in_aexpr (id: id) (a: aexpr) =
+    match a with
+    | Acst _ -> true
+    | Avar v   -> id <> v
+    | Asub a1 a2 -> fresh_in_aexpr id a1 /\ fresh_in_aexpr id a2
+    end
+
+  predicate fresh_in_bexpr (id: id) (b: bexpr) =
+    match b with
+    | Bleq a1 a2 -> fresh_in_aexpr id a1 /\ fresh_in_aexpr id a2
+    | _ -> true
+    end
+
+  predicate fresh_in_formula (id: id) (f: formula) =
+    match f with
+    | Fterm b -> fresh_in_bexpr id b
+    | Fand f1 f2 | Fimp f1 f2 -> fresh_in_formula id f1 /\ fresh_in_formula id f2
+    | Fnot f -> fresh_in_formula id f
+    | Fall y f -> id <> y /\ fresh_in_formula id f
+    end
+
+  function fresh_from (f: formula) : id
+
+  axiom fresh_from_formula: forall f: formula.
+    fresh_in_formula (fresh_from f) f
+
+  (* predicate valid_formula (f: formula) = forall st. eval_formula st f *)
+
 
 end

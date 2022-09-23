@@ -4,9 +4,10 @@ module Semantics
   use map.Map
   use set.Fset
   use grammar.Grammar
+  use grammar.Formula
   use option.Option
 
-  type e_behaviour = Eint int | Eunbound
+  type e_behaviour = Eint int | Eunbound | Ebool bool
 
   inductive eval_aexpr aexpr state e_behaviour =
     | eval_cst : forall n s.
@@ -53,6 +54,10 @@ module Semantics
          end
        end
 
+  (* It does not work when we dont define the induction ourselfs *)
+  (* lemma eval_aexpr_fun : forall a s b1 b2. *)
+  (*    eval_aexpr a s b1 -> eval_aexpr a s b2 -> b1 = b2 *)
+
   let rec lemma eval_aexpr_fun (a: aexpr) (s: state)
       variant { a }
       ensures { forall b1 b2. eval_aexpr a s b1 ->
@@ -73,6 +78,41 @@ module Semantics
       | Acst _ | Avar _ -> ()
       | Asub a1 a2 -> eval_aexpr_total a1; eval_aexpr_total a2
       end
+
+  inductive eval_bexpr bexpr state e_behaviour =
+    | eval_true : forall s.
+                eval_bexpr Btrue s (Ebool true)
+    | eval_false : forall s.
+                eval_bexpr Bfalse s (Ebool false)
+    | eval_leq_true  : forall a1 a2 n1 n2 s.
+                eval_aexpr a1 s (Eint n1) ->
+                eval_aexpr a2 s (Eint n2) ->
+                n1 <= n2 ->
+                eval_bexpr (Bleq a1 a2) s (Ebool true)
+    | eval_leq_false  : forall a1 a2 n1 n2 s.
+                eval_aexpr a1 s (Eint n1) ->
+                eval_aexpr a2 s (Eint n2) ->
+                n1 > n2 ->
+                eval_bexpr (Bleq a1 a2) s (Ebool false)
+    | eval_leq_err1 : forall a1 a2 s.
+                eval_aexpr a1 s Eunbound ->
+                eval_bexpr (Bleq a1 a2) s Eunbound
+    | eval_leq_err2 : forall a1 a2 n1 s.
+                eval_aexpr a1 s (Eint n1) ->
+                eval_aexpr a2 s Eunbound ->
+                eval_bexpr (Bleq a1 a2) s Eunbound
+
+  let rec lemma eval_bexpr_total_fun (b: bexpr) (s: state)
+       variant { b }
+       ensures { eval_bexpr b s result }
+     = match b with
+       | Btrue -> Ebool true
+       | Bfalse -> Ebool false
+       | Bleq a1 a2 -> match eval_aexpr_total_fun a1 s, eval_aexpr_total_fun a2 s with
+                       | (Eint n1, Eint n2) -> Ebool (n1 <= n2)
+                       | _ -> Eunbound
+                       end
+       end
 
   type s_behaviour = Snormal | Sunbound
 
@@ -95,30 +135,17 @@ module Semantics
           bhv <> Snormal ->
           eval_stmt st (Sseq s1 s2) st' bhv
 
+  lemma seval_determ_aux : forall s st st' bhv.
+     eval_stmt st s st' bhv -> forall st''. (eval_stmt st s st'' bhv) -> st' = st''
+
+  lemma seval_determ : forall s st st' st'' bhv.
+     eval_stmt st s st' bhv -> eval_stmt st s st'' bhv -> st' = st''
+
+  (* inductive eval_formula state formula = *)
+  (*   | Fterm b -> eval_bexpr st *)
+
 end
 
-  (* inductive eval_bexpr bexpr state e_behaviour = *)
-  (*   | eval_true : forall s. *)
-  (*               eval_bexpr Btrue s (Ebool true) *)
-  (*   | eval_false : forall s. *)
-  (*               eval_bexpr Bfalse s (Ebool false) *)
-  (*   | eval_leq_true  : forall a1 a2 n1 n2 s. *)
-  (*               eval_aexpr a1 s (Eint n1) -> *)
-  (*               eval_aexpr a2 s (Eint n2) -> *)
-  (*               n1 <= n2 -> *)
-  (*               eval_bexpr (Bleq a1 a2) s (Ebool true) *)
-  (*   | eval_leq_false  : forall a1 a2 n1 n2 s. *)
-  (*               eval_aexpr a1 s (Eint n1) -> *)
-  (*               eval_aexpr a2 s (Eint n2) -> *)
-  (*               n1 > n2 -> *)
-  (*               eval_bexpr (Bleq a1 a2) s (Ebool false) *)
-  (*   | eval_leq_err1 : forall a1 a2 s. *)
-  (*               eval_aexpr a1 s Eunbound -> *)
-  (*               eval_bexpr (Bleq a1 a2) s Eunbound *)
-  (*   | eval_leq_err2 : forall a1 a2 n1 s. *)
-  (*               eval_aexpr a1 s (Eint n1) -> *)
-  (*               eval_aexpr a2 s Eunbound -> *)
-  (*               eval_bexpr (Bleq a1 a2) s Eunbound *)
 
   (*   goal G1: forall s:state. eval_bexpr Btrue s (Ebool true) *)
 

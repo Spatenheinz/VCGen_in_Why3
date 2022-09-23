@@ -1,0 +1,17 @@
+module WP
+
+use grammar.Grammar
+use sematics.Semantics
+
+(* {WP(s,Q)} s {Q} *)
+let rec function wp (s: stmt) (q: formula) : formula =
+  variant { s }
+  match s with
+  | Sskip -> q                             (* WP(skip, Q) = Q *)
+  | Sseq s1 s2 -> wp s1 (wp s2 q)          (* WP(s1;s2, Q) = WP(s1, WP(s2, Q)) *)
+  | Sass x e -> let y = fresh_from q in
+                Fall y (Fimp (Beq y = e) (subst x y q) (* WP(x := e, Q) = ∀ y . y = e → Q[x ← y] *)
+
+let
+
+end
