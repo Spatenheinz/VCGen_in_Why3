@@ -91,6 +91,39 @@ We found that to verify the VCgen of the evaluator functions
 `aeval` we would have to use the same imperative Dict as in the ghost code article, whereas using a finite Map (fmap.MapImp) would not verify.
 
 
+aexpr is not a good (functional) predicate, it is much better as an inductive predicate.
+
+#+begin_src
+   predicate eval_aexpr2 (a: aexpr) (st: state) =
+    match a with
+    | Acst _ -> true
+    | Avar x -> st[x] <> None
+    | Asub a1 a2 -> eval_aexpr2 a1 st /\ eval_aexpr2 a2 st
+    end
+#+end_src
+
+we cant show
+#+begin_src
+  let rec lemma seval_deterministic (s: stmt) (st: state)
+       variant { s }
+       ensures { forall st'' bhv. eval_stmt st s result bhv ->
+                                      eval_stmt st s st'' bhv ->
+                                      result = st''
+       }
+     = match s with
+       | Sskip -> st
+       | Sass x a -> match eval_aexpr_total_fun a st with
+                     | Eint i -> st[x <- Some i]
+                     | Ebool _ -> st
+                     | Eunbound -> st
+                     end
+       | Sseq s1 s2 ->
+         let st1 = seval_deterministic s1 st in seval_deterministic s2 st1
+       end
+#+end_src
+
+
+
 ** For monday
 It would be really nice to have WP working for the small subset of the language we have now (we need ~ && (&& || ||))
 

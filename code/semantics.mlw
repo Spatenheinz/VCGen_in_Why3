@@ -9,6 +9,13 @@ module Semantics
 
   type e_behaviour = Eint int | Eunbound | Ebool bool
 
+  predicate eval_aexpr2 (a: aexpr) (st: state) =
+    match a with
+    | Acst _ -> true
+    | Avar x -> st[x] <> None
+    | Asub a1 a2 -> eval_aexpr2 a1 st /\ eval_aexpr2 a2 st
+    end
+
   inductive eval_aexpr aexpr state e_behaviour =
     | eval_cst : forall n s.
                eval_aexpr (Acst n) s (Eint n)
@@ -40,7 +47,8 @@ module Semantics
  (** Ken: We can describe evaluation of expressions as a total function *)
   let rec lemma eval_aexpr_total_fun (a: aexpr) (s: state)
        variant { a }
-       ensures { eval_aexpr a s result }
+       ensures { eval_aexpr2 a s }
+       (* ensures { eval_aexpr a s result } *)
      = match a with
        | Acst n -> Eint n
        | Avar v -> match s[v] with
@@ -135,8 +143,27 @@ module Semantics
           bhv <> Snormal ->
           eval_stmt st (Sseq s1 s2) st' bhv
 
+  (* let rec lemma seval_deterministic (s: stmt) (st: state) *)
+  (*      variant { s } *)
+  (*      ensures { forall st'' bhv. eval_stmt st s result bhv -> *)
+  (*                                     eval_stmt st s st'' bhv -> *)
+  (*                                     result = st'' *)
+  (*      } *)
+  (*    = match s with *)
+  (*      | Sskip -> st *)
+  (*      | Sass x a -> match eval_aexpr_total_fun a st with *)
+  (*                    | Eint i -> st[x <- Some i] *)
+  (*                    | Ebool _ -> st *)
+  (*                    | Eunbound -> st *)
+  (*                    end *)
+  (*      | Sseq s1 s2 -> *)
+  (*        let st1 = seval_deterministic s1 st in seval_deterministic s2 st1 *)
+  (*      end *)
+
+
   lemma seval_determ_aux : forall s st st' bhv.
      eval_stmt st s st' bhv -> forall st''. (eval_stmt st s st'' bhv) -> st' = st''
+
 
   lemma seval_determ : forall s st st' st'' bhv.
      eval_stmt st s st' bhv -> eval_stmt st s st'' bhv -> st' = st''
