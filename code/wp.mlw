@@ -6,14 +6,22 @@ use semantics.Semantics
 use subst.Subst
 
 (* {WP(s,Q)} s {Q} *)
-let rec function wp (s: stmt) (q: formula) : formula =
+let rec wp (s: stmt) (q: formula) : formula
+  diverges
   variant { s }
-  match s with
+= match s with
   | Sskip -> q                             (* WP(skip, Q) = Q *)
   | Sseq s1 s2 -> wp s1 (wp s2 q)          (* WP(s1;s2, Q) = WP(s1, WP(s2, Q)) *)
   | Sass x e -> let y = fresh_from q in
                 Fall y (Fimp (Fand (Fterm (Bleq (Avar y) e))
                                    (Fterm (Bleq e (Avar y)))) (subst_fmla q x y)) (* WP(x := e, Q) = ∀ y . y = e → Q[x ← y] *)
   end
+
+lemma monotonicity: forall s:stmt, p q: formula.
+      valid_formula (Fimp p q) -> valid_formula (Fimp (wp s p) (wp s q))
+
+lemma distrib_conj: forall s: stmt, sigma: state, p q: formula.
+      eval_formula (wp s p) sigma /\ eval_formula (wp s q) sigma ->
+      eval_formula (wp s (Fand p q)) sigma
 
 end

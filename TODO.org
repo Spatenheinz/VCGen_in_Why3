@@ -1,25 +1,6 @@
 #+title: Todo
 
 
-* UGE 2 [5/10]
-- [X] Vi skal finde koden til de 3 artikler :D
-- [X] Noget af det skal køres gennem IDE. Vi har brugt den lidt og den virker
-- [X] Franskmænd er mærkelige
-- [X] Find ud af Z3?? Det meget weird, men brug z3 og ikke Z3 da denne er en nyere version som ikke virker eller noget??
-- [X] Tilføj CVC4
-- [ ] Undersøg hvor meget det har ændret sig siden 2014.
-- [ ] Evt. kig på galleriet. (og VerifyThis konkurrencer)
-- [ ] Ghost kode til extraction.
-- [ ] Lemma der ikke kan bevises burde kunne bevise efter vi har bevist det med rec lemma (eller måske ikke).
-- [ ] Mange niveauer (Logik, Meta, Objekt)
-        Levels:
-        - AST (for WHILE and Assertion language)
-        - Eval (WHILE) Operational semantics
-        - WPC
-        - Extraction of EVAL
-        - extraction of WP
-        - Test of programs?
-
 * QUESTIONS
 
 Hvorfor prover den?
@@ -28,6 +9,10 @@ Hvornår bruger vi inductive vs non-inductive
 
 Er der en måde at lave "alias" / definition
 
+I WP revisited bruger de `WP(assert a, Q) = a /\ (a -> q)` de siger de bruger det som man gør i praksis?
+Hvad er det for en praksis? og de nævner at det tvinger f til at fremstå som hypotese i den anden "proof obligation", hvad menes der her?
+
+Hvorfor kan vi ikke vise goal ImpNone (in semantics.mlw)
 
 * NOTES AST
 Vi starter med denne AST:
@@ -37,6 +22,7 @@ Aexpr ::= int
 
 Bexpr ::= true
           false
+          not
           leq
 
  stmt  ::= seq
@@ -49,20 +35,28 @@ Bexpr ::= true
 
 - Lemma without inductive definition
 
-* Søndag
+* Uge 3??
 
 ** NO : implement band throughout all stages.
 ** DONE : implement bnot throughout all stages.
 ** DONE : try reimplement eval_bexpr leq
   reduced number of steps from ~2272 to ~1427
 ** DONE : make subst function
-** TODO : make fresh_from an exportable function
+** DONE : make fresh_from an exportable function
   It is not possible to use ghost functions in non-ghost context.
-** TODO : make valid formula
+** DONE : make eval_formula
+*** IDEA : this does not all that much, why?
+** DONE : make valid formula and test it
 ** TODO : lemmas om WP
+  We cannot use our wp in lemma's because it is not a pure function. This is annoying. We need a terminating
+  function for finding a fresh_variable.
 ** TODO : a single case for atoms in bexpr
 ** TODO : imp unnecessary in formula??
   p --> q == ~(p /\ ~ q)
+
+** TODO : At the moment, the imperative dict cannot be exported.
+  This is a problem if we want to export the evaluator.
+** WAIT : Are we cheating when we are using divergent code?
 
 ** Flere noter
 Vi har kun en mulig fejl, den hedder unbound så den propergeres gennem programmerne.

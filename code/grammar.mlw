@@ -29,6 +29,7 @@ end
 module Formula
 
   use Grammar
+  use int.Int
 
   type value = Vint int | Vbool bool
 
@@ -47,33 +48,71 @@ module Formula
     (* let x = t in f ≍ ∀ y. y = t → f[x ← y] *)
     | Fall id formula
 
-  predicate fresh_in_aexpr (id: id) (a: aexpr) =
-    match a with
+  (* predicate fresh_in_aexpr (id: id) (a: aexpr) = *)
+  (*   match a with *)
+  (*   | Acst _ -> true *)
+  (*   | Avar v   -> id <> v *)
+  (*   | Asub a1 a2 -> fresh_in_aexpr id a1 /\ fresh_in_aexpr id a2 *)
+  (*   end *)
+
+  (* predicate fresh_in_bexpr (id: id) (b: bexpr) = *)
+  (*   match b with *)
+  (*   | Bleq a1 a2 -> fresh_in_aexpr id a1 /\ fresh_in_aexpr id a2 *)
+  (*   | _ -> true *)
+  (*   end *)
+
+  (* predicate fresh_in_formula (id: id) (f: formula) = *)
+  (*   match f with *)
+  (*   | Fterm b -> fresh_in_bexpr id b *)
+  (*   | Fand f1 f2 | Fimp f1 f2 -> fresh_in_formula id f1 /\ fresh_in_formula id f2 *)
+  (*   | Fnot f -> fresh_in_formula id f *)
+  (*   | Fall y f -> id <> y /\ fresh_in_formula id f *)
+  (*   end *)
+
+  (* function fresh_from (f: formula) : id *)
+
+  (* axiom fresh_from_formula: forall f: formula. *)
+  (*   fresh_in_formula (fresh_from f) f *)
+
+
+  let rec function fresh_in_aexpr (id : id) (a: aexpr) : bool
+    variant { a }
+  = match a with
     | Acst _ -> true
     | Avar v   -> id <> v
-    | Asub a1 a2 -> fresh_in_aexpr id a1 /\ fresh_in_aexpr id a2
+    | Asub a1 a2 -> fresh_in_aexpr id a1 && fresh_in_aexpr id a2
     end
 
-  predicate fresh_in_bexpr (id: id) (b: bexpr) =
-    match b with
-    | Bleq a1 a2 -> fresh_in_aexpr id a1 /\ fresh_in_aexpr id a2
+  let rec function fresh_in_bexpr (id: id) (b: bexpr) : bool
+    variant { b }
+  = match b with
+    | Bleq a1 a2 -> fresh_in_aexpr id a1 && fresh_in_aexpr id a2
     | _ -> true
     end
 
-  predicate fresh_in_formula (id: id) (f: formula) =
-    match f with
+  let rec function fresh_in_formula (id: id) (f: formula) : bool
+    variant { f }
+  = match f with
     | Fterm b -> fresh_in_bexpr id b
-    | Fand f1 f2 | Fimp f1 f2 -> fresh_in_formula id f1 /\ fresh_in_formula id f2
+    | Fand f1 f2 | Fimp f1 f2 -> fresh_in_formula id f1 && fresh_in_formula id f2
     | Fnot f -> fresh_in_formula id f
-    | Fall y f -> id <> y /\ fresh_in_formula id f
+    | Fall y f -> id <> y && fresh_in_formula id f
     end
 
-  function fresh_from (f: formula) : id
+  let rec fresh_from_aux (f: formula) (id : id) : id
+      diverges
+  =
+      if fresh_in_formula id f then id
+      else fresh_from_aux f (id + 1)
 
-  axiom fresh_from_formula: forall f: formula.
-    fresh_in_formula (fresh_from f) f
+  let fresh_from (f: formula) : id
+      diverges
+  =   fresh_from_aux f 0
+
 
   (* predicate valid_formula (f: formula) = forall st. eval_formula st f *)
+
+
 
 
 end
