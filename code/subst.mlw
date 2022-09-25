@@ -1,0 +1,31 @@
+module Subst
+
+use grammar.Grammar
+use grammar.Formula
+use int.Int
+
+let rec function subst_aexpr (a : aexpr) (x : id) (v : id) : aexpr =
+    match a with
+    | Acst _ -> a
+    | Avar y -> if x = y then Avar v else a
+    | Asub a1 a2 -> Asub (subst_aexpr a1 x v) (subst_aexpr a2 x v)
+    end
+
+let rec function subst_bexpr (b : bexpr) (x : id) (v : id) : bexpr =
+    match b with
+    | Btrue | Bfalse -> b
+    | Bleq a1 a2     -> Bleq (subst_aexpr a1 x v) (subst_aexpr a2 x v)
+    | Bnot b         -> Bnot (subst_bexpr b x v)
+    end
+
+let rec function subst_fmla (f : formula) (x : id) (v : id) : formula =
+    match f with
+    | Fterm b -> Fterm (subst_bexpr b x v)
+    | Fand f1 f2 -> Fand (subst_fmla f1 x v) (subst_fmla f2 x v)
+    | Fnot f     -> Fnot (subst_fmla f x v)
+    | Fimp f1 f2 -> Fimp (subst_fmla f1 x v) (subst_fmla f2 x v)
+    | Fall y f   -> Fall y (subst_fmla f x v)
+    end
+
+
+end

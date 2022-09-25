@@ -122,6 +122,10 @@ we cant show
        end
 #+end_src
 
+*** Beval &&
+Interestingly, we cannot prove the vcgeneration for the beval function. However it seems like we dont need it to make the language expressive.
+
+In a similiar manner, we dont need Bnot, since we can express all relational operators from Bleq, Asub, Sskip, and If.
 
 
 ** For monday

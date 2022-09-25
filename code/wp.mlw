@@ -1,7 +1,9 @@
 module WP
 
 use grammar.Grammar
-use sematics.Semantics
+use grammar.Formula
+use semantics.Semantics
+use subst.Subst
 
 (* {WP(s,Q)} s {Q} *)
 let rec function wp (s: stmt) (q: formula) : formula =
@@ -10,8 +12,8 @@ let rec function wp (s: stmt) (q: formula) : formula =
   | Sskip -> q                             (* WP(skip, Q) = Q *)
   | Sseq s1 s2 -> wp s1 (wp s2 q)          (* WP(s1;s2, Q) = WP(s1, WP(s2, Q)) *)
   | Sass x e -> let y = fresh_from q in
-                Fall y (Fimp (Beq y = e) (subst x y q) (* WP(x := e, Q) = ∀ y . y = e → Q[x ← y] *)
-
-let
+                Fall y (Fimp (Fand (Fterm (Bleq (Avar y) e))
+                                   (Fterm (Bleq e (Avar y)))) (subst_fmla q x y)) (* WP(x := e, Q) = ∀ y . y = e → Q[x ← y] *)
+  end
 
 end

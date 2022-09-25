@@ -48,3 +48,21 @@ Bexpr ::= true
 - Reductions in p.35 of xavier leroy (in github IFC)
 
 - Lemma without inductive definition
+
+* Søndag
+
+** NO : implement band throughout all stages.
+** DONE : implement bnot throughout all stages.
+** DONE : try reimplement eval_bexpr leq
+  reduced number of steps from ~2272 to ~1427
+** DONE : make subst function
+** TODO : make fresh_from an exportable function
+  It is not possible to use ghost functions in non-ghost context.
+** TODO : make valid formula
+** TODO : lemmas om WP
+** TODO : a single case for atoms in bexpr
+** TODO : imp unnecessary in formula??
+  p --> q == ~(p /\ ~ q)
+
+** Flere noter
+Vi har kun en mulig fejl, den hedder unbound så den propergeres gennem programmerne.

@@ -41,6 +41,19 @@ module Evaluator
   (*   | Asub a1 a2 -> aeval2 a1 - aeval2 a2 *)
   (* end *)
 
+  let rec beval (b: bexpr) : bool
+    variant { b }
+    ensures { eval_bexpr b sigma (Ebool result) }
+    raises { E.Var_unbound -> eval_bexpr b sigma Eunbound }
+  = match b with
+    | Btrue      -> true
+    | Bfalse     -> false
+    | Bleq a1 a2 -> aeval a1 <= aeval a2
+    (* Cannot be proven *)
+    (* | Band b1 b2 -> beval b1 && beval b2 *)
+    | Bnot b     -> not (beval b)
+  end
+
   let rec seval (s: stmt) : ()
      diverges
      ensures {
@@ -55,10 +68,5 @@ module Evaluator
     | Sseq s1 s2 -> seval s1; seval s2
     end
 
-  (* let rec function beval (e: bexpr) (st: state) : bool = match e with *)
-  (*   | Btrue -> true *)
-  (*   | Bfalse -> false *)
-  (*   | Bleq a1 a2 -> aeval a1 st <= aeval a2 st *)
-  (* end *)
 
 end
