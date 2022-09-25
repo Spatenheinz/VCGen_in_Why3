@@ -14,7 +14,7 @@ module Grammar
        | Btrue
        | Bfalse
        | Bleq aexpr aexpr
-       (* | Band bexpr bexpr *)
+       | Band bexpr bexpr
        | Bnot bexpr
 
   type stmt =

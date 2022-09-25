@@ -45,7 +45,7 @@ Bexpr ::= true
 ** DONE : make fresh_from an exportable function
   It is not possible to use ghost functions in non-ghost context.
 ** DONE : make eval_formula
-*** IDEA : this does not all that much, why?
+*** IDEA : this does not work all that much, why?
 ** DONE : make valid formula and test it
 ** TODO : lemmas om WP
   We cannot use our wp in lemma's because it is not a pure function. This is annoying. We need a terminating

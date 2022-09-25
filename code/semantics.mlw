@@ -108,23 +108,23 @@ module Semantics
                 eval_aexpr a1 s (Eint n1) ->
                 eval_aexpr a2 s Eunbound ->
                 eval_bexpr (Bleq a1 a2) s Eunbound
-    (* | eval_band_true : forall b1 b2 b1' b2' s. *)
-    (*             eval_bexpr b1 s (Ebool b1') -> *)
-    (*             eval_bexpr b2 s (Ebool b2') -> *)
-    (*             b1' && b2' -> *)
-    (*             eval_bexpr (Band b1 b2) s (Ebool true) *)
+    | eval_band_true : forall b1 b2 b1' b2' s.
+                eval_bexpr b1 s (Ebool b1') ->
+                eval_bexpr b2 s (Ebool b2') ->
+                (* b1' && b2' -> *)
+                eval_bexpr (Band b1 b2) s (Ebool (b1' && b2'))
     (* | eval_band_false : forall b1 b2 b1' b2' s. *)
     (*             eval_bexpr b1 s (Ebool b1') -> *)
     (*             eval_bexpr b2 s (Ebool b2') -> *)
     (*             not (b1' && b2') -> *)
     (*             eval_bexpr (Band b1 b2) s (Ebool false) *)
-    (* | eval_band_err1 : forall b1 b2 s. *)
-    (*             eval_bexpr b1 s Eunbound -> *)
-    (*             eval_bexpr (Band b1 b2) s Eunbound *)
-    (* | eval_band_err2 : forall b1 b1' b2 s. *)
-    (*             eval_bexpr b1 s (Ebool b1') -> *)
-    (*             eval_bexpr b2 s Eunbound -> *)
-    (*             eval_bexpr (Band b1 b2) s Eunbound *)
+    | eval_band_err1 : forall b1 b2 s.
+                eval_bexpr b1 s Eunbound ->
+                eval_bexpr (Band b1 b2) s Eunbound
+    | eval_band_err2 : forall b1 b1' b2 s.
+                eval_bexpr b1 s (Ebool b1') ->
+                eval_bexpr b2 s Eunbound ->
+                eval_bexpr (Band b1 b2) s Eunbound
     | eval_bnot : forall b b' s.
                 eval_bexpr b s (Ebool b') ->
                 eval_bexpr (Bnot b) s (Ebool (not b'))
@@ -142,14 +142,14 @@ module Semantics
                        | (Eint n1, Eint n2) -> Ebool (n1 <= n2)
                        | _ -> Eunbound
                        end
-       (* | Band b1 b2 -> match eval_bexpr_total_fun b1 s, eval_bexpr_total_fun b2 s with *)
+       | Band b1 b2 -> match eval_bexpr_total_fun b1 s, eval_bexpr_total_fun b2 s with
        (*                 (\* | (Ebool True, Ebool True) -> Ebool true *\) *)
        (*                 (\* | (Ebool True, Ebool False) -> Ebool false *\) *)
        (*                 (\* | (Ebool False, Ebool True) -> Ebool false *\) *)
        (*                 (\* | (Ebool False, Ebool False) -> Ebool false *\) *)
-       (*                 | (Ebool b1', Ebool b2') -> Ebool (b1' && b2') *)
-       (*                 | _ -> Eunbound *)
-       (*                 end *)
+                       | (Ebool b1', Ebool b2') -> Ebool (b1' && b2')
+                       | _ -> Eunbound
+                       end
        | Bnot b     -> match eval_bexpr_total_fun b s with
                        | Ebool b' -> Ebool (not b')
                        | _ -> Eunbound
