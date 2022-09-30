@@ -112,7 +112,7 @@ module Semantics
                 eval_bexpr b1 s (Ebool b1') ->
                 eval_bexpr b2 s (Ebool b2') ->
                 (* b1' && b2' -> *)
-                eval_bexpr (Band b1 b2) s (Ebool (b1' && b2'))
+                eval_bexpr (Band b1 b2) s (Ebool (b1' /\ b2'))
     (* | eval_band_false : forall b1 b2 b1' b2' s. *)
     (*             eval_bexpr b1 s (Ebool b1') -> *)
     (*             eval_bexpr b2 s (Ebool b2') -> *)
@@ -209,7 +209,6 @@ module Semantics
     | Fnot f -> not (eval_formula f st)
     | Fimp f1 f2 -> eval_formula f1 st -> eval_formula f2 st
     | Fall y f -> forall n. eval_formula f st[y <- n]
-    | _ -> false
     end
 
   (* goal G1 : forall st. eval_formula (Fand (Fterm (Btrue)) (Fterm (Btrue))) st *)
@@ -230,16 +229,19 @@ module Semantics
   (* goal G2 : forall st. eval_formula (Fand (Fterm (Btrue)) (Fterm (Bfalse))) st *)
   (* goal False' : forall st. eval_formula (Fterm (Bfalse)) st *)
 
+  goal test : forall y x. y <= x -> y <= x + 1
+
   predicate valid_formula (f : formula) = forall sigma: state. eval_formula f sigma
 
-  goal G1 : valid_formula (Fand (Fterm (Btrue)) (Fterm (Btrue)))
+  (* goal G1 : valid_formula (Fand (Fterm (Btrue)) (Fterm (Btrue))) *)
+  goal G1 : valid_formula (Fand (Fterm (Btrue)) (Fimp (Fterm Btrue) (Fterm (Btrue))))
   goal A  : forall n1 n2. n1 <= n2 ->
                     valid_formula (Fterm (Bleq (Acst n1) (Acst n2)))
   goal Imp : valid_formula (Fimp (Fterm Btrue) (Fterm Btrue))
   goal AbsurdImp : valid_formula (Fimp (Fterm Bfalse)
                                                  (Fterm (Bleq (Acst 4) (Acst 1))))
-  goal ImpNone : forall y x. valid_formula (Fimp (Fterm (Bleq (Avar y) (Acst x)))
-                                              (Fterm (Bleq (Avar y) (Acst (x+1))))
+  goal ImpNone : forall n1 x. valid_formula (Fimp (Fterm (Bleq (Acst n1) (Acst x)))
+                                              (Fterm (Bleq (Acst n1) (Acst (x+1))))
                                         )
   goal Simp : forall y. valid_formula (Fall y (Fterm (Btrue)))
   goal ALL : forall y. valid_formula (Fall y (Fimp (Fterm (Bleq (Avar y) (Acst 5)))

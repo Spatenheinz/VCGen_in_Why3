@@ -50,7 +50,7 @@ module Evaluator
     | Bfalse     -> false
     | Bleq a1 a2 -> aeval a1 <= aeval a2
     (* Cannot be proven *)
-    (* | Band b1 b2 -> beval b1 && beval b2 *)
+    | Band b1 b2 -> beval b1 && beval b2
     | Bnot b     -> not (beval b)
   end
 

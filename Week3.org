@@ -129,7 +129,7 @@ In a similiar manner, we dont need Bnot, since we can express all relational ope
 
 
 ** For monday
-It would be really nice to have WP working for the small subset of the language we have now (we need ~ && (&& || ||))
+It would be really nice to have WP working for the small subset of the language.
 
 
 ** Structure of the "final" language

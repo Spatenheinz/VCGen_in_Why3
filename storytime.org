@@ -1,0 +1,46 @@
+#+title: Storytime
+
+what are we actually doing???????????
+
+* The initial purpose:
+VCGen which itself could be verified for correctness.
+It is interesting because if we can formally verify
+that we can generate a correct verification condition,
+then it will be a stepping stone in allowing a while
+language to be used instead of the current eBPF-language??
+
+
+In this approach we use three levels of abstraction:
+- At the lowest level, we have the object language (namely WHILE)
+- At the meta we treat the object level as data. In the current state
+  it is evaluation and VCgen.
+- At the highest level of abstraction, we have the logic language, which
+  we use to reason about the meta level. That is to ensure correctness of these.
+  Along with some lemmas, such as soundness of WP and partial correctness etc.
+
+
+We would like to be able to extract the VCgenerator. So we can have a self-contained
+VCgenerator. (Presumably when extracting the Ocaml code, which then in turn
+can be extracted to C code, it would be much smaller).
+
+* ATM
+At the moment, we have hit a few roadblocks.
+
+- because a terrible fresh_variable function which is divergent, we cannot even
+  reason about our wp function on a logical level. This can easily be fixed. And reasonably it will always work????
+
+- We have defined a predicate (which actually should be a extractable function? if we want self contained code). However Ken think this is a weird predicate because we reason about the object level in the logic level. And it does not validate when given specific inputs. Which we dont know how to fix. Maybe we can do so, by making it a function instead of predicate.
+
+  One thing we have not considered is how a "standalone" solution should verify this, as we would presumably use a SMT solver to verify the Formula.
+
+- We cannot show determinism of our current language. And dont know why.
+
+  It is very difficult to know where stuff breaks in why3. PLEASE USE A THEOREM PROVER.
+
+- We cannot show that evaluation of a b_expr is total if we include && in the language.
+  WTF is going on????
+
+
+* Working conclusion
+Our working conclusion, is that because of our still fairly limited experience with why3, it is difficult to even reason about why stuff is not working as expected.
+and it seems like using a theorem prover would be easier (atleast Isabelle/HOL seems like a good alternative, because of its high level of automization).
