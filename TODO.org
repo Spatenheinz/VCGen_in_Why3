@@ -60,3 +60,22 @@ Bexpr ::= true
 
 ** Flere noter
 Vi har kun en mulig fejl, den hedder unbound så den propergeres gennem programmerne.
+
+* Uge 4, rapport skrivning.
+** TODO : læs artiklen om Colis
+** TODO : læs artiklen "Instrumenting WP ..."
+** Write background [0/3]
+*** TODO : noget om WP
+*** TODO : Noget om Why3
+*** TODO : Noget om artiklerne
+** Write about implementation [0/4]
+*** TODO : the language
+*** TODO : the infrastructure
+*** TODO : logical reasoning about the language [/]
+**** TODO : Semantics
+**** TODO : Soundness of WP
+**** TODO : Partial corrctness
+*** TODO : adventures in extraction
+** Findings [0/1]
+*** TODO : what are our results?
+** TODO : Conclusion
