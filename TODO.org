@@ -79,3 +79,9 @@ Vi har kun en mulig fejl, den hedder unbound så den propergeres gennem programm
 ** Findings [0/1]
 *** TODO : what are our results?
 ** TODO : Conclusion
+
+
+* TODO of Friday
+** Make free var in why3 work
+** Try to implement aexpr in Isabelle
+** What do we want to tell in our report

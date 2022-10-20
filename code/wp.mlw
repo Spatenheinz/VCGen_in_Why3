@@ -6,8 +6,7 @@ use semantics.Semantics
 use subst.Subst
 
 (* {WP(s,Q)} s {Q} *)
-let rec wp (s: stmt) (q: formula) : formula
-  diverges
+let rec function wp (s: stmt) (q: formula) : formula
   variant { s }
 = match s with
   | Sskip -> q                             (* WP(skip, Q) = Q *)

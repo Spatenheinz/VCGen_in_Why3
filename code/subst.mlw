@@ -5,6 +5,7 @@ use grammar.Formula
 use int.Int
 
 let rec function subst_aexpr (a : aexpr) (x : id) (v : id) : aexpr =
+    variant { a }
     match a with
     | Acst _ -> a
     | Avar y -> if x = y then Avar v else a
@@ -12,6 +13,7 @@ let rec function subst_aexpr (a : aexpr) (x : id) (v : id) : aexpr =
     end
 
 let rec function subst_bexpr (b : bexpr) (x : id) (v : id) : bexpr =
+    variant { b }
     match b with
     | Btrue | Bfalse -> b
     | Bleq a1 a2     -> Bleq (subst_aexpr a1 x v) (subst_aexpr a2 x v)
@@ -19,6 +21,7 @@ let rec function subst_bexpr (b : bexpr) (x : id) (v : id) : bexpr =
     end
 
 let rec function subst_fmla (f : formula) (x : id) (v : id) : formula =
+    variant { f }
     match f with
     | Fterm b -> Fterm (subst_bexpr b x v)
     | Fand f1 f2 -> Fand (subst_fmla f1 x v) (subst_fmla f2 x v)

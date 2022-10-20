@@ -1,0 +1,84 @@
+module Syntax
+
+  type program_var
+
+  type expr =
+    | Elit int                 (* literals n *)
+    | Evar program_var         (* program variables x *)
+    | Esub expr expr           (* subtraction e1-e2 *)
+
+  type cmd =
+    | Cskip                    (* no effect *)
+    | Cassign program_var expr (* assignment x := e *)
+    | Cseq cmd cmd             (* sequence c1;c2 *)
+    | Cif expr cmd cmd         (* conditional if e<>0 then c1 else c2 *)
+    | Cwhile expr cmd          (* loop while e<>0 do c *)
+end
+
+module ConcreteSemantics
+
+  use int.Int
+  use option.Option
+  use set.Fset
+  use map.Map
+  use Syntax
+
+  type environment = program_var -> option int
+
+  type expr_behaviour = Enormal int | Eunbound_var
+
+  inductive eval_expr environment expr expr_behaviour =
+    | eval_lit : forall env n.
+        eval_expr env (Elit n) (Enormal n)
+    | eval_var : forall env x n.
+        env[x] = Some n ->
+        eval_expr env (Evar x) (Enormal n)
+    | eval_var_undefined : forall env x.
+        env[x] = None ->
+        eval_expr env (Evar x) Eunbound_var
+    | eval_sub : forall env e1 e2 n1 n2.
+        eval_expr env e1 (Enormal n1) ->
+        eval_expr env e2 (Enormal n2) ->
+        let n = n1 - n2 in
+        eval_expr env (Esub e1 e2) (Enormal n)
+    | eval_sub_error1 : forall env e1 e2.
+        eval_expr env e1 Eunbound_var ->
+        eval_expr env (Esub e1 e2) Eunbound_var
+    | eval_sub_error2 : forall env e1 e2 n1.
+        eval_expr env e1 (Enormal n1) ->
+        eval_expr env e2 Eunbound_var ->
+        eval_expr env (Esub e1 e2) Eunbound_var
+
+  let rec ghost function identifiers_in_expr (e:expr) =
+    match e with
+    | Elit _ -> empty
+    | Evar v -> singleton v
+    | Esub e1 e2 -> union (identifiers_in_expr e1) (identifiers_in_expr e2)
+    end
+
+  let rec lemma eval_expr_functional (env:environment) (e:expr)
+    variant { e }
+    ensures { forall n1 n2.
+      eval_expr env e n1 ->
+      eval_expr env e n2 ->
+      n1 = n2
+    }
+  = match e with
+    | Elit _ | Evar _ -> ()
+    | Esub e1 e2 ->
+      eval_expr_functional env e1;
+      eval_expr_functional env e2
+    end
+
+  let rec lemma eval_expr_total (e:expr)
+    ensures { forall gamma.
+      eval_expr gamma e Eunbound_var \/
+      exists n. eval_expr gamma e (Enormal n)
+    }
+  = match e with
+    | Elit _ | Evar _ -> ()
+    | Esub e1 e2 ->
+      eval_expr_total e1;
+      eval_expr_total e2
+    end
+end

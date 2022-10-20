@@ -20,8 +20,7 @@ In this approach we use three levels of abstraction:
 
 
 We would like to be able to extract the VCgenerator. So we can have a self-contained
-VCgenerator. (Presumably when extracting the Ocaml code, which then in turn
-can be extracted to C code, it would be much smaller).
+VCgenerator (To C).
 
 * ATM
 At the moment, we have hit a few roadblocks.
