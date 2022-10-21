@@ -1,20 +1,30 @@
 \section{Background}
+When writing compilers we must consider atleast two types of languages.
+Firstly, we must have a host language used for writing the compiler,
+We use Why3 and Isabelle as our two host languages. A brief introduction to both is given in \autoref{sec:why3} and \autoref{sec:isabelle} respectively.
+Secondly, we must consider an object language which will be the input for the compiler.
+In \autoref{sec:theory} we describe any necessary information about the object language.
 
+\subsection{Theory}\label{sec:theory}
+This section will present the necessary theory for the object language.
+Specifically, \autoref{sec:while} will describe the syntax and semantics of the object language.
+\autoref{sec:hoare} will give a brief overview of Hoare logic,
+which is the basis for the Verification condition generation we use, which we describe in detail in
+\autoref{sec:wp}.
 
-\subsection{Theory}
-
-\subsubsection{WHILE}
+\subsubsection{WHILE}\label{sec:while}
+\input{Background/grammar}
 \begin{itemize}
 \item We want to define imp
 \end{itemize}
 
-\subsubsection{Hoare logic}
+\subsubsection{Hoare logic}\label{sec:hoare}
 \begin{itemize}
   \item Give a brief introduction to Hoare logic
 \item mention soundness etc. We do not prove this.
 \end{itemize}
 
-\subsubsection{Weakest Precondition Calculus}
+\subsubsection{Weakest Precondition Calculus}\label{sec:wp}
 \begin{itemize}
 \item Introduce the rules of WP.
 \item mention soundness etc. Refer to automated proofs in section ??
@@ -29,13 +39,13 @@
   \item expressiveness and effectiveness
 \end{itemize}
 
-\subsubsection{Why3}
+\subsubsection{Why3}\label{sec:why3}
 \begin{itemize}
   \item Brief overview of syntax and usecases
   \item expressive power (coupled with backend)
 \end{itemize}
 
-\subsubsection{Isabelle/HOL}
+\subsubsection{Isabelle/HOL}\label{sec:isabelle}
 \begin{itemize}
   \item Brief overview of syntax and usecases
   \item expressive power (coupled with backend)
