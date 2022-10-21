@@ -1,0 +1,115 @@
+We describe WHILE by its Natural semantics.
+we use a store to keep the values of any program variables. We use a finite map:
+$$\sigma \in \Sigma = Var \longrightarrow \mathbb{Z} \cup \{\bot\}$$
+where $Var$ defines all possible variables and $\bot$ denotes the result of unbound variables.
+Hence we consider a store to be a total function and define a judgement for arithmetic expressions as
+$\judge{a,\sigma}{(n | \bot)}$, where $n \in \mathbb{Z}$ $a$ is an arithmetic expression and $x | y$ denotes either $x$ or $y$.
+
+\begin{figure}[h!]
+\inference[ACst]{}
+{\judge{n,\sigma}{n}}
+
+\inference[Var]{}
+{\judge{v,\sigma}{n}}[$(\sigma(v) = n)$]
+
+\inference[Var\_Unbound]{}
+{\judge{v,\sigma}{\bot}}[$( \sigma(v) = \bot )$]
+
+\inference[BinOp]{\judge{a_{0}, \sigma}{n_{0}} & \judge{a_{1}, \sigma}{n_{1}}}
+{\judge{a_{0} \oplus a_{1},\sigma}{n_{0} \oplus n_{1}}}
+
+\inference[BinOp\_Unbound1]{\judge{a_{0}, \sigma}{\bot}}
+{\judge{a_{0} \oplus a_{1},\sigma}{\bot}}
+
+\inference[BinOp\_Unbound2]{\judge{a_{1}, \sigma}{\bot}}
+{\judge{a_{0} \oplus a_{1},\sigma}{\bot}}
+\end{figure}
+
+In a similar manner we define a judgement for boolean expressions as $\judge{b,\sigma}{(t | \bot)}$, where $t \in \{true, false\}$ and $b$ is a boolean expression.
+
+\begin{figure}[h!]
+\inference[BCst]{}
+{\judge{t,\sigma}{t}}
+
+\inference[LeqT]{\judge{a_0,\sigma}{n_0} & \judge{a_1,\sigma}{n_1}}
+{\judge{a_0 \leq a_1 ,\sigma}{true}}[$(n_0 \leq n_1)$]
+
+\inference[LeqF]{\judge{a_0,\sigma}{n_0} & \judge{a_1,\sigma}{n_1}}
+{\judge{a_0 \leq a_1 ,\sigma}{true}}[$(n_0 > n_1)$]
+
+\inference[Leq\_Unbound1]{\judge{a_0,\sigma}{\bot}}
+{\judge{a_0 \leq a_1, \sigma}{\bot}}
+
+\inference[Leq\_Unbound2]{\judge{a_1,\sigma}{\bot}}
+{\judge{a_0 \leq a_1, \sigma}{\bot}}
+
+\inference[NegT]{\judge{b,\sigma}{n_0} = true}
+{\judge{ \neg b , \sigma}{false}}
+
+\inference[NegF]{\judge{b,\sigma}{n_0} = false}
+{\judge{ \neg b , \sigma}{true}}
+
+\inference[Neg\_Unbound]{\judge{b,\sigma}{\bot}}
+{\judge{ \neg b , \sigma}{\bot}}
+
+\end{figure}
+
+Likewise for statements a judgement will either be an abnormal behaviour in terms of
+unbound variables: $\judge{s, \sigma}{(\sigma | \bot)}$, where $s$ is a statement.
+
+\begin{figure}[h!]
+
+\inference[Skip]{}
+{\judge{skip,\sigma}{\sigma}}
+
+\inference[Assign]{\judge{a,\sigma}{n}}
+{\judge{x := a,\sigma}{\sigma[x \mapsto n]}}
+
+\inference[Assign\_Unbound]{\judge{a,\sigma}{\bot}}
+{\judge{x := a,\sigma}{\bot}}
+
+\inference[Assign\_Unbound]{\judge{a,\sigma}{\bot}}
+{\judge{x := a,\sigma}{\bot}}
+
+\inference[IfT]{\judge{b, \sigma}{true} & \judge{s_0, \sigma}{\sigma'}}
+{\judge{\mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\sigma'}}
+
+\inference[IfF]{\judge{b, \sigma}{false} & \judge{s_1, \sigma}{\sigma'}}
+{\judge{\mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\sigma'}}
+
+\inference[If\_UnboundB]{\judge{b, \sigma}{\bot}}
+{\judge{\mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\bot}}
+
+\inference[If\_Unbound1]{\judge{b, \sigma}{true} & \judge{s_0, \sigma}{\bot}}
+{\judge{\mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\bot}}
+
+\inference[If\_Unbound2]{\judge{b, \sigma}{false} & \judge{s_1, \sigma}{\bot}}
+{\judge{\mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\bot}}
+
+\inference[WhileT]{\judge{b, \sigma}{true} & \judge{s_0, \sigma}{\sigma''} & \judge{\mathbf{while} b \; \{ \; s_0 \; \}, \sigma''}{\sigma'}}
+{\judge{\mathbf{while} \; b \; \{ \; s_0 \; \}, \sigma}{\sigma'}}
+
+\inference[WhileF]{\judge{b, \sigma}{false}}
+{\judge{\mathbf{while} \; b \; \{ \; s_0 \; \}, \sigma}{\sigma}}
+
+\inference[While\_UnboundB]{\judge{b, \sigma}{\bot}}
+{\judge{\mathbf{while} \; b \; \{ \; s_0 \; \}, \sigma}{\bot}}
+
+\inference[While\_UnboundS]{\judge{b, \sigma}{true} & \judge{s_0, \sigma}{\bot}}
+{\judge{\mathbf{while} \; b \; \{ \; s_0 \; \}, \sigma}{\bot}}
+
+\inference[Seq]{\judge{s_0, \sigma}{\sigma''} & \judge{s_1, \sigma''}{\sigma'}}
+{\judge{s_0 \; ; \; s_1, \sigma}{\sigma'}}
+
+\inference[Seq\_Unbound1]{\judge{s_0, \sigma}{\bot}}
+{\judge{s_0 \; ; \; s_1, \sigma}{\bot}}
+
+\inference[Seq\_Unbound2]{\judge{s_1, \sigma}{\bot}}
+{\judge{s_0 \; ; \; s_1, \sigma}{\bot}}
+
+\end{figure}
+
+For assertions we simply cannot define the semantics in terms of operational semantics,
+since the language contains quantifiers. We define it through a satisfaction relation.
+
+see chapter3 of SATnotes.

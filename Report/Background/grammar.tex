@@ -1,0 +1,74 @@
+As object language we consider a simple imperative language often in the literature referred to as either
+IMP or WHILE and from hereon out we will reference our definition as the latter. Notice the language might differ slightly from other definitions but any such derivations should be insignificant.
+We consider a language with two basic types, integers and booleans.
+\autoref{fig:grammaraexpr} shows the grammar for arithmetic and boolean expressions.
+An arithmetic expression might either be a variable, integer, a substitution of two variables.
+Notice here than we only define a single binary operation for arithmetic expressions.
+We do so for a simpler compiler, without loss of expressiveness as we as syntactic sugar can define addition as
+$a_{0} + a_{1} = a_{0} - (0 - a_{1})$.
+
+In a similar manner we can define boolean expressions as either $\top$ (true), $\bot$ (false), negation, conjunction
+and relational operators. again we limit relational operators to only a single operator as we can describe the rest in terms of $\leq$ paired with $\neg$.
+
+\colorbox{BurntOrange}{TODO???? We might make a table of the syntactic sugared versions.}
+
+Likewise with the functionally complete set $\{\wedge, \neg\}$ we can define all possible boolean expressions.
+
+\begin{figure}[h!]
+\centering
+\begin{grammar}
+<aexpr> ::= <identifier>
+\alt <integer>
+\alt <aexpr> <aop> <aexpr>
+\alt '(' <aexpr> ')'
+
+<aop> ::= '$-$'
+
+<bexpr> ::= 'true' | 'false' | \alt '$\neg$'<bexpr>
+\alt <bexpr> '$\wedge$' <bexpr>
+\alt <aexpr> <rop> <aexpr>
+\alt '(' <bexpr> ')'
+
+<rop> ::= '$\le$'
+\end{grammar}
+\label{fig:grammaraexpr}
+\caption{Grammar for arithmetic \& boolean expressions}
+\end{figure}
+
+In a similar manner we define assertions corresponding to a first order logic. Assertions
+will be used for two things. Mainly this will be used for the Hoare logic and Verification condition generation,
+but secondarily as regular assertions, which will terminate program execution if the assertion is not valid.
+We have a functionally complete set in $\{\forall, \wedge, \neg\}$.
+
+Note here that in other definitions of assertion languages in relation to hoare logic it is common to include ghost variables, which are not allowed in the execution of programs and hence are only allowed in the logic language. In our current state, we do not include such variables.
+\begin{figure}[h!]
+\centering
+\begin{grammar}
+<assertion> ::= '$\forall$' <identifier> '.' <assertion>
+\alt '$\neg$' <assertion>
+\alt <assertion> '$\wedge$' <assertion>
+\alt <bexpr>
+\end{grammar}
+\label{fig:grammaraexpr}
+\caption{Grammar of assertion language}
+\end{figure}
+
+A WHILE program is a possibly empty sequence of statements. a statement can either be
+a variable binding, if-else statement, a while loop, an assertion or a skip.
+
+\begin{figure}[h!]
+\centering
+\begin{grammar}
+<statements> ::= <statement> ';' <statements> | $\epsilon$
+
+<statement> ::= <identifier> ':=' <aexpr>
+\alt 'if' <bexpr> '\{' <statements> '\}' 'else' '\{' <statements> '\}'
+\alt 'while' <bexpr> '\{' <statements> '\}'
+\alt '\#\{' <assertion> '\}'
+\alt 'skip'
+\end{grammar}
+\label{fig:grammaraexpr}
+\caption{Grammar for a WHILE program}
+\end{figure}
+
+In the future it would be good to consider additional types but we save this for future work.

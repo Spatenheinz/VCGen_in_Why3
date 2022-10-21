@@ -25,21 +25,6 @@ inductive eval_aexpr :: "'id aexpr \<Rightarrow> 'id state \<Rightarrow> int beh
 
 lemmas [intro] = eval_cst eval_var eval_var_err eval_sub eval_sub_err1 eval_sub_err2
 
-(* lemma eval_aexpr_fun : "\<forall>a s b1 b2. eval_aexpr a s b1 \<Longrightarrow>
- *                         eval_aexpr a s b2 \<Longrightarrow> b1 = b2" *)
-(* lemma eval_aexpr_fun :
- *   assumes "\<forall>a s b1 b2. eval_aexpr a s b1 \<Longrightarrow>
- *                        eval_aexpr a s b2 \<Longrightarrow> b1 = b2"
- *   proof(induction a)
- *           case (Cst x)
- *   then show ?case using aexpr.distinct(1) aexpr.distinct(3) behaviour.distinct(1) eval_aexpr.cases by blast
- *    next
- *   case (Var x)
- *   then show ?case using eval_aexpr.cases by blast
- *    next
- *   case (Sub a1 a2)
- *   then show ?case using eval_aexpr.cases by blast
- *    qed *)
 primrec aeval :: "'id state \<Rightarrow> 'id aexpr \<Rightarrow> int behaviour" ("_\<lbrakk>_\<rbrakk>a" [999,0] 1000) where
   "S\<lbrakk>Cst c\<rbrakk>a = Enormal c"
 | "S\<lbrakk>Var x\<rbrakk>a = (case S x of Some n \<Rightarrow> Enormal n | None \<Rightarrow> Eunbound)"
