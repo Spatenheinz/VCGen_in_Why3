@@ -3,7 +3,7 @@ We use a store to keep the values of any program variables, and this is implemen
 $$\sigma \in \Sigma = Var \longrightarrow \mathbb{Z} \cup \{\bot\}$$
 where $Var$ defines all possible variables and $\bot$ denotes the result of unbound variables.
 Hence we consider a store to be a total function and define a judgement for arithmetic expressions as
-$\judge{a,\sigma}{(n | \bot)}$, where $n \in \mathbb{Z}$ $a$ is an arithmetic expression and $x | y$ denotes either $x$ or $y$.
+$\judge{a,\sigma}{(n | \bot)}$, where $n \in \mathbb{Z}$, $a$ is an arithmetic expression, and $x | y$ denotes either $x$ or $y$.
 
 \begin{figure}[h!]
 \inference[ACst]{}
@@ -31,6 +31,15 @@ In a similar manner we define a judgement for boolean expressions as $\judge{b,\
 \inference[BCst]{}
 {\judge{t,\sigma}{t}}
 
+\inference[NegT]{\judge{b,\sigma}{n_0} = true}
+{\judge{ \neg b , \sigma}{false}}
+
+\inference[NegF]{\judge{b,\sigma}{n_0} = false}
+{\judge{ \neg b , \sigma}{true}}
+
+\inference[Neg\_Unbound]{\judge{b,\sigma}{\bot}}
+{\judge{ \neg b , \sigma}{\bot}}
+
 \inference[LeqT]{\judge{a_0,\sigma}{n_0} & \judge{a_1,\sigma}{n_1}}
 {\judge{a_0 \leq a_1 ,\sigma}{true}}[$(n_0 \leq n_1)$]
 
@@ -43,19 +52,18 @@ In a similar manner we define a judgement for boolean expressions as $\judge{b,\
 \inference[Leq\_Unbound2]{\judge{a_1,\sigma}{\bot}}
 {\judge{a_0 \leq a_1, \sigma}{\bot}}
 
-\inference[NegT]{\judge{b,\sigma}{n_0} = true}
-{\judge{ \neg b , \sigma}{false}}
+\inference[AndT]{\judge{a_0, \sigma}{true} & \judge{a_1, \sigma}{true}}
+{\judge{a_0 \land a_1, \sigma}{true}}
 
-\inference[NegF]{\judge{b,\sigma}{n_0} = false}
-{\judge{ \neg b , \sigma}{true}}
+\inference[AndF0]{\judge{a_0, \sigma}{false}}
+{\judge{a_0 \land a_1, \sigma}{false}}
 
-\inference[Neg\_Unbound]{\judge{b,\sigma}{\bot}}
-{\judge{ \neg b , \sigma}{\bot}}
+\inference[AndF1]{\judge{a_0, \sigma}{true} & \judge{a_1, \sigma}{false}}
+{\judge{a_0 \land a_1, \sigma}{false}}
 
 \end{figure}
 
-Likewise for statements a judgement will either be an abnormal behaviour in terms of
-unbound variables: $\judge{s, \sigma}{(\sigma | \bot)}$, where $s$ is a statement.
+Likewise for statements a judgement will either be a new state, or an abnormal behaviour in terms of unbound variables: $\judge{s, \sigma}{(\sigma | \bot)}$, where $s$ is a statement.
 
 \begin{figure}[h!]
 
@@ -112,4 +120,5 @@ unbound variables: $\judge{s, \sigma}{(\sigma | \bot)}$, where $s$ is a statemen
 For assertions we simply cannot define the semantics in terms of operational semantics,
 since the language contains quantifiers. We define it through a satisfaction relation.
 
+\textbf{TODO: I am confused about this last part????}
 see chapter3 of SATnotes.
