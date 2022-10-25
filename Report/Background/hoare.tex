@@ -56,11 +56,16 @@ To prove termination a variant $v$ must be provided and it must be subject to a 
 where, $\xi$ is a fresh variable. By this total correctness can be achieved.
 \\~\\
 Hoare logic can be shown to be sound, that is if a Hoare triple is proveable from the inference rules then the hoare triple is valid, i.e. $\vdash \hoarePQ{s}$ implies $\vDash \hoarePQ{s}$. This is an important
-property, since we will be unable to derive partial correctness proofs that does not hold. The proof is done on the induction on the derivation of $\vdash \hoarePQ{s}$. We omit this proof.
+property, since we will be unable to derive partial correctness proofs that does not hold. The proof is done on the induction on the derivation of $\vdash \hoarePQ{s}$. We omit this proof, because we dont use Hoare logic in our formalization directly but rather as a consequence for our Verification condition generation.
 \\~\\
-On the other hand Hoare logic was in 1974\cite{} shown to be relatively complete with respect to the assertion language used. That is hoare logic is just as complete as the assertion language. This means that if
-$\vdash A$ implies $\vDash A$ for an assertion then $\vdash \hoarePQ{s}$ implies $\vDash \hoarePQ{s}$.
+On the other hand Hoare logic was in 1974\cite{} shown to be relatively complete with respect to the assertion language used. That is hoare logic is no more incomplete than the assertion language. This means that $\vdash \hoarePQ{s}$ implies $\vDash \hoarePQ{s}$ and with an expressive enough language.
+Notice furthermore that without multiplication Hoare logic would not be complete.
 
-AT THE MOMENT WE MIGHT HAVE A COMPLETE ASSERTION LANGUAGE, BUT IN GENERAL NOT. ESPECIALLY WHEN WE ADD MULTIPLICATION.
+The proof Cook provided used the notion of Weakest liberal precondition (wlp). Wlp was first introduced by Edgar W. Dijkstra and is defined as follows
 
-From these introducturary words about Hoare logic we can define Verification Conditions.
+$$
+\forall P'. P' \Longrightarrow P \; \text{iff} \; \hoare{P'}{s}{Q} \; \text{is valid}
+$$
+
+That is $P$ is a weakest precodition for P such that $Q$ will hold in the halting state of $s$. We denote
+the weakest liberal precodition as $P = wlp(s,Q)$.

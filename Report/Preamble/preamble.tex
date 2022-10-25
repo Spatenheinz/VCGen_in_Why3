@@ -96,3 +96,12 @@
 }
 
 \lstset{style=mystyle}
+
+% Left-right absolute value
+\newcommand{\lra}[1]{\langle #1 \rangle}
+
+\newcommand{\judge}[2]{\lra{#1} \Downarrow #2}
+
+\newcommand{\hoare}[3]{\{#1\}#2\{#3\}}
+
+\newcommand{\hoarePQ}[1]{\{P\}#1\{Q\}}
