@@ -1,16 +1,15 @@
 As object language we consider a simple imperative language often in the literature referred to as either
 IMP or WHILE and from hereon out we will reference our definition as the latter. Notice the language might differ slightly from other definitions but any such derivations should be insignificant.
 We consider a language with two basic types, integers and booleans.
-\autoref{fig:grammaraexpr} shows the grammar for arithmetic and boolean expressions.
-An arithmetic expression might either be a variable, integer, a substitution of two variables.
-Notice here than we only define a single binary operation for arithmetic expressions.
-We do so for a simpler compiler, without loss of expressiveness as we as syntactic sugar can define addition as
+\autoref{fig:grammarexpr} shows the grammar for arithmetic and boolean expressions.
+An arithmetic expression might either be a variable, an integer, or a suvtraction of two arithmetic expressions.
+Notice here than we only define a single binary operation for arithmetic expressions, instead of defining both subtraction and addition.
+We do so for a simpler compiler, without loss of expressiveness, as we can define addition in form of subtraction by
 $a_{0} + a_{1} = a_{0} - (0 - a_{1})$.
 
-In a similar manner we can define boolean expressions as either $\top$ (true), $\bot$ (false), negation, conjunction
-and relational operators. again we limit relational operators to only a single operator as we can describe the rest in terms of $\leq$ paired with $\neg$.
+In a similar manner we can define boolean expressions as either $\top$ (true), $\bot$ (false), a negation, a conjunction or a relation. Again we limit relational operators to only a single operator as we can describe the rest in terms of $\leq$ paired with $\neg$.
 
-\colorbox{BurntOrange}{TODO???? We might make a table of the syntactic sugared versions.}
+\colorbox{BurntOrange}{TODO???? We might make a table of the syntactic sugared versions. But is it kind of trivial?}
 
 Likewise with the functionally complete set $\{\wedge, \neg\}$ we can define all possible boolean expressions.
 
@@ -31,16 +30,16 @@ Likewise with the functionally complete set $\{\wedge, \neg\}$ we can define all
 
 <rop> ::= '$\le$'
 \end{grammar}
-\label{fig:grammaraexpr}
+\label{fig:grammarexpr}
 \caption{Grammar for arithmetic \& boolean expressions}
 \end{figure}
 
-In a similar manner we define assertions corresponding to a first order logic. Assertions
-will be used for two things. Mainly this will be used for the Hoare logic and Verification condition generation,
-but secondarily as regular assertions, which will terminate program execution if the assertion is not valid.
+Next we want to define assertions in our language, corresponding to a first order logic.
+Assertions will be used for two things: 1) the Hoare logic and Verification condition generation, and 2) as regular assertions, which will terminate program execution if the assertion is not valid.
 We have a functionally complete set in $\{\forall, \wedge, \neg\}$.
 
 Note here that in other definitions of assertion languages in relation to hoare logic it is common to include ghost variables, which are not allowed in the execution of programs and hence are only allowed in the logic language. In our current state, we do not include such variables.
+The grammar for assertions is depicted in \autoref{fig:grammarasserts}.
 \begin{figure}[h!]
 \centering
 \begin{grammar}
@@ -49,12 +48,11 @@ Note here that in other definitions of assertion languages in relation to hoare 
 \alt <assertion> '$\wedge$' <assertion>
 \alt <bexpr>
 \end{grammar}
-\label{fig:grammaraexpr}
+\label{fig:grammarasserts}
 \caption{Grammar of assertion language}
 \end{figure}
 
-A WHILE program is a possibly empty sequence of statements. a statement can either be
-a variable binding, if-else statement, a while loop, an assertion or a skip.
+Lastly we define the grammar of statements. A WHILE program is a possibly empty sequence of statements, and a statement can be either a variable binding, an if-else statement, a while loop, an assertion or a skip command. \autoref{fig:grammarstmts} shows the grammar of statements.
 
 \begin{figure}[h!]
 \centering
@@ -67,8 +65,8 @@ a variable binding, if-else statement, a while loop, an assertion or a skip.
 \alt '\#\{' <assertion> '\}'
 \alt 'skip'
 \end{grammar}
-\label{fig:grammaraexpr}
+\label{fig:grammarstmts}
 \caption{Grammar for a WHILE program}
 \end{figure}
 
-In the future it would be good to consider additional types but we save this for future work.
+In future work it could be interesting to extend the language with additional types, but for now we keep the structure of the pbject language simple.

@@ -1,5 +1,5 @@
 We describe WHILE by its Natural semantics.
-we use a store to keep the values of any program variables. We use a finite map:
+We use a store to keep the values of any program variables, and this is implemented using a finite map:
 $$\sigma \in \Sigma = Var \longrightarrow \mathbb{Z} \cup \{\bot\}$$
 where $Var$ defines all possible variables and $\bot$ denotes the result of unbound variables.
 Hence we consider a store to be a total function and define a judgement for arithmetic expressions as

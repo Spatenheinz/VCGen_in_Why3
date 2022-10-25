@@ -1,28 +1,27 @@
 \section{Background}
-When writing compilers we must consider atleast two types of languages.
-Firstly, we must have a host language used for writing the compiler,
+When writing a verified VC generator, we must consider both the language that we want to interpret, the syntax and semantics, both operational and axiomatic, of the object language, and the language that we use for writing the VC generator in.
+
+Firstly, we consider an object language \textbf{WHILE} which will be the input for the compiler.
+In \autoref{sec:while} we describe the syntax and semantics of the object language.
+
+Secondly, we consider the axiomatic semantics of the language, which we use for generating verification conditions for a given program. This is presented in \autoref{sec:hoare\&wp}, where we describe the Hoare logic and weakest precondiion calculus that we build VC generation on.
+
+Thirdly, we consider the host language used for writing the compiler.
 We use Why3 and Isabelle as our two host languages. A brief introduction to both is given in \autoref{sec:why3} and \autoref{sec:isabelle} respectively.
-Secondly, we must consider an object language which will be the input for the compiler.
-In \autoref{sec:theory} we describe any necessary information about the object language.
 
-\subsection{Theory}\label{sec:theory}
-This section will present the necessary theory for the object language.
-Specifically, \autoref{sec:while} will describe the syntax and semantics of the object language.
-\autoref{sec:hoare} will give a brief overview of Hoare logic,
-which is the basis for the Verification condition generation we use, which we describe in detail in
-\autoref{sec:wp}.
+\subsection{WHILE}\label{sec:while}
+In this project we work with a simple WHILE language, which is designed to be a minimal but still expressive language.
+In \autoref{sec:syntax} we define the syntax of the language, and in \autoref{sec:semantics} the operational semantics.
 
-\subsubsection{WHILE}\label{sec:while}
+\subsubsection{Syntax}\label{sec:syntax}
 \input{Background/grammar}
-\begin{itemize}
-\item We want to define imp
-\end{itemize}
+\subsubsection{Semantics}\label{sec:semantics}
+\input{Background/semantics}
+
+\subsection{Hoare logic and WP calculus}\label{sec:hoare\&wp}
 
 \subsubsection{Hoare logic}\label{sec:hoare}
-\begin{itemize}
-  \item Give a brief introduction to Hoare logic
-\item mention soundness etc. We do not prove this.
-\end{itemize}
+\input{Background/hoare}
 
 \subsubsection{Weakest Precondition Calculus}\label{sec:wp}
 \begin{itemize}
