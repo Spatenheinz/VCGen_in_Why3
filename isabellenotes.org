@@ -1,0 +1,97 @@
+#+title: Isabellenotes
+
+
+ok so this is very interesting. It is extremely easy to show that aexpr are deterministic if we dont consider bottom/None, similar to how it is done in SAT.
+I.e. the following inductive predicate shows the semantics:
+
+#+BEGIN_SRC
+inductive eval_aexpr2 :: "'a aexpr ⇒ ('a ⇒ int) ⇒ int ⇒ bool" where
+    eval_cst : "eval_aexpr2 (Cst n) s n"
+  | eval_var : "eval_aexpr2 (Var x) s (s x)"
+  | eval_mul : "eval_aexpr2 a1 s n1 ⟹
+                eval_aexpr2 a2 s n2 ⟹
+                op = Mul ⟹
+                eval_aexpr2 (BinOp a1 op a2) s(n1 * n2)"
+  | eval_sub : "eval_aexpr2 a1 s n1 ⟹
+                eval_aexpr2 a2 s n2 ⟹
+                op = Sub ⟹
+                eval_aexpr2 (BinOp a1 Sub a2) s (n1 - n2)"
+#+END_SRC
+then we can do the following proof:
+
+#+BEGIN_SRC
+lemma eval_aexpr_fun2 :
+  "⟦eval_aexpr2 a s b1; eval_aexpr2 a s b2⟧ ⟹ b1 = b2"
+proof(induction a s b1 arbitrary: b2 rule: eval_aexpr2.induct)
+  case (eval_cst n s)
+  then show ?case
+    by (metis aexpr.distinct(1) aexpr.distinct(4) aexpr.inject(1) eval_aexpr2.simps)
+next
+  case (eval_var x s n)
+  then show ?case
+    by (metis aexpr.distinct(2) aexpr.inject(2) aexpr.simps(9) eval_aexpr2.simps)
+next
+  case (eval_mul a1 s n1 a2 n2 op)
+  then show ?case
+    by (smt (verit) aexpr.distinct(3) aexpr.distinct(5) aexpr.inject(3) aop.distinct(1) eval_aexpr2.simps)
+next
+  case (eval_sub a1 s n1 a2 n2 op)
+  then show ?case
+    by (smt (verit) aexpr.distinct(3) aexpr.distinct(5) aexpr.inject(3) aop.distinct(1) eval_aexpr2.simps)
+qed
+#+END_SRC
+
+However if we consider the state to be a total function then we have:
+
+#+BEGIN_SRC
+inductive eval_aexpr :: "'a aexpr ⇒ 'a state ⇒ int behaviour ⇒ bool" where
+    eval_cst : "eval_aexpr (Cst n) s (Enormal n)"
+  | eval_var : "s x = Some n ⟹ eval_aexpr (Var x) s (Enormal n)"
+  | eval_var_err : "s x = None ⟹ eval_aexpr (Var x) s Eunbound"
+  | eval_mul : "eval_aexpr a1 s (Enormal n1) ⟹
+                eval_aexpr a2 s (Enormal n2) ⟹
+                op = Mul ⟹
+                eval_aexpr (BinOp a1 op a2) s (Enormal (n1 * n2))"
+  | eval_sub : "eval_aexpr a1 s (Enormal n1) ⟹
+                eval_aexpr a2 s (Enormal n2) ⟹
+                op = Sub ⟹
+                eval_aexpr (BinOp a1 Sub a2) s (Enormal (n1 - n2))"
+  | eval_op_err1 : "eval_aexpr a1 s Eunbound ⟹
+                     eval_aexpr (BinOp a1 op a2) s Eunbound"
+  | eval_op_err2 : "eval_aexpr a1 s (Enormal n) ⟹
+                    eval_aexpr a2 s Eunbound ⟹
+                    eval_aexpr (BinOp a1 op a2) s Eunbound"
+#+END_SRC
+
+Then we can no longer show that the program is deterministic.
+We can try to do induction as such:
+#+BEGIN_SRC
+lemma eval_aexpr_fun :
+  "⟦eval_aexpr a s b1; eval_aexpr a s b2⟧ ⟹ b1 = b2"
+proof(induction a s b1 arbitrary: b2 rule: eval_aexpr.induct)
+  case (eval_cst n s)
+  then show ?case
+    by (smt (verit, ccfv_SIG) aexpr.distinct(1) aexpr.distinct(4) aexpr.inject(1) eval_aexpr.simps)
+next
+  case (eval_var s x n)
+  then show ?case
+    by (smt (verit, best) aexpr.distinct(1) aexpr.distinct(5) aexpr.inject(2) option.distinct(1) eval_aexpr.simps option.inject)
+next
+  case (eval_mul a1 s n1 a2 n2 op)
+  then show ?case sorry
+next
+  case (eval_sub a1 s n1 a2 n2 op)
+  then show ?case sorry
+next
+  case (eval_op_err1 a1 s op a2)
+  then show ?case sorry
+next
+  case (eval_op_err2 a1 s n a2 op)
+  then show ?case sorry
+qed
+#+END_SRC
+
+and if we comment parts of the inductive predicate out we can show things. So either the smt proof becomes too hard.
+Especially this seems true since, when calling sledgehammer we can where binary operation are commented out we can find a proof
+for both eval_cst and eval_var and eval_var_err, and we cannot show it when all relation are available. But the proofs still work on the
+for those cases when we reintroduce the predicates for binary operators. We cannot do the same for binary operators. This seems very weird.
