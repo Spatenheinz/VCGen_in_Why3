@@ -61,7 +61,7 @@ Lastly we define the grammar of statements. A WHILE program is a possibly empty 
 
 <statement> ::= <identifier> ':=' <aexpr>
 \alt 'if' <bexpr> '\{' <statements> '\}' 'else' '\{' <statements> '\}'
-\alt 'while' <bexpr> '\{' <statements> '\}'
+\alt 'while' <bexpr> 'invariant' <aexpr> '\{' <statements> '\}'
 \alt '\#\{' <assertion> '\}'
 \alt 'skip'
 \end{grammar}

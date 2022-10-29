@@ -24,7 +24,7 @@ Notice that we show the formalization in the traditional sense and do not consid
 {\hoarePQ{ \mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \} }}
 
 \inference[HWhile]{\hoare{P \wedge b}{s}{P}}
-{\hoare{P}{ \mathbf{while} \; b \; \{ \; s \; \} }{P \wedge \neg b}}
+{\hoare{P}{ \mathbf{while} \; b \; \mathbf{invariant} \; I \; \{ \; s \; \} }{P \wedge \neg b}}
 
 \inference[HSeq]{\hoare{P}{s_0}{R} & \hoare{R}{s_1}{Q}}
 {\hoarePQ{s_0 \; ; \; s_1}}
@@ -35,6 +35,8 @@ Notice that we show the formalization in the traditional sense and do not consid
 \label{fig:hoare}
 \caption{Hoare logic inference rules.}
 \end{figure}
+
+\textbf{TODO: update to include invariant in while statement?}
 
 The rules are rather intuitive.
 For Hskip, the pre and postcondition must be the same.

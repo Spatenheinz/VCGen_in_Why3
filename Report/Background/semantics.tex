@@ -4,6 +4,7 @@ $$\sigma \in \Sigma = Var \longrightarrow \mathbb{Z} \cup \{\bot\}$$
 where $Var$ defines all possible variables and $\bot$ denotes the result of unbound variables.
 Hence we consider a store to be a total function and define a judgement for arithmetic expressions as
 $\judge{a,\sigma}{(n | \bot)}$, where $n \in \mathbb{Z}$, $a$ is an arithmetic expression, and $x | y$ denotes either $x$ or $y$.
+All the inference rules for arithmetic expressions are shown in \autoref{fig:aexprsemantics}.
 
 \begin{figure}[h!]
 \inference[ACst]{}
@@ -23,9 +24,13 @@ $\judge{a,\sigma}{(n | \bot)}$, where $n \in \mathbb{Z}$, $a$ is an arithmetic e
 
 \inference[BinOp\_Unbound2]{\judge{a_{1}, \sigma}{\bot}}
 {\judge{a_{0} \oplus a_{1},\sigma}{\bot}}
+
+\label{fig:aexprsemantics}
+\caption{Semantics of arithmetic expressions in WHILE.}
 \end{figure}
 
 In a similar manner we define a judgement for boolean expressions as $\judge{b,\sigma}{(t | \bot)}$, where $t \in \{true, false\}$ and $b$ is a boolean expression.
+The semantics for boolean expressions are presented in \autoref{fig:bexprsemantics}.
 
 \begin{figure}[h!]
 \inference[BCst]{}
@@ -61,9 +66,12 @@ In a similar manner we define a judgement for boolean expressions as $\judge{b,\
 \inference[AndF1]{\judge{a_0, \sigma}{true} & \judge{a_1, \sigma}{false}}
 {\judge{a_0 \land a_1, \sigma}{false}}
 
+\label{fig:bexprsemantics}
+\caption{Semantics of boolean expressions in WHILE.}
 \end{figure}
 
 Likewise for statements a judgement will either be a new state, or an abnormal behaviour in terms of unbound variables: $\judge{s, \sigma}{(\sigma | \bot)}$, where $s$ is a statement.
+The semantics of statements are presented in \autoref{fig:stmtsemantics}.
 
 \begin{figure}[h!]
 
@@ -115,7 +123,11 @@ Likewise for statements a judgement will either be a new state, or an abnormal b
 \inference[Seq\_Unbound2]{\judge{s_1, \sigma}{\bot}}
 {\judge{s_0 \; ; \; s_1, \sigma}{\bot}}
 
+\label{fig:stmtsemantics}
+\caption{Semantics of statements in WHILE.}
 \end{figure}
+
+\textbf{TODO: update semantics to have invariants in while expressions.}
 
 For assertions we simply cannot define the semantics in terms of operational semantics,
 since the language contains quantifiers. We define it through a satisfaction relation.
