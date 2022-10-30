@@ -18,10 +18,22 @@ module Grammar
        | Band (bexpr 'a) (bexpr 'a)
        | Bnot (bexpr 'a)
 
+  type formula 'a =
+    | Fterm (bexpr 'a)
+    | Fand (formula 'a) (formula 'a)
+    | Fnot (formula 'a)
+    | Fimp (formula 'a) (formula 'a)
+    (* Flet = Fall *)
+    (* let x = t in f ≍ ∀ y. y = t → f[x ← y] *)
+    | Fall 'a (formula 'a)
+
   type stmt 'a =
        | Sskip
        | Sass 'a (aexpr 'a)
        | Sseq (stmt 'a) (stmt 'a)
+       | Sassert (formula 'a)
+       | Sif (bexpr 'a) (stmt 'a) (stmt 'a)
+       | Swhile (bexpr 'a) (formula 'a) (stmt 'a)
 
   type prog 'a = stmt 'a
 
@@ -34,14 +46,6 @@ module Formula
   use int.MinMax
 
 
-  type formula 'a =
-    | Fterm (bexpr 'a)
-    | Fand (formula 'a) (formula 'a)
-    | Fnot (formula 'a)
-    | Fimp (formula 'a) (formula 'a)
-    (* Flet = Fall *)
-    (* let x = t in f ≍ ∀ y. y = t → f[x ← y] *)
-    | Fall 'a (formula 'a)
 
   predicate fresh_in_aexpr (id: 'a) (a: aexpr 'a) =
     match a with
@@ -65,50 +69,6 @@ module Formula
     | Fnot f                  -> fresh_in_formula id f
     | Fall y f                -> id <> y /\ fresh_in_formula id f
     end
-
-  (* function fresh_from (f: (formula 'a)) : id *)
-
-  (* axiom fresh_from_formula: forall f: (formula 'a). *)
-  (*   fresh_in_formula (fresh_from f) f *)
-
-
-  (* let rec function fresh_in_aexpr (id : 'a) (a: aexpr 'a) : bool *)
-  (*   variant { a } *)
-  (* = match a with *)
-  (*   | Acst _ -> true *)
-  (*   | Avar v   -> id <> v *)
-  (*   | ABin a1 _ a2 -> fresh_in_aexpr id a1 && fresh_in_aexpr id a2 *)
-  (*   end *)
-
-  (* let rec function fresh_in_bexpr (id: 'a) (b: bexpr 'a) : bool *)
-  (*   variant { b } *)
-  (* = match b with *)
-  (*   | Bleq a1 a2 -> fresh_in_aexpr id a1 && fresh_in_aexpr id a2 *)
-  (*   | Band b1 b2 -> fresh_in_bexpr id b1 && fresh_in_bexpr id b2 *)
-  (*   | Bnot b -> fresh_in_bexpr id b *)
-  (*   | BCst _ -> true *)
-  (*   end *)
-
-  (* let rec function fresh_in_formula (id: 'a) (f: formula 'a) : bool *)
-  (*   variant { f } *)
-  (* = match f with *)
-  (*   | Fterm b -> fresh_in_bexpr id b *)
-  (*   | Fand f1 f2 | Fimp f1 f2 -> fresh_in_formula id f1 && fresh_in_formula id f2 *)
-  (*   | Fnot f -> fresh_in_formula id f *)
-  (*   | Fall y f -> id <> y && fresh_in_formula id f *)
-  (*   end *)
-
-  (* let rec function fresh_from_aux (f: formula 'a) (id : 'a) : 'a *)
-  (*     diverges *)
-  (* = *)
-  (*     if fresh_in_formula id f then id *)
-  (*     else fresh_from_aux f (id + 1) *)
-
-  (* let fresh_from (f: (formula 'a)) : id *)
-  (*     diverges *)
-  (* =   fresh_from_aux f 0 *)
-
-
 
   let rec function max_id_aexpr (id : id) (a: aexpr id) : id
     variant { a }
@@ -164,6 +124,51 @@ module Formula
 
 (* pred occurs_in id term -> bool *)
 (* lemma fresh af term => does not occur *)
+
+  (* function fresh_from (f: (formula 'a)) : id *)
+
+  (* axiom fresh_from_formula: forall f: (formula 'a). *)
+  (*   fresh_in_formula (fresh_from f) f *)
+
+
+  (* let rec function fresh_in_aexpr (id : 'a) (a: aexpr 'a) : bool *)
+  (*   variant { a } *)
+  (* = match a with *)
+  (*   | Acst _ -> true *)
+  (*   | Avar v   -> id <> v *)
+  (*   | ABin a1 _ a2 -> fresh_in_aexpr id a1 && fresh_in_aexpr id a2 *)
+  (*   end *)
+
+  (* let rec function fresh_in_bexpr (id: 'a) (b: bexpr 'a) : bool *)
+  (*   variant { b } *)
+  (* = match b with *)
+  (*   | Bleq a1 a2 -> fresh_in_aexpr id a1 && fresh_in_aexpr id a2 *)
+  (*   | Band b1 b2 -> fresh_in_bexpr id b1 && fresh_in_bexpr id b2 *)
+  (*   | Bnot b -> fresh_in_bexpr id b *)
+  (*   | BCst _ -> true *)
+  (*   end *)
+
+  (* let rec function fresh_in_formula (id: 'a) (f: formula 'a) : bool *)
+  (*   variant { f } *)
+  (* = match f with *)
+  (*   | Fterm b -> fresh_in_bexpr id b *)
+  (*   | Fand f1 f2 | Fimp f1 f2 -> fresh_in_formula id f1 && fresh_in_formula id f2 *)
+  (*   | Fnot f -> fresh_in_formula id f *)
+  (*   | Fall y f -> id <> y && fresh_in_formula id f *)
+  (*   end *)
+
+  (* let rec function fresh_from_aux (f: formula 'a) (id : 'a) : 'a *)
+  (*     diverges *)
+  (* = *)
+  (*     if fresh_in_formula id f then id *)
+  (*     else fresh_from_aux f (id + 1) *)
+
+  (* let fresh_from (f: (formula 'a)) : id *)
+  (*     diverges *)
+  (* =   fresh_from_aux f 0 *)
+
+
+
 
 
 

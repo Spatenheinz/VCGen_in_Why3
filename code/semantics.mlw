@@ -53,6 +53,8 @@ module Semantics
                eval_aexpr (ABin a1 op a2) s (Eabnormal e)
 
 
+  lemma eval_aexpr_total_cannot_show : forall a, s : store 'a.
+    eval_aexpr a s (Eabnormal Eunbound) \/ exists n. eval_aexpr a s (Enormal n)
  (** Ken: We can describe evaluation of expressions as a total function *)
   let rec lemma eval_aexpr_total_fun (a: aexpr 'a) (s: store 'a)
        variant { a }
@@ -98,66 +100,76 @@ module Semantics
       end
 
   inductive eval_bexpr (bexpr 'a) (store 'a) (e_behaviour bool) =
-    | EBCst    : forall b, s : store 'a.
-                eval_bexpr (BCst b) s (Enormal b)
-    | EBLeq_true  : forall a1 a2 n1 n2, s : store 'a.
-                eval_aexpr a1 s (Enormal n1) ->
-                eval_aexpr a2 s (Enormal n2) ->
-                (* n1 <= n2 -> *)
-                eval_bexpr (Bleq a1 a2) s (Enormal (n1 <= n2))
-    | eval_leq_err1 : forall a1 a2, s : store 'a.
-                eval_aexpr a1 s (Eabnormal Eunbound) ->
-                eval_bexpr (Bleq a1 a2) s (Eabnormal Eunbound)
-    | eval_leq_err2 : forall a1 a2 n1, s : store 'a.
-                eval_aexpr a1 s (Enormal n1) ->
-                eval_aexpr a2 s (Eabnormal Eunbound) ->
-                eval_bexpr (Bleq a1 a2) s (Eabnormal Eunbound)
-    | eval_band_true : forall b1 b2 b1' b2', s: store 'a.
-                eval_bexpr b1 s (Enormal b1') ->
-                eval_bexpr b2 s (Enormal b2') ->
-                (* b1' && b2' -> *)
-                eval_bexpr (Band b1 b2) s (Enormal (b1' /\ b2'))
-    | eval_band_false : forall b1 b2 b1' b2', s : store 'a.
-                eval_bexpr b1 s (Enormal b1') ->
-                eval_bexpr b2 s (Enormal b2') ->
-                not (b1' && b2') ->
-                eval_bexpr (Band b1 b2) s (Enormal false)
-    | eval_band_err1 : forall b1 b2, s : store 'a.
-                eval_bexpr b1 s (Eabnormal Eunbound) ->
-                eval_bexpr (Band b1 b2) s (Eabnormal Eunbound)
-    | eval_band_err2 : forall b1 b1' b2, s : store 'a.
-                eval_bexpr b1 s (Enormal b1') ->
-                eval_bexpr b2 s (Eabnormal Eunbound) ->
-                eval_bexpr (Band b1 b2) s (Eabnormal Eunbound)
-    | eval_bnot : forall b b', s : store 'a.
-                eval_bexpr b s (Enormal b') ->
-                eval_bexpr (Bnot b) s (Enormal (not b'))
-    | eval_bnot_err : forall b, s : store 'a.
-                eval_bexpr b s (Eabnormal Eunbound) ->
-                eval_bexpr (Bnot b) s (Eabnormal Eunbound)
+    | EBCst      : forall b, s : store 'a.
+                   eval_bexpr (BCst b) s (Enormal b)
+    | EBLeq      : forall a1 a2 n1 n2, s : store 'a.
+                   eval_aexpr a1 s (Enormal n1) ->
+                   eval_aexpr a2 s (Enormal n2) ->
+                   (* n1 <= n2 -> *)
+                   eval_bexpr (Bleq a1 a2) s (Enormal (n1 <= n2))
+    | EBLeq_err1 : forall a1 a2, s : store 'a.
+                   eval_aexpr a1 s (Eabnormal Eunbound) ->
+                   eval_bexpr (Bleq a1 a2) s (Eabnormal Eunbound)
+    | EBLeq_err2 : forall a1 a2 n1, s : store 'a.
+                   eval_aexpr a1 s (Enormal n1) ->
+                   eval_aexpr a2 s (Eabnormal Eunbound) ->
+                   eval_bexpr (Bleq a1 a2) s (Eabnormal Eunbound)
+    | EBAnd      : forall b1 b2 b1' b2', s: store 'a.
+                   eval_bexpr b1 s (Enormal b1') ->
+                   eval_bexpr b2 s (Enormal b2') ->
+                   (* b1' && b2' -> *)
+                   eval_bexpr (Band b1 b2) s (Enormal (b1' && b2'))
+    | EBAnd_err1 : forall b1 b2, s : store 'a.
+                   eval_bexpr b1 s (Eabnormal Eunbound) ->
+                   eval_bexpr (Band b1 b2) s (Eabnormal Eunbound)
+    | EBAnd_err2 : forall b1 b1' b2, s : store 'a.
+                   eval_bexpr b1 s (Enormal b1') ->
+                   eval_bexpr b2 s (Eabnormal Eunbound) ->
+                   eval_bexpr (Band b1 b2) s (Eabnormal Eunbound)
+    | EBNot      : forall b b', s : store 'a.
+                   eval_bexpr b s (Enormal b') ->
+                   eval_bexpr (Bnot b) s (Enormal (not b'))
+    | EBNot_err  : forall b, s : store 'a.
+                   eval_bexpr b s (Eabnormal Eunbound) ->
+                   eval_bexpr (Bnot b) s (Eabnormal Eunbound)
 
-  (* let rec lemma eval_bexpr_total_fun (b: (bexpr 'a)) (s: (store 'a)) *)
-  (*      variant { b } *)
-  (*      ensures { eval_bexpr b s result } *)
-  (*    = match b with *)
-  (*      | BCst b     -> Enormal b *)
-  (*      | Bleq a1 a2 -> match eval_aexpr_total_fun a1 s, eval_aexpr_total_fun a2 s with *)
-  (*                      | Enormal n1, Enormal n2 -> Enormal (n1 <= n2) *)
-  (*                      | Eabnormal e, _   -> Eabnormal e *)
-  (*                      | _ , Eabnormal e  -> Eabnormal e *)
-  (*                      end *)
-  (*      | Band b1 b2 -> match eval_bexpr_total_fun b1 s, eval_bexpr_total_fun b2 s with *)
-  (*                      | Enormal b1', Enormal b2' -> Enormal (b1' && b2') *)
-  (*                      | Eabnormal e, _   -> Eabnormal e *)
-  (*                      | _ , Eabnormal e  -> Eabnormal e *)
-  (*                      end *)
-  (*      | Bnot b     -> match eval_bexpr_total_fun b s with *)
-  (*                      | Enormal b' -> Enormal (not b') *)
-  (*                      | e   -> e *)
-  (*                      end *)
-  (*      end *)
+  let rec lemma eval_bexpr_total_fun (b: (bexpr 'a)) (s: (store 'a))
+       variant { b }
+       ensures { eval_bexpr b s result }
+     = match b with
+       | BCst b     -> Enormal b
+       | Bleq a1 a2 -> match eval_aexpr_total_fun a1 s, eval_aexpr_total_fun a2 s with
+                       | Enormal n1, Enormal n2 -> Enormal (n1 <= n2)
+                       | Eabnormal e, _   -> Eabnormal e
+                       | _ , Eabnormal e  -> Eabnormal e
+                       end
+       | Band b1 b2 -> match eval_bexpr_total_fun b1 s, eval_bexpr_total_fun b2 s with
+                       | Enormal b1', Enormal b2' -> Enormal (b1' && b2')
+                       | Eabnormal e, _   -> Eabnormal e
+                       | _ , Eabnormal e  -> Eabnormal e
+                       end
+       | Bnot b     -> match eval_bexpr_total_fun b s with
+                       | Enormal b' -> Enormal (not b')
+                       | e   -> e
+                       end
+       end
+
+  lemma eval_bexpr_fun_cannot_show : forall b, s : store 'a, b1 b2.
+     eval_bexpr b s b1 -> eval_bexpr b s b2 -> b1 = b2
+
+  lemma eval_bexpr_total_cannot_show : forall b, s : store 'a.
+    eval_bexpr b s (Eabnormal Eunbound) \/ exists n. eval_bexpr b s (Enormal n)
 
   let rec lemma eval_bexpr_fun (b : bexpr 'a) (s : store 'a)
+      variant { b }
+      ensures { eval_bexpr b s (Eabnormal Eunbound) \/ exists n. eval_bexpr b s (Enormal n) }
+  = match b with
+    | BCst _ -> ()
+    | Bleq a1 a2 -> eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
+    | Band b1 b2 -> eval_bexpr_fun b1 s; eval_bexpr_fun b2 s
+    | Bnot b     -> eval_bexpr_fun b s
+    end
+  let rec lemma eval_bexpr_total (b : bexpr 'a) (s : store 'a)
       variant { b }
       ensures { forall b1 b2. eval_bexpr b s b1 ->
                               eval_bexpr b s b2 ->
@@ -170,25 +182,24 @@ module Semantics
     | Bnot b     -> eval_bexpr_fun b s
     end
 
-
-(*   inductive eval_stmt (stmt 'a) (store 'a) (e_behaviour (store 'a)) = *)
-(*     | eval_skip : forall st : store 'a. *)
-(*           eval_stmt Sskip st (Enormal st) *)
-(*     | eval_ass  : forall st : store 'a, x : 'a, e n. *)
-(*           eval_aexpr e st (Enormal n) -> *)
-(*           let st' = st[x <- Some n] in *)
-(*           eval_stmt (Sass x e) st (Enormal st') *)
-(*     | eval_ass_error  : forall st : store 'a, x e. *)
-(*           eval_aexpr e st (Eabnormal Eunbound) -> *)
-(*           eval_stmt (Sass x e) st (Eabnormal Eunbound) *)
-(*     | eval_seq  : forall s1 s2, st  st'' : store 'a, bhv : e_behaviour (store 'a). *)
-(*           eval_stmt s1 st (Enormal st'') -> *)
-(*           eval_stmt s2 st'' bhv -> *)
-(*           eval_stmt (Sseq s1 s2) st bhv *)
-(*     (\* | eval_seq_error  : forall s1 s2, st st' : store 'a, bhv : e_behaviour 'a. *\) *)
-(*     (\*       eval_stmt st s1 st' bhv -> *\) *)
-(*     (\*       bhv <> (Enormal ()) -> *\) *)
-(*     (\*       eval_stmt st (Sseq s1 s2) st' bhv *\) *)
+  inductive eval_stmt (stmt 'a) (store 'a) (e_behaviour (store 'a)) =
+    | eval_skip : forall st : store 'a.
+          eval_stmt Sskip st (Enormal st)
+    | eval_ass  : forall st : store 'a, x : 'a, e n.
+          eval_aexpr e st (Enormal n) ->
+          let st' = st[x <- Some n] in
+          eval_stmt (Sass x e) st (Enormal st')
+    | eval_ass_error  : forall st : store 'a, x e.
+          eval_aexpr e st (Eabnormal Eunbound) ->
+          eval_stmt (Sass x e) st (Eabnormal Eunbound)
+    | eval_seq  : forall s1 s2, st  st'' : store 'a, bhv : e_behaviour (store 'a).
+          eval_stmt s1 st (Enormal st'') ->
+          eval_stmt s2 st'' bhv ->
+          eval_stmt (Sseq s1 s2) st bhv
+    | eval_seq_error  : forall s1 s2, st st' : store 'a, bhv : e_behaviour 'a.
+          eval_stmt st s1 st' bhv ->
+          bhv <> (Enormal ()) ->
+          eval_stmt st (Sseq s1 s2) st' bhv
 
 (*   (\* let rec lemma seval_deterministic (s: stmt) (st: (store 'a)) *\) *)
 (*   (\*      variant { s } *\) *)

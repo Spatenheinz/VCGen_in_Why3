@@ -85,3 +85,81 @@ Vi har kun en mulig fejl, den hedder unbound så den propergeres gennem programm
 ** Make free var in why3 work
 ** Try to implement aexpr in Isabelle
 ** What do we want to tell in our report
+
+
+* NEW TODO
+-  BCst bool
+
+- stmt:
+  - Sskip
+  - Sass
+  - Sseq
+  - Sassert (missing)
+  - Sif (missing)
+  - While (missing)
+
+- formula
+
+
+(without ADD)
+  File semantics.mlw:
+Goal eval_aexpr_total_fun'vc.
+Prover result is: Valid (0.05s, 1258 steps).
+
+File "semantics.mlw", line 76, characters 37-122:
+Goal eval_aexpr_fun_cannot_show.
+Prover result is: Valid (0.10s, 4484 steps).
+
+File semantics.mlw:
+Goal eval_aexpr_fun'vc.
+Prover result is: Valid (0.02s, 292 steps).
+
+File semantics.mlw:
+Goal eval_aexpr_total'vc.
+Prover result is: Valid (0.03s, 643 steps).
+
+File semantics.mlw:
+Goal eval_bexpr_fun'vc.
+Prover result is: Valid (0.10s, 1777 steps).
+
+(ADD BAD??)
+File semantics.mlw:
+Goal eval_aexpr_total_fun'vc.
+Prover result is: Valid (0.05s, 1260 steps).
+
+File "semantics.mlw", line 76, characters 37-122:
+Goal eval_aexpr_fun_cannot_show.
+Prover result is: Valid (0.08s, 2094 steps).
+
+File semantics.mlw:
+Goal eval_aexpr_fun'vc.
+Prover result is: Valid (0.02s, 291 steps).
+
+File semantics.mlw:
+Goal eval_aexpr_total'vc.
+Prover result is: Valid (0.03s, 813 steps).
+
+File semantics.mlw:
+Goal eval_bexpr_fun'vc.
+Prover result is: Valid (0.10s, 1766 steps).
+
+(Add Good)
+File semantics.mlw:
+Goal eval_aexpr_total_fun'vc.
+Prover result is: Valid (0.04s, 1051 steps).
+
+File "semantics.mlw", line 76, characters 37-122:
+Goal eval_aexpr_fun_cannot_show.
+Prover result is: Valid (0.07s, 1764 steps).
+
+File semantics.mlw:
+Goal eval_aexpr_fun'vc.
+Prover result is: Valid (0.02s, 291 steps).
+
+File semantics.mlw:
+Goal eval_aexpr_total'vc.
+Prover result is: Valid (0.02s, 349 steps).
+
+File semantics.mlw:
+Goal eval_bexpr_fun'vc.
+Prover result is: Valid (0.10s, 1782 steps).
