@@ -3,26 +3,27 @@ module Grammar
   use option.Option
 
   type id = int
-  type state = id -> option int
+  type store 'a = 'a -> option int
 
-  type aexpr =
+  type aop = Mul | Sub | Add
+
+  type aexpr 'a =
        | Acst int
-       | Avar id
-       | Asub aexpr aexpr
+       | Avar 'a
+       | ABin (aexpr 'a) aop (aexpr 'a)
 
-  type bexpr =
-       | Btrue
-       | Bfalse
-       | Bleq aexpr aexpr
-       (* | Band bexpr bexpr *)
-       | Bnot bexpr
+  type bexpr 'a =
+       | BCst bool
+       | Bleq (aexpr 'a) (aexpr 'a)
+       | Band (bexpr 'a) (bexpr 'a)
+       | Bnot (bexpr 'a)
 
-  type stmt =
+  type stmt 'a =
        | Sskip
-       | Sass id aexpr
-       | Sseq stmt stmt
+       | Sass 'a (aexpr 'a)
+       | Sseq (stmt 'a) (stmt 'a)
 
-  type prog = stmt
+  type prog 'a = stmt 'a
 
 end
 
@@ -32,66 +33,63 @@ module Formula
   use int.Int
   use int.MinMax
 
-  type value = Vint int | Vbool bool
 
-  (* type term = *)
-  (*   | Tvalue value *)
-  (*   | Tvar id *)
-  (*   | Tghost id *)
-    (* | Tbin *)
-
-  type formula =
-    | Fterm bexpr
-    | Fand formula formula
-    | Fnot formula
-    | Fimp formula formula
+  type formula 'a =
+    | Fterm (bexpr 'a)
+    | Fand (formula 'a) (formula 'a)
+    | Fnot (formula 'a)
+    | Fimp (formula 'a) (formula 'a)
     (* Flet = Fall *)
     (* let x = t in f ≍ ∀ y. y = t → f[x ← y] *)
-    | Fall id formula
+    | Fall 'a (formula 'a)
 
-  (* predicate fresh_in_aexpr (id: id) (a: aexpr) = *)
-  (*   match a with *)
-  (*   | Acst _ -> true *)
-  (*   | Avar v   -> id <> v *)
-  (*   | Asub a1 a2 -> fresh_in_aexpr id a1 /\ fresh_in_aexpr id a2 *)
-  (*   end *)
+  predicate fresh_in_aexpr (id: 'a) (a: aexpr 'a) =
+    match a with
+    | Acst _ -> true
+    | Avar v   -> id <> v
+    | ABin a1 _ a2 -> fresh_in_aexpr id a1 /\ fresh_in_aexpr id a2
+    end
 
-  (* predicate fresh_in_bexpr (id: id) (b: bexpr) = *)
-  (*   match b with *)
-  (*   | Bleq a1 a2 -> fresh_in_aexpr id a1 /\ fresh_in_aexpr id a2 *)
-  (*   | _ -> true *)
-  (*   end *)
+  predicate fresh_in_bexpr (id: 'a) (b: bexpr 'a) =
+    match b with
+    | Bleq a1 a2 -> fresh_in_aexpr id a1 /\ fresh_in_aexpr id a2
+    | Band b1 b2 -> fresh_in_bexpr id b1 /\ fresh_in_bexpr id b2
+    | Bnot b -> fresh_in_bexpr id b
+    | BCst _ -> true
+    end
 
-  (* predicate fresh_in_formula (id: id) (f: formula) = *)
-  (*   match f with *)
-  (*   | Fterm b -> fresh_in_bexpr id b *)
-  (*   | Fand f1 f2 | Fimp f1 f2 -> fresh_in_formula id f1 /\ fresh_in_formula id f2 *)
-  (*   | Fnot f -> fresh_in_formula id f *)
-  (*   | Fall y f -> id <> y /\ fresh_in_formula id f *)
-  (*   end *)
+  predicate fresh_in_formula (id: 'a) (f: formula 'a) =
+    match f with
+    | Fterm b                 -> fresh_in_bexpr id b
+    | Fand f1 f2 | Fimp f1 f2 -> fresh_in_formula id f1 /\ fresh_in_formula id f2
+    | Fnot f                  -> fresh_in_formula id f
+    | Fall y f                -> id <> y /\ fresh_in_formula id f
+    end
 
-  (* function fresh_from (f: formula) : id *)
+  (* function fresh_from (f: (formula 'a)) : id *)
 
-  (* axiom fresh_from_formula: forall f: formula. *)
+  (* axiom fresh_from_formula: forall f: (formula 'a). *)
   (*   fresh_in_formula (fresh_from f) f *)
 
 
-  (* let rec function fresh_in_aexpr (id : id) (a: aexpr) : bool *)
+  (* let rec function fresh_in_aexpr (id : 'a) (a: aexpr 'a) : bool *)
   (*   variant { a } *)
   (* = match a with *)
   (*   | Acst _ -> true *)
   (*   | Avar v   -> id <> v *)
-  (*   | Asub a1 a2 -> fresh_in_aexpr id a1 && fresh_in_aexpr id a2 *)
+  (*   | ABin a1 _ a2 -> fresh_in_aexpr id a1 && fresh_in_aexpr id a2 *)
   (*   end *)
 
-  (* let rec function fresh_in_bexpr (id: id) (b: bexpr) : bool *)
+  (* let rec function fresh_in_bexpr (id: 'a) (b: bexpr 'a) : bool *)
   (*   variant { b } *)
   (* = match b with *)
   (*   | Bleq a1 a2 -> fresh_in_aexpr id a1 && fresh_in_aexpr id a2 *)
-  (*   | _ -> true *)
+  (*   | Band b1 b2 -> fresh_in_bexpr id b1 && fresh_in_bexpr id b2 *)
+  (*   | Bnot b -> fresh_in_bexpr id b *)
+  (*   | BCst _ -> true *)
   (*   end *)
 
-  (* let rec function fresh_in_formula (id: id) (f: formula) : bool *)
+  (* let rec function fresh_in_formula (id: 'a) (f: formula 'a) : bool *)
   (*   variant { f } *)
   (* = match f with *)
   (*   | Fterm b -> fresh_in_bexpr id b *)
@@ -100,40 +98,69 @@ module Formula
   (*   | Fall y f -> id <> y && fresh_in_formula id f *)
   (*   end *)
 
-  (* let rec fresh_from_aux (f: formula) (id : id) : id *)
+  (* let rec function fresh_from_aux (f: formula 'a) (id : 'a) : 'a *)
   (*     diverges *)
   (* = *)
   (*     if fresh_in_formula id f then id *)
   (*     else fresh_from_aux f (id + 1) *)
 
-  (* let fresh_from (f: formula) : id *)
+  (* let fresh_from (f: (formula 'a)) : id *)
   (*     diverges *)
   (* =   fresh_from_aux f 0 *)
-  let rec function max_id_aexpr (id : id) (a: aexpr) : id
+
+
+
+  let rec function max_id_aexpr (id : id) (a: aexpr id) : id
     variant { a }
   = match a with
-    | Acst _ -> id
-    | Avar v   -> max id v
-    | Asub a1 a2 -> max (max_id_aexpr id a1) (max_id_aexpr id a2)
+    | Acst _       -> id
+    | Avar v       -> max id v
+    | ABin a1 _ a2 -> max (max_id_aexpr id a1) (max_id_aexpr id a2)
     end
 
-  let rec function max_id_bexpr (id: id) (b: bexpr) : id
+  let rec function max_id_bexpr (id: id) (b: bexpr id) : id
     variant { b }
   = match b with
     | Bleq a1 a2 -> max (max_id_aexpr id a1) (max_id_aexpr id a2)
-    | _ -> id
+    | Band b1 b2 -> max (max_id_bexpr id b1) (max_id_bexpr id b2)
+    | Bnot b     -> max_id_bexpr id b
+    | BCst _     -> id
     end
 
-  let rec function max_id_formula (id: id) (f: formula) : id
+  let rec function max_id_formula (id: id) (f: formula id) : id
     variant { f }
   = match f with
-    | Fterm b -> max_id_bexpr id b
+    | Fterm b                 -> max_id_bexpr id b
     | Fand f1 f2 | Fimp f1 f2 -> max (max_id_formula id f1) (max_id_formula id f2)
-    | Fnot f -> max_id_formula id f
-    | Fall y f -> max y (max_id_formula id f)
+    | Fnot f                  -> max_id_formula id f
+    | Fall y f                -> max y (max_id_formula id f)
     end
 
-  let fresh_from (f: formula) : id = max_id_formula 0 f + 1
+  let function fresh_from (f: formula id) : id
+  = max_id_formula 0 f + 1
+
+  lemma fresh_var_max_plus_1 : forall f v.
+      v = fresh_from f -> v = max_id_formula 0 f + 1
+
+  lemma fresh_var_trivial : forall v : id.
+      fresh_in_formula v (Fterm (Bleq (Acst 5) (Acst 6)))
+
+  lemma fresh_var_trivial2 : forall v f.
+      f = (Fterm (Bleq (Acst 5) (Acst 6))) ->
+      v = fresh_from f -> fresh_in_formula v f
+
+  lemma fresh_var_trivial3 : forall v f.
+      f = (Fterm (Bleq (Acst 5) (Acst 6))) ->
+      v = fresh_from f -> v = 1
+
+  lemma max_is_not_fresh : forall v a.
+      v = max_id_aexpr 0 a -> not (fresh_in_aexpr v a)
+
+  lemma fresh_var_in_aexpr : forall a v.
+      v = max_id_aexpr 0 a -> fresh_in_aexpr (v + 1) a
+
+  lemma fresh_var_is_fresh : forall f [@induction] v.
+      v = fresh_from f -> fresh_in_formula v f
 
 (* pred occurs_in id term -> bool *)
 (* lemma fresh af term => does not occur *)

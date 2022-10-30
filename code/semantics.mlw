@@ -7,65 +7,76 @@ module Semantics
   use grammar.Formula
   use option.Option
 
-  type e_behaviour = Eint int | Eunbound | Ebool bool
+  type error = Eunbound (*| Ediv0 *)
 
-  (* predicate eval_aexpr2 (a: aexpr) (st: state) = *)
-  (*   match a with *)
-  (*   | Acst _ -> true *)
-  (*   | Avar x -> st[x] <> None *)
-  (*   | Asub a1 a2 -> eval_aexpr2 a1 st /\ eval_aexpr2 a2 st *)
-  (*   end *)
+  type e_behaviour 'a = Enormal 'a | Eabnormal error
 
-  inductive eval_aexpr aexpr state e_behaviour =
-    | eval_cst : forall n s.
-               eval_aexpr (Acst n) s (Eint n)
-    | eval_var : forall x n s.
-               s[x] = Some n ->
-               eval_aexpr (Avar x) s (Eint n)
-    | eval_var_err : forall x s.
-               s[x] = None ->
-               eval_aexpr (Avar x) s Eunbound
-    | eval_sub : forall a1 a2 n1 n2 s.
-               eval_aexpr a1 s (Eint n1) ->
-               eval_aexpr a2 s (Eint n2) ->
-               eval_aexpr (Asub a1 a2) s (Eint (n1 - n2))
-    | eval_sub_err1 : forall a1 a2 s.
-               eval_aexpr a1 s Eunbound ->
-               eval_aexpr (Asub a1 a2) s Eunbound
-    | eval_sub_err2 : forall a1 a2 s.           (* can we skip eval of a1? *)
-               (* eval_aexpr a1 s (Eint n1) -> *)
-               eval_aexpr a2 s Eunbound ->
-               eval_aexpr (Asub a1 a2) s Eunbound
-
-  let rec ghost function id_in_aexpr (a: aexpr) =
-      match a with
-      | Acst _ -> empty
-      | Avar v -> singleton v
-      | Asub a1 a2 -> union (id_in_aexpr a1) (id_in_aexpr a2)
+  let function eval_op (op : aop) : (int -> int -> int) =
+      match op with
+      | Mul -> (*) | Sub -> (-) | Add -> (+)
       end
 
+  inductive eval_aexpr (aexpr 'a) (store 'a) (e_behaviour int) =
+    | EACst : forall n, s : store 'a.
+               eval_aexpr (Acst n) s (Enormal n)
+    | EAVar : forall x n, s : store 'a.
+               s[x] = Some n ->
+               eval_aexpr (Avar x) s (Enormal n)
+    | EAVar_err : forall x, s : store 'a.
+               s[x] = None ->
+               eval_aexpr (Avar x) s (Eabnormal Eunbound)
+    | EABin : forall a1 a2 n1 n2, s : store 'a, op.
+               eval_aexpr a1 s (Enormal n1) ->
+               eval_aexpr a2 s (Enormal n2) ->
+               eval_aexpr (ABin a1 op a2) s (Enormal ((eval_op op) n1 n2))
+    (* | EASub : forall a1 a2 n1 n2, s : store 'a, op. *)
+    (*            eval_aexpr a1 s (Enormal n1) -> *)
+    (*            eval_aexpr a2 s (Enormal n2) -> *)
+    (*            op = Sub -> *)
+    (*            eval_aexpr (ABin a1 op a2) s (Enormal (n1 - n2)) *)
+    (* | EAMul : forall a1 a2 n1 n2, s : store 'a, op. *)
+    (*            eval_aexpr a1 s (Enormal n1) -> *)
+    (*            eval_aexpr a2 s (Enormal n2) -> *)
+    (*            op = Mul -> *)
+    (*            eval_aexpr (ABin a1 op a2) s (Enormal (n1 * n2)) *)
+    (* | EAAdd : forall a1 a2 n1 n2, s : store 'a, op. *)
+    (*            eval_aexpr a1 s (Enormal n1) -> *)
+    (*            eval_aexpr a2 s (Enormal n2) -> *)
+    (*            op = Add -> *)
+    (*            eval_aexpr (ABin a1 op a2) s (Enormal (n1 + n2)) *)
+    | EAOp_err1 : forall a1 a2, s : store 'a, op e.
+               eval_aexpr a1 s (Eabnormal e) ->
+               eval_aexpr (ABin a1 op a2) s (Eabnormal e)
+    | EAOp_err2 : forall a1 a2 n1, s : store 'a, op e.           (* can we skip eval of a1? *)
+               eval_aexpr a1 s (Enormal n1) ->
+               eval_aexpr a2 s (Eabnormal e) ->
+               eval_aexpr (ABin a1 op a2) s (Eabnormal e)
+
+
  (** Ken: We can describe evaluation of expressions as a total function *)
-  let rec lemma eval_aexpr_total_fun (a: aexpr) (s: state)
+  let rec lemma eval_aexpr_total_fun (a: aexpr 'a) (s: store 'a)
        variant { a }
        ensures { eval_aexpr a s result }
      = match a with
-       | Acst n -> Eint n
+       | Acst n -> Enormal n
        | Avar v -> match s[v] with
-                     | Some n -> Eint n
-                     | None -> Eunbound
+                     | Some n -> Enormal n
+                     | None -> Eabnormal Eunbound
                    end
-       | Asub a1 a2 ->
+       | ABin a1 op a2 ->
          match eval_aexpr_total_fun a1 s, eval_aexpr_total_fun a2 s with
-           | Eint n1, Eint n2 -> Eint (n1 - n2)
-           | _ -> Eunbound
+           | Enormal n1, Enormal n2 -> Enormal ((eval_op op) n1 n2)
+           | Eabnormal e, _   -> Eabnormal e
+           | _ , Eabnormal e  -> Eabnormal e
          end
        end
 
-  (* It does not work when we dont define the induction ourselfs *)
-  (* lemma eval_aexpr_fun : forall a s b1 b2. *)
-  (*    eval_aexpr a s b1 -> eval_aexpr a s b2 -> b1 = b2 *)
 
-  let rec lemma eval_aexpr_fun (a: aexpr) (s: state)
+  (* It does not work when we dont define the induction ourselfs *)
+  lemma eval_aexpr_fun_cannot_show : forall a, s : store 'a, b1 b2.
+     eval_aexpr a s b1 -> eval_aexpr a s b2 -> b1 = b2
+
+  let rec lemma eval_aexpr_fun (a: aexpr 'a) (s: store 'a)
       variant { a }
       ensures { forall b1 b2. eval_aexpr a s b1 ->
                               eval_aexpr a s b2 ->
@@ -73,188 +84,190 @@ module Semantics
       }
     = match a with
       | Acst _ | Avar _ -> ()
-      | Asub a1 a2 ->
+      | ABin a1 _ a2 ->
         eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
       end
 
-  let rec lemma eval_aexpr_total (a: aexpr)
-      ensures { forall s:state.
-          eval_aexpr a s Eunbound \/ exists n. eval_aexpr a s (Eint n)
+  let rec lemma eval_aexpr_total (a: aexpr 'a)
+      ensures { forall s:store 'a.
+          eval_aexpr a s (Eabnormal Eunbound) \/ exists n. eval_aexpr a s (Enormal n)
       }
     = match a with
       | Acst _ | Avar _ -> ()
-      | Asub a1 a2 -> eval_aexpr_total a1; eval_aexpr_total a2
+      | ABin a1 _ a2 -> eval_aexpr_total a1; eval_aexpr_total a2
       end
 
-  inductive eval_bexpr bexpr state e_behaviour =
-    | eval_true : forall s.
-                eval_bexpr Btrue s (Ebool true)
-    | eval_false : forall s.
-                eval_bexpr Bfalse s (Ebool false)
-    | eval_leq_true  : forall a1 a2 n1 n2 s.
-                eval_aexpr a1 s (Eint n1) ->
-                eval_aexpr a2 s (Eint n2) ->
+  inductive eval_bexpr (bexpr 'a) (store 'a) (e_behaviour bool) =
+    | EBCst    : forall b, s : store 'a.
+                eval_bexpr (BCst b) s (Enormal b)
+    | EBLeq_true  : forall a1 a2 n1 n2, s : store 'a.
+                eval_aexpr a1 s (Enormal n1) ->
+                eval_aexpr a2 s (Enormal n2) ->
                 (* n1 <= n2 -> *)
-                eval_bexpr (Bleq a1 a2) s (Ebool (n1 <= n2))
-    (* | eval_leq_false  : forall a1 a2 n1 n2 s. *)
-    (*             eval_aexpr a1 s (Eint n1) -> *)
-    (*             eval_aexpr a2 s (Eint n2) -> *)
-    (*             n1 > n2 -> *)
-    (*             eval_bexpr (Bleq a1 a2) s (Ebool false) *)
-    | eval_leq_err1 : forall a1 a2 s.
-                eval_aexpr a1 s Eunbound ->
-                eval_bexpr (Bleq a1 a2) s Eunbound
-    | eval_leq_err2 : forall a1 a2 n1 s.
-                eval_aexpr a1 s (Eint n1) ->
-                eval_aexpr a2 s Eunbound ->
-                eval_bexpr (Bleq a1 a2) s Eunbound
-    (* | eval_band_true : forall b1 b2 b1' b2' s. *)
-    (*             eval_bexpr b1 s (Ebool b1') -> *)
-    (*             eval_bexpr b2 s (Ebool b2') -> *)
-    (*             (\* b1' && b2' -> *\) *)
-    (*             eval_bexpr (Band b1 b2) s (Ebool (b1' /\ b2')) *)
-    (* | eval_band_false : forall b1 b2 b1' b2' s. *)
-    (*             eval_bexpr b1 s (Ebool b1') -> *)
-    (*             eval_bexpr b2 s (Ebool b2') -> *)
-    (*             not (b1' && b2') -> *)
-    (*             eval_bexpr (Band b1 b2) s (Ebool false) *)
-    (* | eval_band_err1 : forall b1 b2 s. *)
-    (*             eval_bexpr b1 s Eunbound -> *)
-    (*             eval_bexpr (Band b1 b2) s Eunbound *)
-    (* | eval_band_err2 : forall b1 b1' b2 s. *)
-    (*             eval_bexpr b1 s (Ebool b1') -> *)
-    (*             eval_bexpr b2 s Eunbound -> *)
-    (*             eval_bexpr (Band b1 b2) s Eunbound *)
-    | eval_bnot : forall b b' s.
-                eval_bexpr b s (Ebool b') ->
-                eval_bexpr (Bnot b) s (Ebool (not b'))
-    | eval_bnot_err : forall b s.
-                eval_bexpr b s Eunbound ->
-                eval_bexpr (Bnot b) s Eunbound
+                eval_bexpr (Bleq a1 a2) s (Enormal (n1 <= n2))
+    | eval_leq_err1 : forall a1 a2, s : store 'a.
+                eval_aexpr a1 s (Eabnormal Eunbound) ->
+                eval_bexpr (Bleq a1 a2) s (Eabnormal Eunbound)
+    | eval_leq_err2 : forall a1 a2 n1, s : store 'a.
+                eval_aexpr a1 s (Enormal n1) ->
+                eval_aexpr a2 s (Eabnormal Eunbound) ->
+                eval_bexpr (Bleq a1 a2) s (Eabnormal Eunbound)
+    | eval_band_true : forall b1 b2 b1' b2', s: store 'a.
+                eval_bexpr b1 s (Enormal b1') ->
+                eval_bexpr b2 s (Enormal b2') ->
+                (* b1' && b2' -> *)
+                eval_bexpr (Band b1 b2) s (Enormal (b1' /\ b2'))
+    | eval_band_false : forall b1 b2 b1' b2', s : store 'a.
+                eval_bexpr b1 s (Enormal b1') ->
+                eval_bexpr b2 s (Enormal b2') ->
+                not (b1' && b2') ->
+                eval_bexpr (Band b1 b2) s (Enormal false)
+    | eval_band_err1 : forall b1 b2, s : store 'a.
+                eval_bexpr b1 s (Eabnormal Eunbound) ->
+                eval_bexpr (Band b1 b2) s (Eabnormal Eunbound)
+    | eval_band_err2 : forall b1 b1' b2, s : store 'a.
+                eval_bexpr b1 s (Enormal b1') ->
+                eval_bexpr b2 s (Eabnormal Eunbound) ->
+                eval_bexpr (Band b1 b2) s (Eabnormal Eunbound)
+    | eval_bnot : forall b b', s : store 'a.
+                eval_bexpr b s (Enormal b') ->
+                eval_bexpr (Bnot b) s (Enormal (not b'))
+    | eval_bnot_err : forall b, s : store 'a.
+                eval_bexpr b s (Eabnormal Eunbound) ->
+                eval_bexpr (Bnot b) s (Eabnormal Eunbound)
 
-  let rec lemma eval_bexpr_total_fun (b: bexpr) (s: state)
-       variant { b }
-       ensures { eval_bexpr b s result }
-     = match b with
-       | Btrue -> Ebool true
-       | Bfalse -> Ebool false
-       | Bleq a1 a2 -> match eval_aexpr_total_fun a1 s, eval_aexpr_total_fun a2 s with
-                       | (Eint n1, Eint n2) -> Ebool (n1 <= n2)
-                       | _ -> Eunbound
-                       end
-       (* | Band b1 b2 -> match eval_bexpr_total_fun b1 s, eval_bexpr_total_fun b2 s with *)
-       (* (\*                 (\\* | (Ebool True, Ebool True) -> Ebool true *\\) *\) *)
-       (* (\*                 (\\* | (Ebool True, Ebool False) -> Ebool false *\\) *\) *)
-       (* (\*                 (\\* | (Ebool False, Ebool True) -> Ebool false *\\) *\) *)
-       (* (\*                 (\\* | (Ebool False, Ebool False) -> Ebool false *\\) *\) *)
-       (*                 | (Ebool b1', Ebool b2') -> Ebool (b1' && b2') *)
-       (*                 | _ -> Eunbound *)
-       (*                 end *)
-       | Bnot b     -> match eval_bexpr_total_fun b s with
-                       | Ebool b' -> Ebool (not b')
-                       | _ -> Eunbound
-                       end
-       end
-
-  type s_behaviour = Snormal | Sunbound
-
-  inductive eval_stmt state stmt state s_behaviour =
-    | eval_skip : forall st.
-          eval_stmt st Sskip st Snormal
-    | eval_ass  : forall st x e n.
-          eval_aexpr e st (Eint n) ->
-          let st' = st[x <- Some n] in
-          eval_stmt st (Sass x e) st' Snormal
-    | eval_ass_error  : forall st x e.
-          eval_aexpr e st Eunbound ->
-          eval_stmt st (Sass x e) st Sunbound
-    | eval_seq  : forall s1 s2 st st' st'' bhv.
-          eval_stmt st s1 st' Snormal ->
-          eval_stmt st' s2 st'' bhv ->
-          eval_stmt st (Sseq s1 s2) st'' bhv
-    | eval_seq_error  : forall s1 s2 st st' bhv.
-          eval_stmt st s1 st' bhv ->
-          bhv <> Snormal ->
-          eval_stmt st (Sseq s1 s2) st' bhv
-
-  (* let rec lemma seval_deterministic (s: stmt) (st: state) *)
-  (*      variant { s } *)
-  (*      ensures { forall st'' bhv. eval_stmt st s result bhv -> *)
-  (*                                     eval_stmt st s st'' bhv -> *)
-  (*                                     result = st'' *)
-  (*      } *)
-  (*    = match s with *)
-  (*      | Sskip -> st *)
-  (*      | Sass x a -> match eval_aexpr_total_fun a st with *)
-  (*                    | Eint i -> st[x <- Some i] *)
-  (*                    | Ebool _ -> st *)
-  (*                    | Eunbound -> st *)
-  (*                    end *)
-  (*      | Sseq s1 s2 -> *)
-  (*        let st1 = seval_deterministic s1 st in seval_deterministic s2 st1 *)
+  (* let rec lemma eval_bexpr_total_fun (b: (bexpr 'a)) (s: (store 'a)) *)
+  (*      variant { b } *)
+  (*      ensures { eval_bexpr b s result } *)
+  (*    = match b with *)
+  (*      | BCst b     -> Enormal b *)
+  (*      | Bleq a1 a2 -> match eval_aexpr_total_fun a1 s, eval_aexpr_total_fun a2 s with *)
+  (*                      | Enormal n1, Enormal n2 -> Enormal (n1 <= n2) *)
+  (*                      | Eabnormal e, _   -> Eabnormal e *)
+  (*                      | _ , Eabnormal e  -> Eabnormal e *)
+  (*                      end *)
+  (*      | Band b1 b2 -> match eval_bexpr_total_fun b1 s, eval_bexpr_total_fun b2 s with *)
+  (*                      | Enormal b1', Enormal b2' -> Enormal (b1' && b2') *)
+  (*                      | Eabnormal e, _   -> Eabnormal e *)
+  (*                      | _ , Eabnormal e  -> Eabnormal e *)
+  (*                      end *)
+  (*      | Bnot b     -> match eval_bexpr_total_fun b s with *)
+  (*                      | Enormal b' -> Enormal (not b') *)
+  (*                      | e   -> e *)
+  (*                      end *)
   (*      end *)
 
-
-  (* lemma seval_determ_aux : forall s st st' bhv. *)
-  (*    eval_stmt st s st' bhv -> forall st''. (eval_stmt st s st'' bhv) -> st' = st'' *)
-
-
-  (* lemma seval_determ : forall s st st' st'' bhv. *)
-  (*    eval_stmt st s st' bhv -> eval_stmt st s st'' bhv -> st' = st'' *)
-
-  predicate eval_formula (f: formula) (st: state)  =
-    match f with
-    | Fterm b -> eval_bexpr b st (Ebool true)
-    | Fand f1 f2 -> eval_formula f1 st /\ eval_formula f2 st
-    | Fnot f -> not (eval_formula f st)
-    | Fimp f1 f2 -> eval_formula f1 st -> eval_formula f2 st
-    | Fall y f -> forall n. eval_formula f st[y <- n]
+  let rec lemma eval_bexpr_fun (b : bexpr 'a) (s : store 'a)
+      variant { b }
+      ensures { forall b1 b2. eval_bexpr b s b1 ->
+                              eval_bexpr b s b2 ->
+                              b1 = b2
+      }
+  = match b with
+    | BCst _ -> ()
+    | Bleq a1 a2 -> eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
+    | Band b1 b2 -> eval_bexpr_fun b1 s; eval_bexpr_fun b2 s
+    | Bnot b     -> eval_bexpr_fun b s
     end
 
-  (* goal G1 : forall st. eval_formula (Fand (Fterm (Btrue)) (Fterm (Btrue))) st *)
-  (* goal A  : forall n1 n2 st. n1 <= n2 -> *)
-  (*                   eval_formula (Fterm (Bleq (Acst n1) (Acst n2))) st *)
-  (* goal Imp : forall st. eval_formula (Fimp (Fterm Btrue) (Fterm Btrue)) st *)
-  (* goal AbsurdImp : forall st. eval_formula (Fimp (Fterm Bfalse) *)
-  (*                                                (Fterm (Bleq (Acst 4) (Acst 1)))) st *)
-  (* goal ImpNone : forall st y x. eval_formula (Fimp (Fterm (Bleq (Avar y) (Acst x))) *)
-  (*                                             (Fterm (Bleq (Avar y) (Acst (x+1)))) *)
-  (*                                       ) st *)
-  (* goal Simp : forall st y. eval_formula (Fall y (Fterm (Btrue))) st *)
-  (* goal ALL : forall st y. eval_formula (Fall y (Fimp (Fterm (Bleq (Avar y) (Acst 5))) *)
-  (*                                                   (Fterm (Bleq (Avar y) (Acst 6))) *)
-  (*                                 ) *)
-  (*                         ) st *)
-  (* goal A2  : forall st. eval_formula (Fterm (Bleq (Acst 4) (Acst 3))) st *)
-  (* goal G2 : forall st. eval_formula (Fand (Fterm (Btrue)) (Fterm (Bfalse))) st *)
-  (* goal False' : forall st. eval_formula (Fterm (Bfalse)) st *)
 
-  goal test : forall y x. y <= x -> y <= x + 1
+(*   inductive eval_stmt (stmt 'a) (store 'a) (e_behaviour (store 'a)) = *)
+(*     | eval_skip : forall st : store 'a. *)
+(*           eval_stmt Sskip st (Enormal st) *)
+(*     | eval_ass  : forall st : store 'a, x : 'a, e n. *)
+(*           eval_aexpr e st (Enormal n) -> *)
+(*           let st' = st[x <- Some n] in *)
+(*           eval_stmt (Sass x e) st (Enormal st') *)
+(*     | eval_ass_error  : forall st : store 'a, x e. *)
+(*           eval_aexpr e st (Eabnormal Eunbound) -> *)
+(*           eval_stmt (Sass x e) st (Eabnormal Eunbound) *)
+(*     | eval_seq  : forall s1 s2, st  st'' : store 'a, bhv : e_behaviour (store 'a). *)
+(*           eval_stmt s1 st (Enormal st'') -> *)
+(*           eval_stmt s2 st'' bhv -> *)
+(*           eval_stmt (Sseq s1 s2) st bhv *)
+(*     (\* | eval_seq_error  : forall s1 s2, st st' : store 'a, bhv : e_behaviour 'a. *\) *)
+(*     (\*       eval_stmt st s1 st' bhv -> *\) *)
+(*     (\*       bhv <> (Enormal ()) -> *\) *)
+(*     (\*       eval_stmt st (Sseq s1 s2) st' bhv *\) *)
 
-  predicate valid_formula (f : formula) = forall sigma: state. eval_formula f sigma
+(*   (\* let rec lemma seval_deterministic (s: stmt) (st: (store 'a)) *\) *)
+(*   (\*      variant { s } *\) *)
+(*   (\*      ensures { forall st'' bhv. eval_stmt st s result bhv -> *\) *)
+(*   (\*                                     eval_stmt st s st'' bhv -> *\) *)
+(*   (\*                                     result = st'' *\) *)
+(*   (\*      } *\) *)
+(*   (\*    = match s with *\) *)
+(*   (\*      | Sskip -> st *\) *)
+(*   (\*      | Sass x a -> match eval_aexpr_total_fun a st with *\) *)
+(*   (\*                    | (Enormal ()) i -> st[x <- Some i] *\) *)
+(*   (\*                    | (Enormal ()) _ -> st *\) *)
+(*   (\*                    | (Eabnormal Eunbound) -> st *\) *)
+(*   (\*                    end *\) *)
+(*   (\*      | Sseq s1 s2 -> *\) *)
+(*   (\*        let st1 = seval_deterministic s1 st in seval_deterministic s2 st1 *\) *)
+(*   (\*      end *\) *)
 
-  (* goal G1 : valid_formula (Fand (Fterm (Btrue)) (Fterm (Btrue))) *)
-  goal G1 : valid_formula (Fand (Fterm (Btrue)) (Fimp (Fterm Btrue) (Fterm (Btrue))))
-  goal A  : forall n1 n2. n1 <= n2 ->
-                    valid_formula (Fterm (Bleq (Acst n1) (Acst n2)))
-  goal Imp : valid_formula (Fimp (Fterm Btrue) (Fterm Btrue))
-  goal AbsurdImp : valid_formula (Fimp (Fterm Bfalse)
-                                                 (Fterm (Bleq (Acst 4) (Acst 1))))
-  goal ImpNone : forall n1 x. valid_formula (Fimp (Fterm (Bleq (Acst n1) (Acst x)))
-                                              (Fterm (Bleq (Acst n1) (Acst (x+1))))
-                                        )
-  goal Simp : forall y. valid_formula (Fall y (Fterm (Btrue)))
-  goal ALL : forall y. valid_formula (Fall y (Fimp (Fterm (Bleq (Avar y) (Acst 5)))
-                                                    (Fterm (Bleq (Avar y) (Acst 6)))
-                                  )
-                          )
-  goal A2  : valid_formula (Fterm (Bleq (Acst 4) (Acst 3)))
-  goal G2 : valid_formula (Fand (Fterm (Btrue)) (Fterm (Bfalse)))
-  goal False' : valid_formula (Fterm (Bfalse))
+
+(*   (\* lemma seval_determ_aux : forall s st st' bhv. *\) *)
+(*   (\*    eval_stmt st s st' bhv -> forall st''. (eval_stmt st s st'' bhv) -> st' = st'' *\) *)
+
+
+(*   (\* lemma seval_determ : forall s st st' st'' bhv. *\) *)
+(*   (\*    eval_stmt st s st' bhv -> eval_stmt st s st'' bhv -> st' = st'' *\) *)
+
+(*   predicate eval_formula (f: formula 'a) (st: (store 'a))  = *)
+(*     match f with *)
+(*     | Fterm b -> eval_bexpr b st (Enormal true) *)
+(*     | Fand f1 f2 -> eval_formula f1 st /\ eval_formula f2 st *)
+(*     | Fnot f -> not (eval_formula f st) *)
+(*     | Fimp f1 f2 -> eval_formula f1 st -> eval_formula f2 st *)
+(*     | Fall y f -> forall n. eval_formula f st[y <- n] *)
+(*     end *)
+
+(*   (\* goal G1 : forall st. eval_formula (Fand (Fterm (Btrue)) (Fterm (Btrue))) st *\) *)
+(*   (\* goal A  : forall n1 n2 st. n1 <= n2 -> *\) *)
+(*   (\*                   eval_formula (Fterm (Bleq (Acst n1) (Acst n2))) st *\) *)
+(*   (\* goal Imp : forall st. eval_formula (Fimp (Fterm Btrue) (Fterm Btrue)) st *\) *)
+(*   (\* goal AbsurdImp : forall st. eval_formula (Fimp (Fterm Bfalse) *\) *)
+(*   (\*                                                (Fterm (Bleq (Acst 4) (Acst 1)))) st *\) *)
+(*   (\* goal ImpNone : forall st y x. eval_formula (Fimp (Fterm (Bleq (Avar y) (Acst x))) *\) *)
+(*   (\*                                             (Fterm (Bleq (Avar y) (Acst (x+1)))) *\) *)
+(*   (\*                                       ) st *\) *)
+(*   (\* goal Simp : forall st y. eval_formula (Fall y (Fterm (Btrue))) st *\) *)
+(*   (\* goal ALL : forall st y. eval_formula (Fall y (Fimp (Fterm (Bleq (Avar y) (Acst 5))) *\) *)
+(*   (\*                                                   (Fterm (Bleq (Avar y) (Acst 6))) *\) *)
+(*   (\*                                 ) *\) *)
+(*   (\*                         ) st *\) *)
+(*   (\* goal A2  : forall st. eval_formula (Fterm (Bleq (Acst 4) (Acst 3))) st *\) *)
+(*   (\* goal G2 : forall st. eval_formula (Fand (Fterm (Btrue)) (Fterm (Bfalse))) st *\) *)
+(*   (\* goal False' : forall st. eval_formula (Fterm (Bfalse)) st *\) *)
+
+(*   goal test : forall y x. y <= x -> y <= x + 1 *)
+
+(*   predicate valid_formula (f : formula 'a) = forall sigma: (store 'a). eval_formula f sigma *)
+
+(*   (\* goal G1 : valid_formula (Fand (Fterm (Btrue)) (Fterm (Btrue))) *\) *)
+(*   (\* goal G1 : valid_formula (Fand (Fterm (Btrue)) (Fimp (Fterm Btrue) (Fterm (Btrue))) : formula int) *\) *)
+(*   (\* goal A  : forall n1 n2. n1 <= n2 -> *\) *)
+(*   (\*                   valid_formula (Fterm (Bleq (Acst n1) (Acst n2))) *\) *)
+(*   (\* goal Imp : valid_formula (Fimp (Fterm Btrue) (Fterm Btrue)) *\) *)
+(*   (\* goal AbsurdImp : valid_formula (Fimp (Fterm Bfalse) *\) *)
+(*   (\*                                                (Fterm (Bleq (Acst 4) (Acst 1)))) *\) *)
+(*   (\* goal ImpNone : forall n1 x. valid_formula (Fimp (Fterm (Bleq (Acst n1) (Acst x))) *\) *)
+(*   (\*                                             (Fterm (Bleq (Acst n1) (Acst (x+1)))) *\) *)
+(*   (\*                                       ) *\) *)
+(*   (\* goal Simp : forall y. valid_formula (Fall y (Fterm (Btrue))) *\) *)
+(*   (\* goal ALL : forall y. valid_formula (Fall y (Fimp (Fterm (Bleq (Avar y) (Acst 5))) *\) *)
+(*   (\*                                                   (Fterm (Bleq (Avar y) (Acst 6))) *\) *)
+(*   (\*                                 ) *\) *)
+(*   (\*                         ) *\) *)
+(*   (\* goal A2  : valid_formula (Fterm (Bleq (Acst 4) (Acst 3))) *\) *)
+(*   (\* goal G2 : valid_formula (Fand (Fterm (Btrue)) (Fterm (Bfalse))) *\) *)
+(*   (\* goal False' : valid_formula (Fterm (Bfalse)) *\) *)
 
 end
 
 
-  (*   goal G1: forall s:state. eval_bexpr Btrue s (Ebool true) *)
+(*   (\*   goal G1: forall s:state. eval_bexpr Btrue s ((Enormal ()) true) *\) *)
 
-  (*   goal G2: forall n1 n2:int, s:state. eval_bexpr (Bleq (Acst n1) (Acst n2)) s (Ebool (n1 <= n2)) *)
+(*   (\*   goal G2: forall n1 n2:int, s:state. eval_bexpr (Bleq (Acst n1) (Acst n2)) s ((Enormal ()) (n1 <= n2)) *\) *)
