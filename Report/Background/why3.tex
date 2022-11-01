@@ -1,0 +1,47 @@
+Why3 is a platform for deductive program verification initially released in 2012. Deductive program verification means that it can be used to prove properties of programs using a set of logical statements. The platform is vast and there are many ways to reason about programs.
+The tool strives to be a standardized frontend with a high level of automation by using third-party provers, such as the aformentioned SMT-solvers and ATP, but also with the possibility to discharge to interactive theorem provers such as Coq and Isabelle.
+For instance it is possible to use the tools as an intermediate tool to reason about C, Java programs etc. This can be done through the main language of the platform called WhyML.
+In this project we mainly use Why3 as a main language, meaning we formalize the abstract syntax of our WHILE directly in the language. As the name might suggest, WhyML is a language in the ML family.
+We will not go into too much detail about the specific syntax, for that we refer to the official documentation. We will however give a brief example of a program/function.
+
+\begin{lstlistings}{SML}
+    let rec aeval (a: aexpr) : int
+    variant { a }
+    ensures { eval_aexpr a sigma (Eint result) }
+    raises { E.Var_unbound -> eval_aexpr a sigma Eunbound }
+  = match a with
+    | Acst i -> i
+    | Avar v ->  E.find sigma v
+    | Asub a1 a2 -> aeval a1 - aeval a2
+    | AMul a1 a2 -> aeval a1 - aeval a2
+  end
+\end{lstlistings}
+
+The function aeval is a function which evaluates an arithmetic expression as defined in \autoref{}. The body of the function should be similar to whatever other ML dialect. Where why3 deviates a lot from others are in the header of the function. We define the function via let rec, this means the program is not necessarily pure and that it is recursive. There are many different function declarations but we will only ever be using function declarations including a let, since any other declaration cannot be exported.
+Furthermore the program contains a contract. This contract consists of 4 parts, which are optional.
+
+\begin{enumerate}
+  \item \texttt{variant}, which as previously described, ensures total correctness of a program. The program may be any term with a well formed order. In this case we the arithmetic expression a.
+  \item \texttt{requires}, serves as the precondition of the program. For this particular function we have no precondition.
+  \item \texttt{ensures}, this is the postcondition of the program. In this case we state that the evaluation of an arithmetic expression should respect the semantics. The keyword result refers to the result of evaluation.
+  \item \texttt{raises}, states that when the function raises an exception the predicate should hold. In particular we have, if a Var_unbound exception is raised then it should correspond to a $\bot$ result, instead an integer.
+\end{enumerate}
+
+From this it should be clear that why3 tries to make the gap for program verification as small as possible and allow program constructs and controlflows familiar to ``regular'' programming languages.
+One can then use either the why3 IDE or the terminal interface to discharge the verification condition for the function. We will show how this is done in \autoref{}.
+
+Not only does whyML allow one to reason about a program through its verification condition. But it is also possible to reason about programs through the embedded logic-language
+(and strictly speaking the contract from before is part of the logic language).
+For instance it is possible to define predicates about programs and even more powerful it is possible to define a lemma.
+A lemma might look as follows:
+
+\begin{lstlistings}[caption={Lemma stating determinism of arithmetic expressions},label={lst:why3fun},language=sml]
+  lemma eval_aexpr_fun : forall a s b1 b2.
+     eval_aexpr a s b1 -> eval_aexpr a s b2 -> b1 = b2
+   \end{lstlistings}
+
+This lemma states that forall arithmetics expressions \texttt{a}, stores \texttt{s}, results \texttt{b1} and \texttt{b2} the semantics of arithmetic expressions ensures that \texttt{b1} and \texttt{b2} are the same.
+In other words deterministic. After this lemma (both when proven and not proven) it will be ``saved'' and can be used in following lemmas.
+It should furthermore be noted that whyML is restricted to first order to only allow proof-obligations to be of first order.
+\\~\\
+So, by using why3 we can reason about WHILE and WP on a high level and by correctness-by-construction we can extract a program to either C or OCaml code\cite{}. We will in the later sections see how well the claim of high level of automation holds up.

@@ -1,0 +1,36 @@
+Firstly our store $\sigma$ is defined as a mapping from a polymorphic type to an Option Int.
+We define the syntax by simple ADTs, which closely resembles the syntax described earlier.
+\\~\\
+\noindent
+\begin{minipage}{0.5\textwidth}
+\begin{lstlisting}
+type store 'a = 'a -> option int
+
+type aop = Mul | Sub
+
+type aexpr 'a =
+     | Acst int
+     | Avar 'a
+     | ABin (aexpr 'a) aop (aexpr 'a)
+
+type bexpr 'a =
+     | Btrue
+     | Bfalse
+     | Bleq (aexpr 'a) (aexpr 'a)
+     | Band (bexpr 'a) (bexpr 'a)
+     | Bnot (bexpr 'a)
+\end{lstlisting}
+\end{minipage}
+\hspace{0.01\textwidth}
+\begin{minipage}{0.5\textwidth}
+\begin{lstlisting}
+type_synonym 'a state = "'a \<Rightarrow> int option"
+
+datatype aop = Mul | Sub
+
+datatype 'a aexpr =
+    Cst int
+  | Var 'a
+  | BinOp "'a aexpr" aop "'a aexpr"
+\end{lstlisting}
+\end{minipage}
