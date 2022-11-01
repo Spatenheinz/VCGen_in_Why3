@@ -4,23 +4,24 @@ use grammar.Grammar
 use grammar.Formula
 use int.Int
 
-let rec function subst_aexpr (a : aexpr) (x : id) (v : id) : aexpr =
+let rec function subst_aexpr (a : aexpr id) (x : id) (v : id) : aexpr id =
     variant { a }
     match a with
     | Acst _ -> a
     | Avar y -> if x = y then Avar v else a
-    | Asub a1 a2 -> Asub (subst_aexpr a1 x v) (subst_aexpr a2 x v)
+    | ABin a1 op a2 -> ABin (subst_aexpr a1 x v) op (subst_aexpr a2 x v)
     end
 
-let rec function subst_bexpr (b : bexpr) (x : id) (v : id) : bexpr =
+let rec function subst_bexpr (b : bexpr id) (x : id) (v : id) : bexpr id =
     variant { b }
     match b with
-    | Btrue | Bfalse -> b
+    | BCst b         -> BCst b
     | Bleq a1 a2     -> Bleq (subst_aexpr a1 x v) (subst_aexpr a2 x v)
+    | Band b1 b2     -> Band (subst_bexpr b1 x v) (subst_bexpr b2 x v)
     | Bnot b         -> Bnot (subst_bexpr b x v)
     end
 
-let rec function subst_fmla (f : formula) (x : id) (v : id) : formula =
+let rec function subst_fmla (f : formula id) (x : id) (v : id) : formula id =
     variant { f }
     match f with
     | Fterm b -> Fterm (subst_bexpr b x v)

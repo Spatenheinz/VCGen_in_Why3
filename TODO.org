@@ -163,3 +163,8 @@ Prover result is: Valid (0.02s, 349 steps).
 File semantics.mlw:
 Goal eval_bexpr_fun'vc.
 Prover result is: Valid (0.10s, 1782 steps).
+
+
+Interestingly enough we can prove this when we have the formula functions defined.
+We should be very careful about having unproven lemmas around. If you import a lemma which is not proven,
+then it is assumed to be true and imported as an axiom by the import.

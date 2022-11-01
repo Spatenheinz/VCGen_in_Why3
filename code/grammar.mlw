@@ -44,14 +44,14 @@ module Formula
   use Grammar
   use int.Int
   use int.MinMax
+  use bool.Bool
+  use set.Set
 
-
-
-  predicate fresh_in_aexpr (id: 'a) (a: aexpr 'a) =
-    match a with
+  predicate fresh_in_aexpr (id: 'a) (a: aexpr 'a)
+  = match a with
     | Acst _ -> true
     | Avar v   -> id <> v
-    | ABin a1 _ a2 -> fresh_in_aexpr id a1 /\ fresh_in_aexpr id a2
+    | ABin a1 _ a2 -> andb (fresh_in_aexpr id a1) (fresh_in_aexpr id a2)
     end
 
   predicate fresh_in_bexpr (id: 'a) (b: bexpr 'a) =
@@ -72,6 +72,7 @@ module Formula
 
   let rec function max_id_aexpr (id : id) (a: aexpr id) : id
     variant { a }
+    ensures { result >= id }
   = match a with
     | Acst _       -> id
     | Avar v       -> max id v
@@ -99,28 +100,51 @@ module Formula
   let function fresh_from (f: formula id) : id
   = max_id_formula 0 f + 1
 
-  lemma fresh_var_max_plus_1 : forall f v.
-      v = fresh_from f -> v = max_id_formula 0 f + 1
+  function vars_in_aexpr (a : aexpr 'a) : set 'a
+  = match a with
+    | (Acst _) -> empty
+    | (Avar v) -> singleton v
+    | (ABin a1 _ a2) -> union (vars_in_aexpr a1) (vars_in_aexpr a2)
+    end
 
-  lemma fresh_var_trivial : forall v : id.
-      fresh_in_formula v (Fterm (Bleq (Acst 5) (Acst 6)))
+  lemma max_id_trivial : forall a. max_id_aexpr 0 a >= 0
 
-  lemma fresh_var_trivial2 : forall v f.
-      f = (Fterm (Bleq (Acst 5) (Acst 6))) ->
-      v = fresh_from f -> fresh_in_formula v f
+  let rec lemma max_id_geq (a : aexpr int)
+    variant { a }
+    ensures { forall x. mem x (vars_in_aexpr a) -> result >= x }
+  = match a with
+    | (Acst n) -> max_id_aexpr 0 (Acst n)
+    | (Avar v) -> max_id_aexpr 0 (Avar v)
+    | (ABin a1 op a2) -> max_id_aexpr 0 (ABin a1 op a2)
+    end
 
-  lemma fresh_var_trivial3 : forall v f.
-      f = (Fterm (Bleq (Acst 5) (Acst 6))) ->
-      v = fresh_from f -> v = 1
+  (* lemma max_id_geq : forall v a. *)
+  (*    v = max_id_aexpr 0 a -> *)
 
-  lemma max_is_not_fresh : forall v a.
-      v = max_id_aexpr 0 a -> not (fresh_in_aexpr v a)
+  (* lemma fresh_var_max_plus_1 : forall f v. *)
+  (*     v = fresh_from f -> v = max_id_formula 0 f + 1 *)
 
-  lemma fresh_var_in_aexpr : forall a v.
-      v = max_id_aexpr 0 a -> fresh_in_aexpr (v + 1) a
+  (* lemma fresh_var_trivial : forall v : id. *)
+  (*     fresh_in_formula v (Fterm (Bleq (Acst 5) (Acst 6))) *)
 
-  lemma fresh_var_is_fresh : forall f [@induction] v.
-      v = fresh_from f -> fresh_in_formula v f
+  (* lemma fresh_var_trivial2 : forall v f. *)
+  (*     f = (Fterm (Bleq (Acst 5) (Acst 6))) -> *)
+  (*     v = fresh_from f -> fresh_in_formula v f *)
+
+  (* lemma fresh_var_trivial3 : forall v f. *)
+  (*     f = (Fterm (Bleq (Acst 5) (Acst 6))) -> *)
+  (*     v = fresh_from f -> v = 1 *)
+
+  (* lemma max_is_not_fresh : forall v a. *)
+  (*     (v = max_id_aexpr 0 a) -> not (fresh_in_aexpr v a) *)
+
+  (* lemma breaks_stuff : forall a : aexpr 'a. *)
+  (*   a <> a *)
+  (* lemma fresh_var_in_aexpr : forall a v. *)
+  (*     v = max_id_aexpr 0 a -> fresh_in_aexpr (v + 1) a *)
+
+  (* lemma fresh_var_is_fresh : forall f [@induction] v. *)
+  (*     v = fresh_from f -> fresh_in_formula v f *)
 
 (* pred occurs_in id term -> bool *)
 (* lemma fresh af term => does not occur *)

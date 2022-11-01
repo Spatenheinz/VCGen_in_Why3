@@ -55,6 +55,10 @@ module Semantics
 
   lemma eval_aexpr_total_cannot_show : forall a, s : store 'a.
     eval_aexpr a s (Eabnormal Eunbound) \/ exists n. eval_aexpr a s (Enormal n)
+  (* It does not work when we dont define the induction ourselfs *)
+  lemma eval_aexpr_fun_cannot_show : forall a, s : store 'a, b1 b2.
+     eval_aexpr a s b1 -> eval_aexpr a s b2 -> b1 = b2
+
  (** Ken: We can describe evaluation of expressions as a total function *)
   let rec lemma eval_aexpr_total_fun (a: aexpr 'a) (s: store 'a)
        variant { a }
@@ -73,11 +77,6 @@ module Semantics
          end
        end
 
-
-  (* It does not work when we dont define the induction ourselfs *)
-  lemma eval_aexpr_fun_cannot_show : forall a, s : store 'a, b1 b2.
-     eval_aexpr a s b1 -> eval_aexpr a s b2 -> b1 = b2
-
   let rec lemma eval_aexpr_fun (a: aexpr 'a) (s: store 'a)
       variant { a }
       ensures { forall b1 b2. eval_aexpr a s b1 ->
@@ -90,13 +89,13 @@ module Semantics
         eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
       end
 
-  let rec lemma eval_aexpr_total (a: aexpr 'a)
-      ensures { forall s:store 'a.
+  let rec lemma eval_aexpr_total (a: aexpr 'a) (s : store 'a)
+      ensures {
           eval_aexpr a s (Eabnormal Eunbound) \/ exists n. eval_aexpr a s (Enormal n)
       }
     = match a with
       | Acst _ | Avar _ -> ()
-      | ABin a1 _ a2 -> eval_aexpr_total a1; eval_aexpr_total a2
+      | ABin a1 _ a2 -> eval_aexpr_total a1 s; eval_aexpr_total a2 s
       end
 
   inductive eval_bexpr (bexpr 'a) (store 'a) (e_behaviour bool) =
@@ -133,7 +132,7 @@ module Semantics
                    eval_bexpr b s (Eabnormal Eunbound) ->
                    eval_bexpr (Bnot b) s (Eabnormal Eunbound)
 
-  let rec lemma eval_bexpr_total_fun (b: (bexpr 'a)) (s: (store 'a))
+  let rec lemma eval_bexpr_total_fun (b: bexpr 'a) (s: store 'a)
        variant { b }
        ensures { eval_bexpr b s result }
      = match b with
@@ -154,22 +153,23 @@ module Semantics
                        end
        end
 
-  lemma eval_bexpr_fun_cannot_show : forall b, s : store 'a, b1 b2.
-     eval_bexpr b s b1 -> eval_bexpr b s b2 -> b1 = b2
+  (* lemma eval_bexpr_fun_cannot_show : forall b, s : store 'a, b1 b2. *)
+  (*    eval_bexpr b s b1 -> eval_bexpr b s b2 -> b1 = b2 *)
 
-  lemma eval_bexpr_total_cannot_show : forall b, s : store 'a.
-    eval_bexpr b s (Eabnormal Eunbound) \/ exists n. eval_bexpr b s (Enormal n)
+  (* lemma eval_bexpr_total_cannot_show : forall b, s : store 'a. *)
+  (*   eval_bexpr b s (Eabnormal Eunbound) \/ exists n. eval_bexpr b s (Enormal n) *)
 
-  let rec lemma eval_bexpr_fun (b : bexpr 'a) (s : store 'a)
+  let rec lemma eval_bexpr_total (b : bexpr 'a) (s : store 'a)
       variant { b }
       ensures { eval_bexpr b s (Eabnormal Eunbound) \/ exists n. eval_bexpr b s (Enormal n) }
   = match b with
     | BCst _ -> ()
-    | Bleq a1 a2 -> eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
-    | Band b1 b2 -> eval_bexpr_fun b1 s; eval_bexpr_fun b2 s
-    | Bnot b     -> eval_bexpr_fun b s
+    | Bleq a1 a2 -> eval_aexpr_total a1 s; eval_aexpr_total a2 s
+    | Band b1 b2 -> eval_bexpr_total b1 s; eval_bexpr_total b2 s
+    | Bnot b     -> eval_bexpr_total b s
     end
-  let rec lemma eval_bexpr_total (b : bexpr 'a) (s : store 'a)
+
+  let rec lemma eval_bexpr_fun (b : bexpr 'a) (s : store 'a)
       variant { b }
       ensures { forall b1 b2. eval_bexpr b s b1 ->
                               eval_bexpr b s b2 ->
@@ -183,57 +183,99 @@ module Semantics
     end
 
   inductive eval_stmt (stmt 'a) (store 'a) (e_behaviour (store 'a)) =
-    | eval_skip : forall st : store 'a.
-          eval_stmt Sskip st (Enormal st)
-    | eval_ass  : forall st : store 'a, x : 'a, e n.
-          eval_aexpr e st (Enormal n) ->
-          let st' = st[x <- Some n] in
-          eval_stmt (Sass x e) st (Enormal st')
-    | eval_ass_error  : forall st : store 'a, x e.
-          eval_aexpr e st (Eabnormal Eunbound) ->
-          eval_stmt (Sass x e) st (Eabnormal Eunbound)
-    | eval_seq  : forall s1 s2, st  st'' : store 'a, bhv : e_behaviour (store 'a).
-          eval_stmt s1 st (Enormal st'') ->
-          eval_stmt s2 st'' bhv ->
-          eval_stmt (Sseq s1 s2) st bhv
-    | eval_seq_error  : forall s1 s2, st st' : store 'a, bhv : e_behaviour 'a.
-          eval_stmt st s1 st' bhv ->
-          bhv <> (Enormal ()) ->
-          eval_stmt st (Sseq s1 s2) st' bhv
+    | ESSkip : forall st : store 'a.
+               eval_stmt Sskip st (Enormal st)
+    | ESAss  : forall st : store 'a, x : 'a, e n.
+               eval_aexpr e st (Enormal n) ->
+               let st' = st[x <- Some n] in
+               eval_stmt (Sass x e) st (Enormal st')
+    | ESAss_err  : forall st : store 'a, x a e.
+                   eval_aexpr a st (Eabnormal e) ->
+                   eval_stmt (Sass x a) st (Eabnormal e)
+    | ESSeq  : forall s1 s2, st  st' : store 'a, b : e_behaviour (store 'a).
+          eval_stmt s1 st (Enormal st') ->
+          eval_stmt s2 st' b ->
+          eval_stmt (Sseq s1 s2) st b
+    | ESSeq_err  : forall s1 s2, st : store 'a, e.
+          eval_stmt s1 st (Eabnormal e)  ->
+          eval_stmt (Sseq s1 s2) st (Eabnormal e)
+    | ESAssert : forall f, st : store 'a.
+                 eval_stmt (Sassert f) st (Enormal st)
+    | ESIfT    : forall b s1 s2, st : store 'a, st'.
+                 eval_bexpr b st (Enormal true) ->
+                 eval_stmt s1 st st' ->
+                 eval_stmt (Sif b s1 s2) st st'
+    | ESIfF    : forall b s1 s2, st : store 'a, st'.
+                 eval_bexpr b st (Enormal false) ->
+                 eval_stmt s2 st st' ->
+                 eval_stmt (Sif b s1 s2) st st'
+    | ESIf_err : forall b s1 s2, st : store 'a, e.
+                 eval_bexpr b st (Eabnormal e) ->
+                 eval_stmt (Sif b s1 s2) st (Eabnormal e)
+    | ESWhileT  : forall cond inv body, st st' : store 'a, bhv.
+                 eval_bexpr cond st (Enormal true) ->
+                 eval_stmt body st (Enormal st') ->
+                 eval_stmt (Swhile cond inv body) st' bhv ->
+                 eval_stmt (Swhile cond inv body) st  bhv
+    | ESWhileF  : forall cond inv body, st : store 'a.
+                 eval_bexpr cond st (Enormal false) ->
+                 eval_stmt (Swhile cond inv body) st (Enormal st)
+    | ESWhile_errC : forall cond inv body, st : store 'a, e.
+                    eval_bexpr cond st (Eabnormal e) ->
+                    eval_stmt (Swhile cond inv body) st (Eabnormal e)
+    | ESWhile_errB : forall cond inv body b, st : store 'a, e.
+                    eval_bexpr cond st (Enormal b) ->
+                    eval_stmt body st (Eabnormal e) ->
+                    eval_stmt (Swhile cond inv body) st (Eabnormal e)
 
-(*   (\* let rec lemma seval_deterministic (s: stmt) (st: (store 'a)) *\) *)
-(*   (\*      variant { s } *\) *)
-(*   (\*      ensures { forall st'' bhv. eval_stmt st s result bhv -> *\) *)
-(*   (\*                                     eval_stmt st s st'' bhv -> *\) *)
-(*   (\*                                     result = st'' *\) *)
-(*   (\*      } *\) *)
-(*   (\*    = match s with *\) *)
-(*   (\*      | Sskip -> st *\) *)
-(*   (\*      | Sass x a -> match eval_aexpr_total_fun a st with *\) *)
-(*   (\*                    | (Enormal ()) i -> st[x <- Some i] *\) *)
-(*   (\*                    | (Enormal ()) _ -> st *\) *)
-(*   (\*                    | (Eabnormal Eunbound) -> st *\) *)
-(*   (\*                    end *\) *)
-(*   (\*      | Sseq s1 s2 -> *\) *)
-(*   (\*        let st1 = seval_deterministic s1 st in seval_deterministic s2 st1 *\) *)
-(*   (\*      end *\) *)
 
 
-(*   (\* lemma seval_determ_aux : forall s st st' bhv. *\) *)
-(*   (\*    eval_stmt st s st' bhv -> forall st''. (eval_stmt st s st'' bhv) -> st' = st'' *\) *)
+  let rec lemma eval_stmt_deterministic (s: stmt 'a) (st: store 'a)
+       variant { s }
+       ensures { eval_stmt s st result }
+       (* ensures { forall b1 b2. eval_stmt s st b1 -> *)
+       (*                         eval_stmt s st b2 -> *)
+       (*                         b1 = b2 *)
+       (* } *)
+     = match s with
+       | Sskip -> Enormal st
+       | Sass x a -> match eval_aexpr_total_fun a st with
+                     | Enormal i -> Enormal (st[x <- Some i])
+                     | Eabnormal e -> Eabnormal e
+                     end
+       | Sseq s1 s2 -> match eval_stmt_deterministic s1 st with
+                       | Enormal st' -> eval_stmt_deterministic s2 st'
+                       | Eabnormal e -> Eabnormal e
+                       end
+       | Sassert _ -> Enormal st
+       | Sif b s1 s2 -> match eval_bexpr_total_fun b st with
+                        | Enormal b' -> if b' then eval_stmt_deterministic s1 st
+                                        else eval_stmt_deterministic s2 st
+                        | Eabnormal e -> Eabnormal e
+                        end
+       | Swhile b i s -> match eval_bexpr_total_fun b st with
+                         | Enormal b' -> if b' then
+                                         match eval_stmt_deterministic s st with
+                                         | Enormal st' -> eval_stmt_deterministic (Swhile b i s) st'
+                                         | e -> e
+                                         end
+                                         else
+                                          Enormal st
+                         | Eabnormal e -> Eabnormal e
+                         end
+       end
 
+  lemma seval_determ : forall st : store 'a, s b1 b2.
+     eval_stmt s st b1 -> eval_stmt s st b2 -> b1 = b2
 
-(*   (\* lemma seval_determ : forall s st st' st'' bhv. *\) *)
-(*   (\*    eval_stmt st s st' bhv -> eval_stmt st s st'' bhv -> st' = st'' *\) *)
-
-(*   predicate eval_formula (f: formula 'a) (st: (store 'a))  = *)
-(*     match f with *)
-(*     | Fterm b -> eval_bexpr b st (Enormal true) *)
-(*     | Fand f1 f2 -> eval_formula f1 st /\ eval_formula f2 st *)
-(*     | Fnot f -> not (eval_formula f st) *)
-(*     | Fimp f1 f2 -> eval_formula f1 st -> eval_formula f2 st *)
-(*     | Fall y f -> forall n. eval_formula f st[y <- n] *)
-(*     end *)
+  predicate eval_formula (f: formula 'a) (st: (store 'a))  =
+    match f with
+    | Fterm b -> eval_bexpr b st (Enormal true)
+    | Fand f1 f2 -> eval_formula f1 st /\ eval_formula f2 st
+    | Fnot f -> not (eval_formula f st)
+    | Fimp f1 f2 -> eval_formula f1 st -> eval_formula f2 st
+    | Fall y f -> forall n. eval_formula f st[y <- n]
+    end
 
 (*   (\* goal G1 : forall st. eval_formula (Fand (Fterm (Btrue)) (Fterm (Btrue))) st *\) *)
 (*   (\* goal A  : forall n1 n2 st. n1 <= n2 -> *\) *)
@@ -255,7 +297,7 @@ module Semantics
 
 (*   goal test : forall y x. y <= x -> y <= x + 1 *)
 
-(*   predicate valid_formula (f : formula 'a) = forall sigma: (store 'a). eval_formula f sigma *)
+  predicate valid_formula (f : formula 'a) = forall sigma: (store 'a). eval_formula f sigma
 
 (*   (\* goal G1 : valid_formula (Fand (Fterm (Btrue)) (Fterm (Btrue))) *\) *)
 (*   (\* goal G1 : valid_formula (Fand (Fterm (Btrue)) (Fimp (Fterm Btrue) (Fterm (Btrue))) : formula int) *\) *)

@@ -31,7 +31,7 @@ fun eval_binop :: "aop \<Rightarrow> (int \<Rightarrow> int \<Rightarrow> int)" 
   "eval_binop Mul = (*)"
 | "eval_binop Sub = (-)"
 
-inductive eval_aexpr :: "int aexpr \<Rightarrow> int state \<Rightarrow> int behaviour \<Rightarrow> bool" where
+inductive eval_aexpr :: "'a aexpr \<Rightarrow> 'a state \<Rightarrow> int behaviour \<Rightarrow> bool" where
     EACst     : "eval_aexpr (Cst n) s (Enormal n)"
   | EAVar     : "s x = Some n \<Longrightarrow>
                  eval_aexpr (Var x) s (Enormal n)"
@@ -58,7 +58,6 @@ inductive_cases eval_aexpr_CstE[elim!]: "eval_aexpr (Cst n) s b"
             and eval_aexpr_VarE[elim!]: "eval_aexpr (Var n) s b"
             and eval_aexpr_BinOpE[elim!]: "eval_aexpr (BinOp a1 op a2) s b"
 
-thm eval_aexpr_VarE
 
 lemma eval_aexpr_fun :
   "\<lbrakk>eval_aexpr a s b1; eval_aexpr a s b2\<rbrakk> \<Longrightarrow> b1 = b2"
@@ -125,7 +124,7 @@ lemma eval_aexpr_fun22 :
   "\<lbrakk>eval_aexpr2 a s b1; eval_aexpr2 a s b2\<rbrakk> \<Longrightarrow> b1 = b2"
 proof(induction a arbitrary: b1 b2)
   case (Cst x)
-  then show ?case using eval_aexpr2.cases by (auto intro: eval_aexpr2.cases)
+  then show ?case by (auto intro: eval_aexpr2.cases)
     (* by (smt (verit, ccfv_SIG) aexpr.distinct(1) aexpr.distinct(3) aexpr.inject(1) eval_aexpr2.simps) *)
 next
   case (Var x)
@@ -139,55 +138,6 @@ next
 qed
  
 (* no bottom ends here *)
-
-lemma eval_aexpr_fun :
-  "\<lbrakk>eval_aexpr a s b1; eval_aexpr a s b2\<rbrakk> \<Longrightarrow> b1 = b2"
-proof(induction a s b1 arbitrary: b2 rule: eval_aexpr.induct)
-  case (eval_cst n s)
-  then show ?case by (auto intro: eval_aexpr.cases)
-    by (smt (verit, ccfv_SIG) aexpr.distinct(1) aexpr.distinct(4) aexpr.inject(1) eval_aexpr.simps)
-next
-  case (eval_var s x n)
-  then show ?case
-    by (smt (verit, best) aexpr.distinct(1) aexpr.distinct(5)
-         aexpr.inject(2) option.distinct(1) eval_aexpr.simps option.inject)
-next
-  case (eval_var_err s x)
-  then show ?case
-    using eval_aexpr.cases by fastforce
-next
-  case (eval_op a1 s n1 a2 n2 op)
-  then show ?case
-    by (smt (verit, best) aexpr.distinct(3) aexpr.distinct(5)
-         aexpr.inject(3) behaviour.distinct(1) behaviour.inject eval_aexpr.simps)
-next
-  case (eval_op_err1 a1 s op a2)
-  then show ?case
-    by (smt (verit, best) aexpr.distinct(3) aexpr.distinct(5)
-        aexpr.inject(3) behaviour.distinct(1) eval_aexpr.simps)
-next
-  case (eval_op_err2 a1 s n a2 op)
-  then show ?case
-    by (smt (verit, best) aexpr.distinct(4) aexpr.inject(3) aexpr.simps(9)
-        behaviour.simps(3) eval_aexpr.simps)
-qed
-
-lemma eval_aexpr_fun_version2 :
-  "\<lbrakk>eval_aexpr a s b1; eval_aexpr a s b2\<rbrakk> \<Longrightarrow> b1 = b2"
-proof(induction a arbitrary: b2 s b1)
-  case (Cst x)
-  then show ?case
-    by (smt (verit, ccfv_SIG) aexpr.distinct(1) aexpr.distinct(4) aexpr.inject(1) eval_aexpr.simps)
-next
-  case (Var x)
-  then show ?case
-    by (smt (verit, best) aexpr.distinct(1) aexpr.distinct(5) aexpr.inject(2) 
-       option.distinct(1) eval_aexpr.simps option.inject)
-next
-  case (BinOp a1 op a2)
-  then show ?case sorry
-    qed
-qed
 
 
 lemma eval_aexpr_total :
@@ -217,4 +167,6 @@ proof(induction a arbitrary: result)
   case (BinOp a1 op a2)
   then show ?case sorry
  qed
+
+
 end
