@@ -45,7 +45,20 @@ For determining the $wlp$ of an \texttt{if} statement, the rule states that \tex
 Next we have the rule for determining the $wlp$ of \texttt{while} statements.
 It states that firstly the invariant $I$ must hold. Secondly we want to exchange all assigned variables $w_{0},...,w_{k}$ with the fresh logical variables $x_{0},...,x_{k}$. Next we want assert that if both the invariant $I$ and the condition $e$ holds, then $WLP(s, I)$ must hold, as we execute the loop body, and the invariant must be true in the end of each loop iteration. If $e$ doesn not hold, but $I$ does, then we do not loop again, and the statement has the same effect as a \texttt{skip} statement, thus we assert that $Q$ holds in this case.
 
-The last rule concerns assertion statements, and this case is trivial, as we simply add the assertion to the formula $Q$ by conjuntion.
+The last rule concerns assertion statements, and this case is trivial, as we simply add the assertion to the formula $Q$ by conjunction.
 
-\paragraph{Soundness etc}
+\paragraph{Soundness of wlp}
 % soundness etc. refer to automated proofs in section ???
+For the weakest liberal precondition calculus to be meaningful to us, we must assert that the calculus is actually sound.
+This is done by proving that \textit{for all statements s and formula Q, {WLP(s, Q)}s{Q} is valid for partial correctness}.
+We present here the stategy and intuition behind the proof, using the prcedure presented in \cite{wlp}.
+
+The proof is done by considering the rules of finding the wlp for the different statements, thus it uses induction on $s$.
+As a preliminary remark it should be noted that for any formula $\phi$ and any state $\Sigma$, we have that the interpretation of $\forall x_{1} ... x_{k} \phi [w_{i} \leftarrow x_{i}]$ in $\Sigma$ does not depend on the values of variables in $\Sigma$, thus if it holds for one state $\Sigma$ then it should hold for all states $\Sigma'$ that only differs from $\Sigma$ in the value of the variables.
+
+Now lets look at the struvture of the proof.
+We consider each possible case of $s$, thus considering all the different types of statements.
+Most of these are straightforward, but the case for $while$-expressions is somewhat tricky.
+Therefore we will dive a bit into the intuition behind that case.
+
+Lets assume that $s =$ \texttt{while $cond$ invariant $inv$ $body$}. Now we want to show that {WLP(s, Q)}s{Q} holds. We assume that we have a state $\Sigma$ such that {WLP(s, Q)} holds, and that $s$ executes in $\Sigma$ and terminates, given by $\Sigma, s \leadsto * \Sigma '$.
