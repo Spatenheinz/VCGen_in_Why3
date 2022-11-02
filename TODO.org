@@ -101,68 +101,38 @@ Vi har kun en mulig fejl, den hedder unbound så den propergeres gennem programm
 - formula
 
 
-(without ADD)
-  File semantics.mlw:
+File semantics.mlw:
 Goal eval_aexpr_total_fun'vc.
-Prover result is: Valid (0.05s, 1258 steps).
-
-File "semantics.mlw", line 76, characters 37-122:
-Goal eval_aexpr_fun_cannot_show.
-Prover result is: Valid (0.10s, 4484 steps).
+Prover result is: Valid (0.08s, 2246 steps).
 
 File semantics.mlw:
 Goal eval_aexpr_fun'vc.
-Prover result is: Valid (0.02s, 292 steps).
+Prover result is: Valid (0.14s, 3414 steps).
 
 File semantics.mlw:
 Goal eval_aexpr_total'vc.
-Prover result is: Valid (0.03s, 643 steps).
+Prover result is: Valid (0.01s, 132 steps).
+
+File semantics.mlw:
+Goal eval_bexpr_total_fun'vc.
+Prover result is: Valid (0.66s, 12008 steps).
+
+File semantics.mlw:
+Goal eval_bexpr_total'vc.
+Prover result is: Valid (0.06s, 1058 steps).
 
 File semantics.mlw:
 Goal eval_bexpr_fun'vc.
-Prover result is: Valid (0.10s, 1777 steps).
-
-(ADD BAD??)
-File semantics.mlw:
-Goal eval_aexpr_total_fun'vc.
-Prover result is: Valid (0.05s, 1260 steps).
-
-File "semantics.mlw", line 76, characters 37-122:
-Goal eval_aexpr_fun_cannot_show.
-Prover result is: Valid (0.08s, 2094 steps).
+Prover result is: Valid (3.48s, 51046 steps).
 
 File semantics.mlw:
-Goal eval_aexpr_fun'vc.
-Prover result is: Valid (0.02s, 291 steps).
+Goal eval_stmt_deterministic'vc.
+Prover result is: Timeout (30.00s).
 
-File semantics.mlw:
-Goal eval_aexpr_total'vc.
-Prover result is: Valid (0.03s, 813 steps).
+File "semantics.mlw", line 268, characters 23-108:
+Goal seval_determ.
+Prover result is: Timeout (30.00s).
 
-File semantics.mlw:
-Goal eval_bexpr_fun'vc.
-Prover result is: Valid (0.10s, 1766 steps).
-
-(Add Good)
-File semantics.mlw:
-Goal eval_aexpr_total_fun'vc.
-Prover result is: Valid (0.04s, 1051 steps).
-
-File "semantics.mlw", line 76, characters 37-122:
-Goal eval_aexpr_fun_cannot_show.
-Prover result is: Valid (0.07s, 1764 steps).
-
-File semantics.mlw:
-Goal eval_aexpr_fun'vc.
-Prover result is: Valid (0.02s, 291 steps).
-
-File semantics.mlw:
-Goal eval_aexpr_total'vc.
-Prover result is: Valid (0.02s, 349 steps).
-
-File semantics.mlw:
-Goal eval_bexpr_fun'vc.
-Prover result is: Valid (0.10s, 1782 steps).
 
 
 Interestingly enough we can prove this when we have the formula functions defined.

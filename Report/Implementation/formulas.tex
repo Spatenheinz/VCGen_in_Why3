@@ -1,0 +1,72 @@
+\paragraph{Formalization.}
+As mentioned in \autoref{TODO}, we cannot formalize the assertion language in a similar manner to
+the onther language constructs because of quantifers.
+We instead decided to use a predicate to describe the semantics.
+As Formulas are a logic construct the choice naturally was to use a predicate over a function,
+since predicates are part of why3's logical languages and therefore is useful in reasoning about logics.
+The predicate \texttt{eval\_closed\_formula} is shown in \autoref{lst:why3formula}.
+The semantics for conjuction implication and negation are rather simple and directly follows the corresponding
+semantics of why3's logic.
+Universal quantification uses the \texttt{forall} defined in why3, and updates the state accordingly.
+For the term expression we use the semantics defined earlier for binary expressions.
+We state that for a term to be true, the term should evaluate to true under the judgement of binary expressions.
+If it evaluates to true, the term is trivially true.
+If it does not evaluate to true, there are two potential evaluations.
+Either it can evaluate to false or it results in $\bot$.
+This is problem in formulas such as $\neg (x \le 10)$ and x is unbound.
+The inner expression $x \le 10$ will be a false term and by negation the entire formula is true.
+This should not be possible as formulas with unbound variables should not make sense.
+Hence the semantics only works for closed formulas.
+We therefore need a wrapper function, so we only consider closed form formulas.
+The wrapper \texttt{eval\_formula} will first check if any free variables exists
+if this is the case, then the formula is false.
+In case we have a closed formula, we evalaute the formula using the defined predicate.
+Determining if any free variables exists in the formula, we recursively traverse the formula to ensure all variables are bound in the given store,
+and in case of universal quantification, we bind the variable to 0,
+so it is present in the store and the value is irrelevant.
+
+\begin{lstlisting}[caption={Predicate defining the semantics of formulas},label={lst:why3formula},language=sml]
+predicate eval_closed_formula (f: formula 'a) (st: store 'a)  =
+  match f with
+  | Fterm b -> eval_bexpr b st (Enormal true)
+  | Fand f1 f2 -> eval_closed_formula f1 st /\ eval_closed_formula f2 st
+  | Fnot f -> not (eval_closed_formula f st)
+  | Fimp f1 f2 -> eval_closed_formula f1 st -> eval_closed_formula f2 st
+  | Fall y f -> forall n. eval_closed_formula f st[y <- n]
+  end
+
+predicate eval_formula (f : formula 'a) (st : store 'a) =
+  if is_closed_formula f st then eval_closed_formula f st
+  else false
+\end{lstlisting}
+
+\paragraph{Why the semantics are non-blocking.}
+We mentioned briefly in \autoref{TODO} for semantics of statements that our semantics are non-blocking.
+The reason we opted for this, was that we preemptively knew that dealing with quantifiers would be problematic.
+We want to make the code extractable to ocaml, and this means we cannot rely on the runtime of why3 and hence
+we would need to implement some algorithm to deal with quantified proofs.
+This was not an objective of this project.
+
+Possible solutions for implementing a blocking semantics are to either have two different assertion languages,
+one for executable assertions (I.e. user-specified assertions for runtime) and another language for
+assertions used in the verification condition generation to strengthening the precondition.
+In the executable assertions we not allow quantifiers, but all other logical constructors would be included.
+In the assertions for VC we include all the constructs.
+
+Another solutions would be to simulate blocking using the predefined constructors.
+The expressiveness of binary expressions are equivalent to the assertion language with quantification,
+and any assertion which should fail can be simulated using an unbound variable.
+For instance, we could have
+
+\begin{lstlisting}[language=haskell]
+if assertion then skip else s = x
+\end{lstlisting}
+
+where \texttt{assertion} defines the assertion that must hold, and \texttt{x} is an unbound variable.
+
+% - We dont have a good exportable way to deal with quantifiers, a possible solution
+% could be to have two different assertion languages, one for blocking and one for reasoning about
+% verification conditions.
+
+% bexpr kan udtrykke det samme som formulas uden kvantorer og any blocking can be simulated with an
+% unbound variable.

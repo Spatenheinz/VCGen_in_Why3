@@ -1,0 +1,12 @@
+With our formalization of the semantics, we can define an evaluator and must do so if we want an extractable evaluator for WHILE.
+We showed earlier how, the total function lemmas got folded out and expressed
+the total function satisfying the semantics.
+The evaluator essentially implements this approach, although modelling the store as a mapping is not satisfactory.
+Firstly, the semantics for statements results in a store under normal evaluation
+and for an evaluator which returns a mapping to be useful we want the be able to
+reason about the final store.
+This can be done by mappings, but requires any post processing to have knowledge
+of the variables assigned in the program either by the user or computationally.
+An easier approach would be to have a data-structure which stores key value pairs.
+We ended up using a mutable list of key value pairs, which has some promises about its state.
+

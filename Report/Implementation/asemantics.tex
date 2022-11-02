@@ -94,7 +94,6 @@ let function eval_op (op : aop) : (int -> int -> int) =
              eval_aexpr (ABin a1 op a2) s (Enormal ((eval_op op) n1 n2))
 \end{lstlisting}
 
-
 Notice furthermore we can define the behaviour of an operation as a Discriminated union of either a polymorphic \texttt{Enormal} behaviour or an \texttt{Eabnormal error},
 we do so to reuse the same types for arithmetic and boolean expressions along with statements.
 In the current implementation the only way to not result in normal behaviour is when we have an unbound variable.
@@ -102,8 +101,10 @@ In the current implementation the only way to not result in normal behaviour is 
 If we in the future were to add additional errors we let Eabnormal hold an ADT containing different errors.
 We tried looking into this matter, by adding division as an operator and adding additional semantics,
 with possibility of resulting in an \texttt{Ebnormal Ediv0} error. We however did not find a way to prove this,
-as the SMT solvers would time out on the properties.
-Again this is probably from the exponential growth of the size of the formula.
+as the SMT solvers would time out on the properties. It is hard to tell exactly why as, adding addition as an operator we get only a fairly small increase in number of steps.
+TODO what are the numbers.
+But the additional error cases might make the actual formula discharged be grow exponetially. Considering the structure of the inductive predicate, we cannot simply let division be part of
+Binop, thus we would need seperate rules for the different operators.
 
 % The equivalent predicate in Isabelle is nearly identical except for a few syntactical differences, for
 % instance we dont have to explicitly instantiate each variable as they implicitly instantiated to be fixed but arbitrary.

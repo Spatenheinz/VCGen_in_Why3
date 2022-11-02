@@ -1,69 +1,133 @@
 
-module Functional
+(* module Functional *)
+
+(*   use option.Option *)
+(*   use map.Map as M *)
+
+(*   type key *)
+(*   type value *)
+
+(*   type model = M.map key (option value) *)
+
+(*   type t = abstract { model: model } *)
+(*   meta coercion function model *)
+
+(*   val constant empty : t *)
+
+(*   axiom empty: forall k. M.get empty.model k = None *)
+
+(*   function get (d: t) (k: key) : option value = *)
+(*     M.get d.model k *)
+
+(*   val function set (d: t) (k: key) (v: value) : t *)
+(*     ensures { get result k = Some v } *)
+(*     ensures { forall k'. k' <> k -> get result k' = get d k' } *)
+
+(*   val mem (d: t) (k: key) : bool *)
+(*     ensures { result = True <-> get d k <> None } *)
+
+(*   exception NotFound *)
+
+(*   val find (d: t) (k: key) : value *)
+(*     ensures { match get d k with None -> false | Some v -> result = v end } *)
+(*     raises  { NotFound -> get d k = None } *)
+
+(* end *)
+
+
+
+(* module Imperative *)
+
+(*   use option.Option *)
+(*   use map.Map as M *)
+
+(*   type model 'key 'value = M.map 'key (option 'value) *)
+(*   type t 'key 'value = abstract { mutable model: model 'key 'value } *)
+(*   meta coercion function model *)
+
+(*   function get (d: t 'key 'value) (k: 'key) : option 'value = M.get d.model k *)
+
+(*   val empty (_:unit) : t 'key 'value *)
+(*     ensures { forall k: 'key. get result k = None } *)
+
+(*   val clear (d: t 'key 'value) : unit *)
+(*     writes  { d } *)
+(*     ensures { forall k: 'key. get d k = None } *)
+
+(*   val set (d: t 'key 'value) (k: 'key) (v: 'value) : unit *)
+(*     writes  { d } *)
+(*     ensures { d.model = M.((old d.model)[k <- Some v]) } *)
+
+(*   val mem (d: t 'key 'value) (k: 'key) : bool *)
+(*     ensures { result = True <-> get d k <> None } *)
+
+(*   exception Var_unbound *)
+
+(*   val find (d: t 'key 'value) (k: 'key) : 'value *)
+(*     ensures { match get d k with None -> false | Some v -> result = v end } *)
+(*     raises  { Var_unbound -> get d k = None } *)
+(* end *)
+
+module ImpMap
 
   use option.Option
   use map.Map as M
+  use int.Int
+  use bool.Bool
+  use list.List
+  use list.HdTl
+  use list.Quant
 
-  type key
-  type value
+  type model_t = M.map int (option int)
 
-  type model = M.map key (option value)
+  predicate match_model (k: int) (v: int) (m : model_t) =
+  match M.get m k with
+  | None -> false
+  | Some v' -> v = v'
+  end
 
-  type t = abstract { model: model }
-  meta coercion function model
+  function helper (m : model_t) (pair: (int,int)) : bool =
+  let (k,v) = pair in match_model k v m
 
-  val constant empty : t
+  type state = { mutable lst : list (int, int);
+                 ghost mutable model : model_t
+               }
+        (* invariant { for_all (helper model) lst } *)
+        (* by { lst = Nil ; model = (fun (_ : int) -> None) } *)
 
-  axiom empty: forall k. M.get empty.model k = None
+  exception Unbound
 
-  function get (d: t) (k: key) : option value =
-    M.get d.model k
+  function domain (s : state) : M.map int (option int) = s.model
 
-  val function set (d: t) (k: key) (v: value) : t
-    ensures { get result k = Some v }
-    ensures { forall k'. k' <> k -> get result k' = get d k' }
+  let function state_lst (s : state) = s.lst
 
-  val mem (d: t) (k: key) : bool
-    ensures { result = True <-> get d k <> None }
+  let function empty () : state
+  ensures {forall k. M.get result.model k = None }
+  = { lst = Nil ; model = (fun (_ : int) -> None) }
 
-  exception NotFound
+  let clear (s : state) : ()
+  writes { s.lst }
+  writes { s.model }
+  ensures {forall k. M.get s.model k = None }
+  = s.lst <- Nil;
+    s.model <- (fun _ -> None)
 
-  val find (d: t) (k: key) : value
-    ensures { match get d k with None -> false | Some v -> result = v end }
-    raises  { NotFound -> get d k = None }
+  let add (k: int) (v: int) (s : state) : ()
+  writes { s.lst }
+  writes { s.model }
+  ensures { s.model = M.((old s.model)[k <- Some v]) }
+  ensures { hd s.lst = Some (k,v) /\ match_model k v s.model }
+  = s.lst <- (Cons (k,v) s.lst);
+    s.model <- M.(s.model[k <- Some v])
 
-end
+  let rec find (k: int) (s : state) : int
+    variant { s.lst }
+    ensures { match_model k result s.model}
+    raises { Unbound -> M.get s.model k = None}
+  = match s.lst with
+    | Cons (k', n) s' -> if andb (k <= k') (k' <= k) then n
+       else find k { lst = s'; model = s.model}
+    | Nil -> raise Unbound
+    end
 
-
-
-module Imperative
-
-  use option.Option
-  use map.Map as M
-
-  type model 'key 'value = M.map 'key (option 'value)
-  type t 'key 'value = abstract { mutable model: model 'key 'value }
-  meta coercion function model
-
-  function get (d: t 'key 'value) (k: 'key) : option 'value = M.get d.model k
-
-  val empty (_:unit) : t 'key 'value
-    ensures { forall k: 'key. get result k = None }
-
-  val clear (d: t 'key 'value) : unit
-    writes  { d }
-    ensures { forall k: 'key. get d k = None }
-
-  val set (d: t 'key 'value) (k: 'key) (v: 'value) : unit
-    writes  { d }
-    ensures { d.model = M.((old d.model)[k <- Some v]) }
-
-  val mem (d: t 'key 'value) (k: 'key) : bool
-    ensures { result = True <-> get d k <> None }
-
-  exception Var_unbound
-
-  val find (d: t 'key 'value) (k: 'key) : 'value
-    ensures { match get d k with None -> false | Some v -> result = v end }
-    raises  { Var_unbound -> get d k = None }
 end

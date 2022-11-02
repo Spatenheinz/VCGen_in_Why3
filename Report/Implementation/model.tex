@@ -1,0 +1,59 @@
+To do so, we had to implement a seperate module \texttt{ImpMap}, presented in \autoref{lst:why3state},
+since we ran into a number of roadblocks using any of the predefined data-structures in the standard library.
+These will be explained further in \autoref{TODO}.
+We define the store, through a record called state.
+This record contains two different fields.
+Firstly we have lst which is a linked list of a key value pair,
+whilst the second state is a mapping of the same type as the state used for defining the semantics.
+Notice here that the model is marked with ghost. This means that the model can only be used in a logical context
+and therefore cannot manipulate any computations.
+We use the model for reasoning about the store through the verification conditions.
+For instance, for instantiation of the state by \texttt{empty} should ensure that the image of the store is \{None\}.
+Likewise when adding a key value pair in to the list the model should also contain this mapping.
+Lastly, for \texttt{find}, we try to find the key in the list and if it does not exist we throw an error.
+This enables us to easily propagate the error throughout the evaluation.
+
+\begin{lstlisting}[caption={Model for a store},label={lst:why3state},language=sml]
+type model_t = M.map int (option int)
+
+predicate match_model (k: int) (v: int) (m : model_t) =
+match M.get m k with
+| None -> false
+| Some v' -> v = v'
+end
+
+function helper (m : model_t) (pair: (int,int)) : bool =
+let (k,v) = pair in match_model k v m
+
+type state = { mutable lst : list (int, int);
+               ghost mutable model : model_t
+             }
+      (* invariant { for_all (helper model) lst } *)
+      (* by { lst = Nil ; model = (fun (_ : int) -> None) } *)
+
+exception Unbound
+
+function domain (s : state) : M.map int (option int) = s.model
+
+let function empty () : state
+ensures {forall k. M.get result.model k = None }
+= { lst = Nil ; model = (fun (_ : int) -> None) }
+
+let add (k: int) (v: int) (s : state) : ()
+writes { s.lst }
+writes { s.model }
+ensures { s.model = M.((old s.model)[k <- Some v]) }
+ensures { hd s.lst = Some (k,v) /\ match_model k v s.model }
+= s.lst <- (Cons (k,v) s.lst);
+  s.model <- M.(s.model[k <- Some v])
+
+let rec find (k: int) (s : state) : int
+  variant { s.lst }
+  ensures { match_model k result s.model}
+  raises { Unbound -> M.get s.model k = None}
+= match s.lst with
+  | Cons (k', n) s' -> if andb (k <= k') (k' <= k) then n
+     else find k { lst = s'; model = s.model}
+  | Nil -> raise Unbound
+  end
+\end{lstlisting}

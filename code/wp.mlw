@@ -79,7 +79,9 @@ module WP
   (*   end *)
 
   lemma abstract_effects_monotonic : forall s p q.
-     valid_formula (Fimp p q) -> forall st. eval_formula (abstract_effects s p) st -> eval_formula (abstract_effects s q) st
+     valid_formula (Fimp p q) ->
+     forall st. eval_formula (abstract_effects s p) st ->
+                eval_formula (abstract_effects s q) st
 
 
   (* {WP(s,Q)} s {Q} *)
@@ -120,5 +122,9 @@ module WP
   lemma distrib_conj: forall s sigma p q.
         eval_formula (wp s p) sigma /\ eval_formula (wp s q) sigma ->
         eval_formula (wp s (Fand p q)) sigma
+
+  lemma normal_eval_is_closed_wp : forall sigma sigma' s.
+        eval_stmt s sigma (Enormal sigma') ->
+        is_closed_formula (wp s (Fterm (BCst True))) sigma
 
 end

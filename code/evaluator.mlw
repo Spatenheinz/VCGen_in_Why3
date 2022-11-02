@@ -2,29 +2,30 @@ module Evaluator
   use grammar.Grammar
   use semantics.Semantics
   use int.Int
+  use bool.Bool
+  use list.List
   (* use fmap.MapImp as M *)
   (* clone fmap.MapImp as M with type key = id, val eq = Int.(=) *)
   (* use map.Const *)
   use option.Option
   (* use ocaml.Exceptions *)
-  use dict.Imperative as E
+  (* use dict.Imperative as E *)
+  use dict.ImpMap as IM
   use map.Map
   (* exception Unbound *)
 
-  type state' = E.t id int
   (* type state2 = M.t (option int) *)
-  let sigma : state' = E.empty ()
+  let sigma : IM.state = IM.empty ()
   (* let sigma2 : state2 = M.create () *)
 
-  let rec aeval (a: aexpr) : int
+  let rec aeval (a: aexpr id) : int
     variant { a }
-    ensures { eval_aexpr a sigma (Eint result) }
-    raises { E.Var_unbound -> eval_aexpr a sigma Eunbound }
+    ensures { eval_aexpr a (IM.domain sigma) (Enormal result) }
+    raises { IM.Unbound -> eval_aexpr a (IM.domain sigma) (Eabnormal Eunbound) }
   = match a with
     | Acst i -> i
-    | Avar v ->  E.find sigma v
-    | Asub a1 a2 -> aeval a1 - aeval a2
-    | Amul a1 a2 -> aeval a1 * aeval a2
+    | Avar v ->  IM.find v sigma
+    | ABin a1 op a2 -> (eval_op op) (aeval a1) (aeval a2)
   end
 
   (* can we not use finite maps???? *)
@@ -32,42 +33,61 @@ module Evaluator
   (*   ensures { match M.find k d with None -> false | Some v -> result = v end } *)
   (*   raises  { Not_found -> M.find k d = None} *)
 
-  (* let rec aeval2 (a: aexpr) : int *)
+  (* let rec aeval2 (a: aexpr id) : int *)
   (*   variant { a } *)
   (*   ensures { eval_aexpr a sigma2 (Eint result) } *)
-  (*   raises { Not_found -> eval_aexpr a sigma2 Eunbound } *)
+  (*   raises { Not_found -> eval_aexpr a sigma2 (Eabnormal Eunbound) } *)
   (* = match a with *)
   (*   | Acst i -> i *)
   (*   | Avar v ->  myfind sigma2 v *)
   (*   | Asub a1 a2 -> aeval2 a1 - aeval2 a2 *)
   (* end *)
 
-  let rec beval (b: bexpr) : bool
+  let rec beval (b: bexpr id) : bool
     variant { b }
-    ensures { eval_bexpr b sigma (Ebool result) }
-    raises { E.Var_unbound -> eval_bexpr b sigma Eunbound }
+    ensures { eval_bexpr b (IM.domain sigma) (Enormal result) }
+    raises { IM.Unbound -> eval_bexpr b (IM.domain sigma) (Eabnormal Eunbound) }
   = match b with
-    | Btrue      -> true
-    | Bfalse     -> false
+    | BCst b -> b
     | Bleq a1 a2 -> aeval a1 <= aeval a2
     (* Cannot be proven *)
-    (* | Band b1 b2 -> beval b1 && beval b2 *)
+    | Band b1 b2 -> andb (beval b1) (beval b2)
     | Bnot b     -> not (beval b)
   end
 
-  let rec seval (s: stmt) : ()
+  let rec seval (s: stmt id) : ()
      diverges
      ensures {
-       eval_stmt (old sigma) s sigma Snormal
+       eval_stmt s (IM.domain (old sigma)) (Enormal (IM.domain sigma))
      }
      raises {
-       E.Var_unbound -> eval_stmt (old sigma) s sigma Sunbound
+       IM.Unbound -> eval_stmt s (IM.domain (old sigma)) (Eabnormal Eunbound)
      }
   = match s with
-    | Sskip -> ()
-    | Sass x a -> E.set sigma x (aeval a)
+    | Sskip | Sassert _ -> ()
+    | Sass x a -> IM.add x (aeval a) sigma
     | Sseq s1 s2 -> seval s1; seval s2
+    | Sif b s1 s2 -> if beval b then seval s1 else seval s2
+    | Swhile e _ body -> while (beval e) do
+                          seval body
+                         done
     end
 
+  let eval_prog (s: stmt id) : list (int,int)
+    diverges
+    ensures {
+       eval_stmt s (IM.domain (old sigma)) (Enormal (IM.domain sigma))
+    }
+    raises { IM.Unbound -> eval_stmt s (IM.domain (old sigma)) (Eabnormal Eunbound) } =
+    let _ = seval s in
+    let res = IM.state_lst sigma in
+    let _ = IM.clear sigma in
+    res
+
+
+    let test ()
+      diverges
+      raises { IM.Unbound }
+    = seval (Sass 1 (Acst 5))
 
 end

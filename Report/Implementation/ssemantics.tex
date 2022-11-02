@@ -1,0 +1,37 @@
+\paragraph{Semantics.}
+Once again, we define the semantics by an inductive predicate. The semantics are generally not that complex,
+however there are many more cases to account for when dealing with statements.
+An example of this, is the inference rules for while.
+We must consider 4 different cases:
+
+\begin{enumerate}
+  \item The boolean condition is true, and thus the body ``evaluates'' to some new state, which is used for the next iteration of the while loop.
+  \item The boolean condition is false, and thus the loop ends in the same state.
+  \item The boolean condition results in abnormal behaviour and thus the enitre statement should result in abnormal behaviour.
+  \item The body results in abnormal behaviour and likewise the entire loop results in abnormal behaviour.
+\end{enumerate}
+
+However for assertions, we only consider a single case, since as mentioned in the inference rules \autoref{TODO},
+we dont consider assertions in the operational semantics, but rather include them for strengthening the
+verification condition of a program.
+
+\paragraph{Properties.}
+The properties for asserting the correctness of the implementation of the semantics is build upon the lemmas regarding totality and determinism of boolean and arithmetic expressions. Hence we consider the lemma
+\texttt{eval_stmt_deterministic}. Unfortunately, our trick from the previous grammar constructs does not render useful for statements. Running the recursive lemma for 300 seconds in Alt-Ergo, does not provide a proof.
+There might be many reasons for this.
+
+First and foremost we cannot include while in the recursive lemma. The reason for this, is that we have to
+include the variant for a recursive lemma to even discharge the proof. I.e. if we cannot prove termination of a lemma it cannot hold true in the system if why3. Since this would only entail partial correctness.
+It should be clear from the ESWhileT case of the inference rules, that we do not reduce the structure of s and hence s does not respect the well founded order.
+Had we included a variant in WHILE we might have been able to express the termination.
+
+We then considered the proof without including the While in the language. Also in this case we could not find a proof. We then tried to remove If. Yet again, the SMT solvers timed out. Finally we found that removing Sequences, would allow us to prove the determinism.
+
+specifically, when excluding Seq, If, While, it took Alt-Ergo 5956 steps to prove the lemma.
+While only excluding Seq and While the prover to 13965 steps. Again this shows how 3 additional inference rules
+can increase the number of step by a significant amount.
+
+One perculiarity we further found was that one can compare mappings by = without importing the module map.MapExt (in the standard library), which specifically defines extensionality of mappings.
+But again this might be overlapping instances of the build in functionality and the standard library.
+However this, along with the conumdrum of \&\& and \texttt{andb}, begs the question as to how well the
+standard library is structured.

@@ -1,0 +1,83 @@
+\paragraph{Implementation of Weakest Liberal Precondition calculus.}
+We implemented the rules for weakest liberal precondition by a recursive function that directly
+follows the inference rules.
+We focus on two of the rules, namely assignments and while statements, which both does substitution in the formula.
+For assignments we define the rule as follows:
+
+\begin{lstlisting}
+| Sass x e -> let y = fresh_from q in
+              Fall y (Fimp (Fand (Fterm (Bleq (Avar y) e))
+                                 (Fterm (Bleq e (Avar y)))) (subst_fmla q x y))
+\end{lstlisting}
+
+We first generate a fresh variable, which is then substituted into the postcondition $Q$.
+We further follow the semantics, however since we do not have equality we use $y \leq e \wedge e \leq y$.
+
+The other interesting rule, for while, is implemented as follows:
+\begin{lstlisting}
+| Swhile cond inv body ->
+  Fand inv
+       (abstract_effects body
+       (Fand (Fimp (Fand (Fterm cond) inv) (wp body inv))
+             (Fimp (Fand (Fnot (Fterm cond)) inv) q))
+       )
+\end{lstlisting}
+
+Here the interesting thing is the function \texttt{abstract\_effects}. This function quantifies over all assigned variables in the body of the loop and substitute the quantifiers with the free variables in the formula
+$((cond \wedge inv) \Rightarrow wp(body,inv)) \wedge ((\neg cond \wedge inv) \Rightarrow Q)$. like \texttt{fresh\_from} this function is inspired by \cite{TODO}. The story is the same. They used axioms to define the function, whereas we have to implement it.
+\texttt{abstract\_effects} takes a statement $s$ and formula $f$.
+If the statement is an assignment
+a fresh variable is made and substituted into $f$, and we then quantify the freshly made variable.
+This is not the most efficient solution, as multiple assignment to the same variable will create unused quantifiers.
+All ther cases will traverse the abstract syntaxt tree or is a leaf and does nothing.
+
+\begin{lstlisting}
+let rec function abstract_effects (s : stmt int) (f : formula int) : formula int
+  variant { s }
+= match s with
+  | Sskip | Sassert _ -> f
+  | Sseq s1 s2 | Sif _ s1 s2 -> abstract_effects s2 (abstract_effects s1 f)
+  | Sass x _ -> let v = fresh_from f in
+                let f' = subst_fmla f x v in
+                Fall v f'
+  | Swhile _ _ s -> abstract_effects s f
+  end
+\end{lstlisting}
+
+Whilst we implemented this function directly, we still want the properties for the function to hold.
+Firstly, we have
+
+\begin{lstlisting}
+  lemma abstract_effects_specialize : forall st : store int, s f.
+    eval_formula (abstract_effects s f) st -> eval_formula f st
+\end{lstlisting}
+
+which states that evaluation of applying abstract effects off s on f in state st implies that f evaluates to true in st. Essentially it states that if we quantify the variables in f and the formula is true under the quantification, then $f$ also hold if the variables are not quantified.
+THIS DOES NOT MAKE ANY SENSE??? PLEASE LOOK AT IT TOMORROW.
+Secondly, we have
+\begin{lstlisting}
+lemma abstract_effects_distrib_conj : forall s p q st.
+   eval_formula (abstract_effects s p) st /\ eval_formula (abstract_effects s q) st ->
+   eval_formula (abstract_effects s (Fand p q)) st
+ \end{lstlisting}
+
+Which states that if we apply abstract effects of s on two formulas p and q and they both evaluates to true,
+then evaluating the result of applying the abstract effects of s on the conjunction of p and q, must also be true.
+Thirdly, we have the property of monotinicity.
+
+\begin{lstlisting}
+lemma abstract_effects_monotonic : forall s p q.
+   valid_formula (Fimp p q) ->
+   forall st. eval_formula (abstract_effects s p) st ->
+   eval_formula (abstract_effects s q) st
+ \end{lstlisting}
+
+If the formula $p \Rightarrow q$ is valid,
+
+
+
+\paragraph{Properties of WLP}
+How do we ensure that it is correct? I.e follows the semantics.
+
+
+\paragraph{Soundness and Completeness???}

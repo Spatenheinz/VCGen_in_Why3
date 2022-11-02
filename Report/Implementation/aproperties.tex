@@ -1,5 +1,114 @@
-The properties we want to hold for arithmetic expressions are straightforward.
+The following paragraphs describes the properties we want to hold for arithmetic expressions. They are determinism and totality.
+
+\paragraph{Determinism.}
 We want our program to be deterministic which means each part of the semantics must be deterministic, i.e. the semantic relation must be functional.
-Furthermore we want semantics to be total, such that we never encounter undefined behaviour.
-We already presented a formulation for determinism of arithmetic expressions in \autoref{lst:why3fun}.
-This lemma cannot be proved directly.
+
+To show that a judgement or inductive relation is functional, we have
+
+\[
+  \judge{a,\sigma}{n} \; \text{and also} \; \judge{a,\sigma}{n'} \; \text{then} \; n = n'
+\]
+
+We can formalize this very easily in Why3 using a lemma, as such.
+
+\begin{lstlisting}[caption={lemma for functional arithmetic expressions},label={lst:why3funnorec},language=sml]
+lemma eval_aexpr_fun_cannot_show : forall a, s : store 'a, b1 b2.
+   eval_aexpr a s b1 -> eval_aexpr a s b2 -> b1 = b2
+\end{lstlisting}
+
+The problem arises when we try to discharge this proof obligation to an SMT solver. It seems like this cannot directly proven. And the reason can be found in the usual way such formalism is proved for ASTs.
+More specifically, we do so by computational induction, and lemmas in why3 has no notion of induction.
+It is possible to transformations on a lemma, and a strategy such as \texttt{induction_pr} would correspond
+to this computational induction. Doing such a transformation we split the lemma into 6 subgoals.
+One for each inductive predicate rule.
+These can then be discharged. The first three goals corresponds to EACst EAVar and EAVar\_err can be proven by Alt-Ergo, the remaining cases are for binary operators and these cannot be shown by an SMT solver. So in this we would want to use either Coq or Isabelle. We tried opening the proofs in both Isabelle and Coq.
+The Isabelle driver, simply does not work. gicing the following error:
+
+There is no verification condition "eval_aexpr_fun_cannot_show".
+
+And this suggest that we cannot reason about lemmas using Isabelle. Opening the proof in Coq allows us to
+perform usual reasoning in Coq. With our limited knowledge of Coq, we quickly abandoned this approach.
+
+Instead we tried a different approach. Although why3 does not allow for induction, it is possible to define
+recursive lemmas. A recursive lemma differs from a regular lemma, in that it looks more like a ``function''.
+We can define \texttt{eval_aexpr_fun_cannot_show} as a recursive lemma as seen in \autoref{lst:why3funrec}.
+The lemma is defined by two parameters the arithmetic expression and a state.
+Recursive lemmas is proved through a Verification condition,
+hence we define the variant, to ensure total correctness,
+and then we specify the post-condition in the \texttt{ensures}.
+The post-condition will serve as the conclusion of the lemma.
+This corresponds to the lemma in \autoref{lst:why3funnorec}.
+The body of the function will then dictate the unfolding of the recursive structure.
+Notice here, how the result of the body is (), and we only use ensures for the actual lemma.
+
+\begin{lstlisting}[caption={Recursive lemma for functional arithmetic expressions},label={lst:why3funrec},language=sml]
+let rec lemma eval_aexpr_fun (a: aexpr 'a) (s: store 'a)
+    variant { a }
+    ensures { forall b1 b2. eval_aexpr a s b1 ->
+                            eval_aexpr a s b2 ->
+                            b1 = b2
+    }
+  = match a with
+    | Acst _ | Avar _ -> ()
+    | ABin a1 _ a2 -> eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
+      end
+\end{lstlisting}
+
+When discharged, a goal is defined through the verification condition of this lemma, in a similar manner to functions.
+After the goal (proven or not) the lemmas is axiomatised. The specific axiom for \texttt{eval_aexpr_fun} can be seen in \autoref{lst:why3funaxiom}.
+
+\begin{lstlisting}[caption={Axiom of functional lemma},label={lst:why3funaxiom},language=sml]
+axiom eval_aexpr_fun :
+  forall a:aexpr 'a, s:'a -> option int.
+   forall b1:e_behaviour int, b2:e_behaviour int.
+    eval_aexpr a s b1 -> eval_aexpr a s b2 -> b1 = b2
+\end{lstlisting}
+
+The axiom clearly is equivalent to the lemma. Notice here, that the arguments for the lemma gets universally quantified.
+
+\paragraph{Totality.}
+Furthermore we want the semantics to be total, meaning all input has an output, such that we never encounter undefined behaviour.
+Formally we have
+\[
+\forall a \in A, \sigma \in \Sigma. (\exists n. \judge{a, \sigma}{n}) \vee \judge{a, \sigma}{\bot}
+\]
+where $A$ is the set of all arithmetic expressions.
+Again we first formalised it as a plain lemma, but as the proof follows the structure of a,
+we had to refomulate this as a recursive lemma. The resulting lemma is shown in \autoref{lst:why3tot}.
+
+\begin{lstlisting}[caption={Axiom of functional lemma},label={lst:why3tot},language=sml]
+  let rec lemma eval_aexpr_total (a: aexpr 'a) (s : store 'a)
+      ensures {
+          eval_aexpr a s (Eabnormal Eunbound) \/ exists n. eval_aexpr a s (Enormal n)
+      }
+    = match a with
+      | Acst _ | Avar _ -> ()
+      | ABin a1 _ a2 -> eval_aexpr_total a1 s; eval_aexpr_total a2 s
+      end
+\end{lstlisting}
+
+\paragraph{Combination of determinism and totality.}
+Another way to state that arithmetic expression are both total and deterministic is to define the actual total function.
+We can do so, again by a recursive lemma, as presented in \autoref{lst:why3totfun}. Notice here that the lemma in this case will simulate the actual
+computation of the total function, thus we can use the \texttt{result} keyword in the post-condition.
+The post condition will ensure that the total function adheres to the semantics, since the inductive predicate
+\texttt{eval_aexpr} should hold for all \texttt{a} and \texttt{s}.
+
+\begin{lstlisting}[caption={Lemma combining totality and determinism for arithmetic expressions},label={lst:why3totfun},language=sml]
+let rec lemma eval_aexpr_total_fun (a: aexpr 'a) (s: store 'a)
+     variant { a }
+     ensures { eval_aexpr a s result }
+   = match a with
+     | Acst n -> Enormal n
+     | Avar v -> match s[v] with
+                   | Some n -> Enormal n
+                   | None -> Eabnormal Eunbound
+                 end
+     | ABin a1 op a2 ->
+       match eval_aexpr_total_fun a1 s, eval_aexpr_total_fun a2 s with
+         | Enormal n1, Enormal n2 -> Enormal ((eval_op op) n1 n2)
+         | Eabnormal e, _   -> Eabnormal e
+         | _ , Eabnormal e  -> Eabnormal e
+       end
+     end
+\end{lstlisting}

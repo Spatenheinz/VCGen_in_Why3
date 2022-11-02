@@ -28,8 +28,12 @@ let rec function subst_fmla (f : formula id) (x : id) (v : id) : formula id =
     | Fand f1 f2 -> Fand (subst_fmla f1 x v) (subst_fmla f2 x v)
     | Fnot f     -> Fnot (subst_fmla f x v)
     | Fimp f1 f2 -> Fimp (subst_fmla f1 x v) (subst_fmla f2 x v)
-    | Fall y f   -> Fall y (subst_fmla f x v)
+    | Fall y f   -> if y = x then Fall y f else Fall y (subst_fmla f x v)
     end
+
+
+let test () =
+  subst_fmla (Fall 0 (Fterm (Bleq (Avar 0) (Acst 10)))) 0 1
 
 
 end

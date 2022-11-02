@@ -2,10 +2,12 @@ module Semantics
 
   use int.Int
   use map.Map
+  (* use map.MapExt *)
   use set.Fset
   use grammar.Grammar
   use grammar.Formula
   use option.Option
+  use bool.Bool
 
   type error = Eunbound (*| Ediv0 *)
 
@@ -53,11 +55,11 @@ module Semantics
                eval_aexpr (ABin a1 op a2) s (Eabnormal e)
 
 
-  lemma eval_aexpr_total_cannot_show : forall a, s : store 'a.
-    eval_aexpr a s (Eabnormal Eunbound) \/ exists n. eval_aexpr a s (Enormal n)
-  (* It does not work when we dont define the induction ourselfs *)
-  lemma eval_aexpr_fun_cannot_show : forall a, s : store 'a, b1 b2.
-     eval_aexpr a s b1 -> eval_aexpr a s b2 -> b1 = b2
+  (* lemma eval_aexpr_total_cannot_show : forall a, s : store 'a. *)
+  (*   eval_aexpr a s (Eabnormal Eunbound) \/ exists n. eval_aexpr a s (Enormal n) *)
+  (* (\* It does not work when we dont define the induction ourselfs *\) *)
+  (* lemma eval_aexpr_fun_cannot_show : forall a, s : store 'a, b1 b2. *)
+  (*    eval_aexpr a s b1 -> eval_aexpr a s b2 -> b1 = b2 *)
 
  (** Ken: We can describe evaluation of expressions as a total function *)
   let rec lemma eval_aexpr_total_fun (a: aexpr 'a) (s: store 'a)
@@ -85,8 +87,7 @@ module Semantics
       }
     = match a with
       | Acst _ | Avar _ -> ()
-      | ABin a1 _ a2 ->
-        eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
+      | ABin a1 _ a2 -> eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
       end
 
   let rec lemma eval_aexpr_total (a: aexpr 'a) (s : store 'a)
@@ -117,7 +118,8 @@ module Semantics
                    eval_bexpr b1 s (Enormal b1') ->
                    eval_bexpr b2 s (Enormal b2') ->
                    (* b1' && b2' -> *)
-                   eval_bexpr (Band b1 b2) s (Enormal (b1' && b2'))
+                   eval_bexpr (Band b1 b2) s (Enormal (andb b1' b2'))
+                   (* eval_bexpr (Band b1 b2) s (Enormal (b1' && b2')) *)
     | EBAnd_err1 : forall b1 b2, s : store 'a.
                    eval_bexpr b1 s (Eabnormal Eunbound) ->
                    eval_bexpr (Band b1 b2) s (Eabnormal Eunbound)
@@ -143,7 +145,8 @@ module Semantics
                        | _ , Eabnormal e  -> Eabnormal e
                        end
        | Band b1 b2 -> match eval_bexpr_total_fun b1 s, eval_bexpr_total_fun b2 s with
-                       | Enormal b1', Enormal b2' -> Enormal (b1' && b2')
+                       | Enormal b1', Enormal b2' -> Enormal (andb b1' b2')
+                       (* | Enormal b1', Enormal b2' -> Enormal (b1' && b2') *)
                        | Eabnormal e, _   -> Eabnormal e
                        | _ , Eabnormal e  -> Eabnormal e
                        end
@@ -232,11 +235,11 @@ module Semantics
 
   let rec lemma eval_stmt_deterministic (s: stmt 'a) (st: store 'a)
        variant { s }
-       ensures { eval_stmt s st result }
-       (* ensures { forall b1 b2. eval_stmt s st b1 -> *)
-       (*                         eval_stmt s st b2 -> *)
-       (*                         b1 = b2 *)
-       (* } *)
+       (* ensures { eval_stmt s st result } *)
+       ensures { forall b1 b2. eval_stmt s st b1 ->
+                               eval_stmt s st b2 ->
+                               b1 = b2
+       }
      = match s with
        | Sskip -> Enormal st
        | Sass x a -> match eval_aexpr_total_fun a st with
@@ -268,14 +271,46 @@ module Semantics
   lemma seval_determ : forall st : store 'a, s b1 b2.
      eval_stmt s st b1 -> eval_stmt s st b2 -> b1 = b2
 
-  predicate eval_formula (f: formula 'a) (st: (store 'a))  =
+
+
+  predicate is_closed_aexpr (a : aexpr 'a) (st: store 'a) =
+    match a with
+    | Acst _ -> true
+    | Avar x -> match st x with
+                | Some _ -> true
+                | None -> false
+                end
+    | ABin a1 _ a2 -> is_closed_aexpr a1 st /\ is_closed_aexpr a2 st
+    end
+
+  predicate is_closed_bexpr (b : bexpr 'a) (st : store 'a) =
+    match b with
+    | BCst _ -> true
+    | Bleq a1 a2 -> is_closed_aexpr a1 st /\ is_closed_aexpr a2 st
+    | Band b1 b2 -> is_closed_bexpr b1 st /\ is_closed_bexpr b2 st
+    | Bnot b -> is_closed_bexpr b st
+    end
+
+  predicate is_closed_formula (f : formula 'a) (st : store 'a) =
+    match f with
+    | Fterm b -> is_closed_bexpr b st
+    | Fand f1 f2 | Fimp f1 f2 -> is_closed_formula f1 st /\ is_closed_formula f2 st
+    | Fnot f -> is_closed_formula f st
+    | Fall y f -> is_closed_formula f st[y <- Some 0]
+    end
+
+  predicate eval_closed_formula (f: formula 'a) (st: store 'a)  =
     match f with
     | Fterm b -> eval_bexpr b st (Enormal true)
-    | Fand f1 f2 -> eval_formula f1 st /\ eval_formula f2 st
-    | Fnot f -> not (eval_formula f st)
-    | Fimp f1 f2 -> eval_formula f1 st -> eval_formula f2 st
-    | Fall y f -> forall n. eval_formula f st[y <- n]
+    | Fand f1 f2 -> eval_closed_formula f1 st /\ eval_closed_formula f2 st
+    | Fnot f -> not (eval_closed_formula f st)
+    | Fimp f1 f2 -> eval_closed_formula f1 st -> eval_closed_formula f2 st
+    | Fall y f -> forall n. eval_closed_formula f st[y <- n]
     end
+
+  predicate eval_formula (f : formula 'a) (st : store 'a) =
+    if is_closed_formula f st then eval_closed_formula f st
+    else false
 
 (*   (\* goal G1 : forall st. eval_formula (Fand (Fterm (Btrue)) (Fterm (Btrue))) st *\) *)
 (*   (\* goal A  : forall n1 n2 st. n1 <= n2 -> *\) *)
