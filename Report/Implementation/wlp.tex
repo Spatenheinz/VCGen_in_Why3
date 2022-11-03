@@ -91,7 +91,7 @@ We have not been able to automatically prove these lemmas in why3.
 At the moment we have a partial proof for the function in Isabelle.
 ???? WRITE SOME MORE ????
 
-\paragraph{Properties Soundness of WLP}
+\paragraph{Properties and Soundness of WLP}
 One of the main goals in making a formally verified Verification condition generator is to ensure the correctness of the implementation.
 We consider the correctness through its soundness.
 To do so we must consider two of the same properties we just stated for a\texttt{abstract\_effects}, namely monotonicity and conjunction distribution.
@@ -108,9 +108,48 @@ lemma distrib_conj: forall s sigma p q.
       eval_formula (wp s (Fand p q)) sigma
 \end{lstlistings}
 
-Once again we, we not able to directly show this.
-TODO: should we consider making recursive lemmas for this?
+Once again we, we not able to directly show this. We tried to unfold the recursion on $s$, in a similar manner to how we proved determinism.
+We did not achieve anything by this.
+We have a formalized proof of both properties in Isabelle.
+The proof for monotonicity can be seen in \cite{lst:isamono}.
+As mentioned we prove the lemma by induction on $s$.
+And mark $p$ and $q$ as arbitrary, since the lemma should hold for any non-fixed $p$ and $q$.
+The proof only shows the cases for sequences, assignments and while.
+The case for sequences are actually directly proved from the assumptions.
+We only distinguish this case because we need to simplify the other trivial cases.
+For both assignment and while we used the sledgehammer to find the proofs by metis,
+which is a complete automatic theorem prover for first order logic with equality\cite{TODO sledgehammer paper}.
 
+\begin{lstlisting}[caption={Proof of monotonicity in Isabelle},label={lst:isamono},language=sml]
+lemma monotonicity : "valid_formula (FImp p q) \<Longrightarrow>
+  valid_formula (FImp (wp s p) (wp s q))"
+proof(induction s arbitrary: p q)
+  case (SSeq s1 s2)
+  then show ?case by auto
+next
+  case (Sassign x1 x2)
+  then show ?case
+    by (metis abstract_effect_writes abstract_effects.simps(2)
+         eval_formula.simps(2) valid_formula_def wp.simps(3))
+next
+  case (Swhile x1 x2 s)
+  then show ?case
+    by (metis abstract_effect_writes abstract_effects.simps(2)
+        eval_formula.simps(2) valid_formula_def wp.simps(3))
+qed (simp_all add: valid_formula_def)
+\end{lstlisting}
 
+For distribution over a conjuction, the proof is straight forward.
+We do induction with the same setup.
+Again the sequences, assignments and while cannot trivially be proved by simplification,
+but the same metis proof used for monotonicity can be used for all three cases.
 
-\paragraph{Soundness and Completeness???}
+With these two properties, we should be able to show soundness for the wp function.
+We decided to not prove the completeness of the function because this says something about the expressiveness of the function, whereas it is more important to ensure that
+the function is correct.
+Using soundness to show correctness is two-fold.
+On the one hand showing the soundness of $wp$ ensures that $\hoare{wp(s,Q)}{s}{Q}$ is valid for partial correctness for all $s$ and $q$, ensures that we cannot generate invalid verification conditions.
+On the other hand, we already know weakest precondition to be sound and proving it for the function $wp$ ensures that our implementation adheres to the semantics or atleast an equivalent semantic.
+
+We have not gotten to show this.
+TODO why have we not done this?????

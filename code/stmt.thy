@@ -81,7 +81,9 @@ lemma abstract_effects_distrib_conj :
   eval_formula (abstract_effects s (FAnd p q)) st"
 proof(induction s arbitrary: p q)
   case (SSeq s1 s2)
-  then show ?case apply(simp) sorry
+  then show ?case
+    apply(conE)
+    apply(simp) sorry
 next
   case (Sassign x1 x2)
   then show ?case sorry
@@ -152,17 +154,18 @@ lemma monotonicity : "valid_formula (FImp p q) \<Longrightarrow>
   valid_formula (FImp (wp s p) (wp s q))"
 proof(induction s arbitrary: p q)
   case (SSeq s1 s2)
-  then show ?case
-    using wp.simps(2) by presburger
+  then show ?case by auto
 next
   case (Sassign x1 x2)
   then show ?case
-    by (metis abstract_effect_writes abstract_effects.simps(2) eval_formula.simps(2) valid_formula_def wp.simps(3))
+    by (metis abstract_effect_writes abstract_effects.simps(2)
+         eval_formula.simps(2) valid_formula_def wp.simps(3))
 next
   case (Swhile x1 x2 s)
   then show ?case
-    by (metis abstract_effect_writes abstract_effects.simps(2) eval_formula.simps(2) valid_formula_def wp.simps(3))
-qed (simp_all add: valid_formula_def)
+    by (metis abstract_effect_writes abstract_effects.simps(2)
+        eval_formula.simps(2) valid_formula_def wp.simps(3))
+qed (auto simp: valid_formula_def)
 
 lemma distrib_conj : 
   "eval_formula (wp s p) st \<and> eval_formula (wp s q) st \<Longrightarrow>

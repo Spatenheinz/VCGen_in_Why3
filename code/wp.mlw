@@ -114,11 +114,11 @@ module WP
            )
     end
 
-  lemma abstract_effect_writes : forall st s q.
-     eval_formula (abstract_effects s q) st -> eval_formula (wp s (abstract_effects s q)) st
+  (* lemma abstract_effect_writes : forall st s q. *)
+  (*    eval_formula (abstract_effects s q) st -> eval_formula (wp s (abstract_effects s q)) st *)
 
-  lemma monotonicity: forall s p q.
-        valid_formula (Fimp p q) -> valid_formula (Fimp (wp s p) (wp s q))
+  (* lemma monotonicity: forall s p q. *)
+  (*       valid_formula (Fimp p q) -> valid_formula (Fimp (wp s p) (wp s q)) *)
 
   let rec lemma monotonicity_rec (s: stmt int) (p : formula int) (q : formula int)
      variant { s }
@@ -129,10 +129,23 @@ module WP
     | Swhile _ _ s -> monotonicity_rec s p q
     end
 
+  (* lemma distrib_conj: forall s sigma p q. *)
+  (*       eval_formula (wp s p) sigma /\ eval_formula (wp s q) sigma -> *)
+  (*       eval_formula (wp s (Fand p q)) sigma *)
 
-  lemma distrib_conj: forall s sigma p q.
+  let rec lemma distrib_conj_rec (s: stmt int) (sigma : store int)
+                                 (p : formula int) (q : formula int)
+     variant { s }
+     ensures {
         eval_formula (wp s p) sigma /\ eval_formula (wp s q) sigma ->
         eval_formula (wp s (Fand p q)) sigma
+     }
+  = match s with
+    | Sskip | Sassert _ | Sass _ _ -> ()
+    | Sseq s1 s2 | Sif _ s1 s2 -> distrib_conj_rec s1 sigma p q;
+                                  distrib_conj_rec s2 sigma p q
+    | Swhile _ _ s -> distrib_conj_rec s sigma p q
+    end
 
   lemma normal_eval_is_closed_wp : forall sigma sigma' s.
         eval_stmt s sigma (Enormal sigma') ->
