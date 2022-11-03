@@ -1,15 +1,16 @@
 Floyd–Hoare logic (from now simply refered to as Hoare logic) is a formal system proposed by Tony Hoare in 1969,
 based on earlier work from Robert W, which is used to prove correctness of a program.
 The core of this formal system is a Hoare triple denoted as $\hoarePQ{s}$
-where $P$ and $Q$ are assertions. This notion means that if the precondition $P$ holds in the initial state
-and $s$ terminates then $Q$ holds in the halting state of $s$. More formally we write:
+where $P$ and $Q$ are assertions.
+This notion means that if the precondition $P$ holds in the initial state,
+and $s$ terminates from that state, then $Q$ holds in the halting state of $s$. More formally we write:
 
-$$\hoarePQ{s} = \forall \sigma, \sigma' \in \Sigma. (\sigma \vDash P) \wedge ( \judge{s, \sigma}{\sigma'} \rightarrow (\sigma' \vDash Q))$$
+$$\hoarePQ{s} = \forall \sigma, \sigma' \in \Sigma. (\sigma \vDash P) \wedge \judge{s, \sigma}{\sigma'} \Rightarrow (\sigma' \vDash Q)$$
 
 Thus if a hoare triple holds, it is correct wrt to the assertions.
 
 Hoare logic provides axioms and inference rules for an imperative language.
-The statements included in these rules corresponds to statements provided in \autoref{sec:syntax}-\autoref{sec:semantics}. \autoref{fig:hoare} shows the inference rules.
+The statements included in these rules corresponds to statements provided in \ref{sec:syntax}-\ref{sec:semantics}. \autoref{fig:hoare} shows the inference rules.
 Notice that we show the formalization in the traditional sense and do not consider behaviour of unbound variables.
 
 \begin{figure}[h!]
@@ -23,8 +24,8 @@ Notice that we show the formalization in the traditional sense and do not consid
 \inference[HIf]{\hoare{P \wedge b}{s_0}{Q} & \hoare{P \wedge \neg b}{s_1}{Q}}
 {\hoarePQ{ \mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \} }}
 
-\inference[HWhile]{\hoare{P \wedge b}{s}{P}}
-{\hoare{P}{ \mathbf{while} \; b \; \mathbf{invariant} \; I \; \{ \; s \; \} }{P \wedge \neg b}}
+\inference[HWhile]{\hoare{I \wedge b}{s}{I}}
+{\hoare{I}{ \mathbf{while} \; b \; \mathbf{invariant} \; I \; \{ \; s \; \} }{I \wedge \neg b}}
 
 \inference[HSeq]{\hoare{P}{s_0}{R} & \hoare{R}{s_1}{Q}}
 {\hoarePQ{s_0 \; ; \; s_1}}
@@ -32,8 +33,8 @@ Notice that we show the formalization in the traditional sense and do not consid
 \inference[HCons]{\vDash P \rightarrow P' \hoare{P}{s_0}{Q} & \vDash Q' \rightarrow Q}
 {\hoarePQ{s_0}}
 
-\label{fig:hoare}
 \caption{Hoare logic inference rules.}
+\label{fig:hoare}
 \end{figure}
 
 \textbf{TODO: update to include invariant in while statement?}
@@ -42,35 +43,36 @@ The rules are rather intuitive.
 For Hskip, the pre and postcondition must be the same.
 For Hassign all occurences of x in postcondition Q must be substituted with a.
 For conditionals HIf we have that if the precondition P and the conditional check b holds then Q must hold after the then branch $s_{0}$, and if P and not b holds then Q must hold after the else branch $s_1$.
-For while the assertion, P is called the invariant and must hold before each iteration of the loop and after the loop. In a similar fashion if the conditional b holds before an iteration of s then the invariant must still hold. And when the loop ends, the condition must not hold any longer.
-Sequencing is rather trivial, if P holds before s_0 then R must hold after s_1 Q must hold.
+For while the assertion I is called the invariant and must hold before each iteration of the loop and after the loop.
+In a similar fashion if the conditional b holds before an iteration of s, then the invariant must still hold afterwards.
+When the loop ends, the condition must not hold any longer.
+Sequences are rather intuitive. If P holds in the state $st$, R holds in the state $st''$ that
+is the result of executing $s_{0}$ in $st$, and Q holds in state $st'$ that is the result of
+executing $s_{1}$ in $st''$, then P holds before the sequence $s_{0}; s_{1}$, and Q holds after.
 Lastly the conseqeuce rule HCons is used to strengthen a precondition or weaken a postcondtion.
-From these rules many additional statements can be derived.
 \\~\\
 Using these inference rules one can show a program to be partially correct.
 The reason we can only show partial correctness is because the transitional sequence of statements might be infinite, i.e. a while loop might not terminate.
 
-MAYBE WRITE ABOUT FINITE TRANSITIVE CLOSURE
-
-To prove total correctness additional information for while-loops have to be included in the logic.
-To prove termination a variant $v$ must be provided and it must be subject to a well-founded relation $\prec$.
+To prove total correctness we need to be bale to prove termination for while-loops.
+To do this we need additional information, hence a variant $v$ must be provided and it must
+be subject to a well-founded relation $\prec$.
+We can express the Hoare triple as follows:
 \[
-\inference[HWhile]{\hoare{P \wedge b \wedge v = \xi }{s}{P \wedge \xi}}
-{\hoare{P}{ \mathbf{while} \; b \; \mathbf{invariant} \; P \; \mathbf{variant} v, \prec \; \{ \; s \; \} }{P \wedge \neg b}}[wf(\prec)]
+\inference[HWhile]{\hoare{I \wedge b \wedge v = \xi }{s}{I \wedge \xi}}
+{\hoare{I}{ \mathbf{while} \; b \; \mathbf{invariant} \; I \; \mathbf{variant} \; v, \prec \; \{ \; s \; \} }{I \wedge \neg b}} \; \text{where} \; wf(\prec)
 \]
 where, $\xi$ is a fresh variable. By this total correctness can be achieved.
 \\~\\
 Hoare logic can be shown to be sound, that is if a Hoare triple is proveable from the inference rules then the hoare triple is valid, i.e. $\vdash \hoarePQ{s}$ implies $\vDash \hoarePQ{s}$. This is an important
-property, since we will be unable to derive partial correctness proofs that does not hold. The proof is done on the induction on the derivation of $\vdash \hoarePQ{s}$. We omit this proof, because we dont use Hoare logic in our formalization directly but rather as a consequence for our Verification condition generation.
+property, since it ensures that it is impossible to derive partial correctness proofs that does not hold.
+The proof goes by induction on the derivation of $\vdash \hoarePQ{s}$.
+We omit this proof, because we do not use Hoare logic in our formalization directly, but rather as a consequence for our Verification condition generation.
 \\~\\
-On the other hand Hoare logic was in 1974\cite{} shown to be relatively complete with respect to the assertion language used. That is hoare logic is no more incomplete than the assertion language. This means that $\vdash \hoarePQ{s}$ implies $\vDash \hoarePQ{s}$ and with an expressive enough language.
+With regards to completeness Hoare logic was in 1974 shown to be relatively complete with respect to the assertion language used\cite{cook}.
+That is, Hoare logic is no more incomplete than the assertion language.
+This means that $\vdash \hoarePQ{s}$ implies $\vDash \hoarePQ{s}$, given that the assertion language is expressive enough.
 Notice furthermore that without multiplication Hoare logic would not be complete.
 
-The proof Cook provided used the notion of Weakest liberal precondition (wlp). Wlp was first introduced by Edgar W. Dijkstra and is defined as follows
-
-$$
-\forall P'. P' \Longrightarrow P \; \text{iff} \; \hoare{P'}{s}{Q} \; \text{is valid}
-$$
-
-That is $P$ is a weakest precodition for P such that $Q$ will hold in the halting state of $s$. We denote
-the weakest liberal precodition as $P = wlp(s,Q)$.
+The proof Cook provided used the notion of Weakest liberal precondition (wlp), whic is
+described in \ref{wp}.

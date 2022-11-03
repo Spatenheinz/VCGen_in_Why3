@@ -1,22 +1,35 @@
 % Some stuff about wp
 Now that we have looked at a general axiomatic semantic of our WHILE language, we will look at \textfit{weakest precondition calculus}, which is another sort of axiomatic semantic for our language.
-Weakest precondition calculus is used for generating verification condition, as we can use this calculus to determine the weakest precondition of a program, ie. the weakest precondtition that must hold for the post condition to hold.
-This precondition can then be used as a verification condition for the program, meaning that if the weakest precondition holds, then the correctness of the program can be assured. However, the weakest precondition also assures termination, and that is not always possible. When we are interested in asserting correctness, but not termination, we use \textit{weakest liberal precondition}.
 
+$WP$ was first introduced by Edgar W. Dijkstra and is defined as follows
+
+$$
+\forall P. P \Longrightarrow Q \; \text{iff} \; \hoare{P}{s}{Q} \; \text{is valid}
+$$
+
+That is $P$ is a weakest precodition for $s$ such that $Q$ will hold in the halting state of $s$.
+
+We use weakest precondition calculus for generating verification conditions, as we can use
+this calculus to determine the weakest precondition of a program, ie. the weakest precondition
+that must hold before a statement for the postcondition to hold afte the execution of the statement.
+This precondition can then be used as a verification condition for the program, meaning that if the weakest precondition holds, then the correctness of the program can be assured.
+However, the weakest precondition also assures termination, and that is not always possible. When we are interested in asserting correctness, but not termination, we use \textit{weakest liberal precondition}.
+We denote the weakest liberal precodition as $P = wlp(s,Q)$.
 
 Now we present the rules for determining the weakest liberal precondition of an expression.
-Next we will present the soundness etc of this system ??? \textbf{TODO}.
+Next we will present the intuition behind proving the soundness of this system.
 
 \paragraph{Rules for determining weakest liberal precondition}
 % rules of wp for the construct of our WHILE language
 The weakest liberal precondition is the minimal condition that must hold to prove correctness of a program, assuming that it terminates.
-The \textit{wlp} for our WHILE language (see \autoref{sec:syntax} for syntax) is determined using the rules presented in \autoref{fig:wlp}.
+The \textit{wlp} for our WHILE language (see \ref{sec:syntax} for syntax) is determined using the rules presented in \autoref{fig:wlp}.
 
-\begin{figure}
+\begin{figure}[h!]
 \begin{align*}
 WLP(\texttt{skip}, Q) &= Q \\
-WLP(x:=e,Q) &= \forall y, y = e \Rightarrow Q[x \leftarrow y] \\
+WLP(x:=e,Q) &= \forall y, y = e \Rightarrow Q[x \mapsto y] \\
 WLP(s_0;s_1, Q) &= WLP(s_0, WLP(s_1, Q)) \\
+WLP(\{P\}, Q) &= P \land Q \quad \text{where P is an assertion} \\
 WLP(\texttt{if } e \texttt{ then } s_0 \texttt{ else } s_1, Q) &= (e \Rightarrow WLP(s_0, Q)) \\
     &\quad \land (\neg e \Rightarrow WLP(s_1, Q)) \\
 WLP(\texttt{while } e \texttt{ invariant } I \texttt{ do } s, Q) &=
@@ -24,10 +37,9 @@ WLP(\texttt{while } e \texttt{ invariant } I \texttt{ do } s, Q) &=
 &\forall x_1, ..., x_k, \\
 &(((e \land I) \Rightarrow WLP(s, I)) \\
 &\quad \land (( \neg e \land I) \Rightarrow Q))
-    [w_i \leftarrow x_i] \\
+    [w_i \mapsto x_i] \\
 &\text{where } w_1, ..., w_k \text{ is the set of assigned variables in} \\
-&\text{statement } s \text{ and } x_1, ..., x_k \text{ are fresh logical variables.} \\
-WLP(\{P\}, Q) &= P \land Q \quad \text{where P is an assertion}
+&\text{statement } s \text{ and } x_1, ..., x_k \text{ are fresh logical variables.}
 \end{align*}
 \caption{Rules for computing weakest liberal precondition \cite{wlp}.}
 \label{fig:wlp}
@@ -50,12 +62,12 @@ The last rule concerns assertion statements, and this case is trivial, as we sim
 \paragraph{Soundness of wlp}
 % soundness etc. refer to automated proofs in section ???
 For the weakest liberal precondition calculus to be meaningful to us, we must assert that the calculus is actually sound.
-This is done by proving that \textit{for all statements s and formula Q, {WLP(s, Q)}s{Q} is valid for partial correctness}.
+This is done by proving that \textit{for all statements s and formula Q, \{WLP(s, Q)\}s\{Q\} is valid for partial correctness}.
 We present here the stategy and intuition behind the proof, using the prcedure presented in \cite{wlp}.
 
 The proof is done by considering the rules of finding the wlp for the different statements, thus it uses structural induction on $s$.
-As a preliminary remark it should be noted that for any formula $\phi$ and any state $\Sigma$, we have that the interpretation of $\forall x_{1} ... x_{k} \phi [w_{i} \leftarrow x_{i}]$ in $\Sigma$ does not depend on the values of variables in $\Sigma$, thus if it holds for one state $\Sigma$ then it should hold for all states $\Sigma'$ that only differs from $\Sigma$ in the value of the variables.
-
+As a preliminary remark it should be noted that for any formula $\phi$ and any state $\Sigma$, we have that the interpretation of $\forall x_{1} ... x_{k} \phi [w_{i} \mapsto x_{i}]$ in $\Sigma$ does not depend on the values of variables in $\Sigma$, thus if it holds for one state $\Sigma$ then it should hold for all states $\Sigma'$ that only differs from $\Sigma$ in the value of the variables.
+\\~\\
 Now lets look at the structure of the proof.
 We consider each possible case of $s$, thus considering all the different types of statements.
 Most of these are straightforward, but the case for $while$-expressions is somewhat tricky.
@@ -68,7 +80,7 @@ The rest of the proof uses induction on the length of the execution denoted by $
 \subparagraph{Case $e=0$.}
 This terminates the loop, thus $\Sigma = \Sigma'$.
 In this case we have that $\llbracket e \rrbracket_{\Sigma} = 0$, by the assumption.
-From the wlp rule for while expressions, we get that $\llbracket I \rrbracket_{\Sigma}$ and $\llbracket ((e = 0 \land I) \Rightarrow Q) [ w_{i} \leftarrow x_{i}] \rrbracket_{\Sigma}$.
+From the wlp rule for while expressions, we get that $\llbracket I \rrbracket_{\Sigma}$ and $\llbracket ((e = 0 \land I) \Rightarrow Q) [ w_{i} \mapsto x_{i}] \rrbracket_{\Sigma}$.
 By the preliminary notion, we know that we can instatiate each $w_{i}$ to the variables of $\Sigma$, and then we get $\llbracket (e = 0 \land I) \Rightarrow Q \rrbracket_{\Sigma}$.
 Now, as $\llbracket I \rrbracket_{\Sigma}$ and $\llbracket e \rrbracket_{\Sigma} = 0$ we get that $\llbracket Q \rrbracket_{\Sigma}$, which was exactly what we wanted to show.
 
@@ -79,11 +91,12 @@ Then the execution must execute the sequence $b;s$ in $\Sigma$, and end in some 
 Lastly, from that state executing $s$ again will get us to the final state $\Sigma$.
 
 \textbf{TODO: explain this better}.
-We can prove that $\{WLP(s, Q)\}s\{Q\}$ for this case by proving that $\llbracket I \rrbracket_{\Sigma''}$ and $\llbracket WLP(s, Q)\rrbracket_{\Sigma''}$, from where we can use induction on the length of the execution to say that $\llbracket Q \rrbracket_{\Sigma'}$.
 
-By the assumption we know that $\llbracket e \rrbracket_{\Sigma} \neq 0$, and by the wlp rule we have that $\llbracket I \rrbracket_{\Sigma}$ and $\llbracket ((e \neq 0 \land I) \Rightarrow WLP(b, I)) [ w_{i} \leftarrow x_{i}] \rrbracket_{\Sigma}$.
+We can prove that $\{WLP(s, Q)\}s\{Q\}$ by proving that $\llbracket I \rrbracket_{\Sigma''}$ and $\llbracket WLP(s, Q)\rrbracket_{\Sigma''}$, from where we can use induction on the length of the execution to say that $\llbracket Q \rrbracket_{\Sigma'}$.
+By the assumption we know that $\llbracket e \rrbracket_{\Sigma} \neq 0$, and by the wlp rule we have that $\llbracket I \rrbracket_{\Sigma}$ and $\llbracket ((e \neq 0 \land I) \Rightarrow WLP(b, I)) [ w_{i} \mapsto x_{i}] \rrbracket_{\Sigma}$.
 Again we instatiate all variables to those in $\Sigma$, and get $\llbracket ((e \neq 0 \land I) \Rightarrow WLP(b, I)) \rrbracket_{\Sigma}$.
 Because we have that $\llbracket e \rrbracket_{\Sigma} \neq 0$ and $\llbracket I \rrbracket_{\Sigma}$, we get that $\llbracket WLP(b, I) \rrbracket_{\Sigma}$.
 First we need to know that $I$ holds in $\Sigma''$. By IH we have $\{WLP(b, I)\}b\{I\}$, which means that $\llbracket I \rrbracket_{\Sigma''}$.
-As described in \cite{wlp} the only difference between $\Sigma''$ and $\Sigma$ is the values of the variables $w_{i}$, and by the preliminary remark we get that $\llbracket ((e \neq 0 \land I) \Rightarrow WLP(b, I)) [ w_{i} \leftarrow x_{i}] \rrbracket_{\Sigma''}$, which means that we now have all we need to know that $\llbracket WLP(s, Q) \rrbracket_{\Sigma''}$.
-We now use
+
+As described in \cite{wlp} the only difference between $\Sigma''$ and $\Sigma$ is the values of the variables $w_{i}$, and by the preliminary remark we get that $\llbracket ((e \neq 0 \land I) \Rightarrow WLP(b, I)) [ w_{i} \mapsto x_{i}] \rrbracket_{\Sigma''}$, which means that we now have all we need to know that $\llbracket WLP(s, Q) \rrbracket_{\Sigma''}$.
+We now use the induction on the length of the execution to say that $\llbracket Q \rrbracket_{\Sigma'}$, which is exactly what we wanted to show.
