@@ -149,6 +149,36 @@ module WP
 
   lemma normal_eval_is_closed_wp : forall sigma sigma' s.
         eval_stmt s sigma (Enormal sigma') ->
-        is_closed_formula (wp s (Fterm (BCst True))) sigma
+        is_closed_formula (wp s (Fterm (BCst true))) sigma
+
+  let function prog () =
+    (* var 2 is q *)
+    (Sseq (Sass 2 (Acst 10))
+    (* var 1 is res *)
+    (Sseq (Sass 1 (Acst 0))
+    (* var 0 is r *)
+    (Sseq (Sass 0 (Acst 5))
+    (* Ghost var = q *)
+    (Sseq (Sass (-1) (Avar 2))
+
+    (Sseq (Swhile (Bleq (Acst 0) (ABin (Avar 2) Add (Acst 1)))
+          (* res <= (ghost - q) * r /\ res >= (ghost - q) * r *)
+          (Fand (Fterm (Band (Bleq (Avar 1)  (ABin (ABin (Avar (-1)) Sub (Avar 2)) Mul (Avar 0)))
+               (Bleq (ABin (ABin (Avar (-1)) Sub (Avar 2)) Mul (Avar 0)) (Avar 1))))
+          (* 0 <= q *)
+               (Fterm (Bleq (Acst 0) (Avar 2))))
+          (* NOW BODY OF THE LOOP *)
+          (Sseq (Sass 1 (ABin (Avar 1) Add (Avar 0)))
+                (Sass 2 (ABin (Avar 2) Sub (Acst 1)))))
+
+          (* Assert {res = ghost * r} *)
+          (Sassert (Fterm (Band (Bleq (Avar 1) (ABin (Avar (-1)) Mul (Avar 0)))
+                        (Bleq (ABin (Avar (-1)) Mul (Avar 0)) (Avar 1))))))))))
+
+  lemma mult_is_correct :
+     valid_formula (wp (prog ()) (Fterm (BCst true)))
+
+  lemma soundness_wp : forall st st' : store int, s.
+     eval_stmt s st (Enormal st') -> forall q. eval_formula (wp s q) st -> eval_formula q st'
 
 end

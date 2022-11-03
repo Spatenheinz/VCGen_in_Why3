@@ -241,32 +241,46 @@ module Semantics
                                b1 = b2
        }
      = match s with
-       | Sskip -> Enormal st
-       | Sass x a -> match eval_aexpr_total_fun a st with
-                     | Enormal i -> Enormal (st[x <- Some i])
-                     | Eabnormal e -> Eabnormal e
-                     end
-       | Sseq s1 s2 -> match eval_stmt_deterministic s1 st with
-                       | Enormal st' -> eval_stmt_deterministic s2 st'
-                       | Eabnormal e -> Eabnormal e
-                       end
-       | Sassert _ -> Enormal st
+       | Sskip -> ()
+       | Sass _ _  -> ()
+       | Sseq s1 s2 -> eval_stmt_deterministic s1 st; eval_stmt_deterministic s2 st
+       | Sassert _ -> ()
        | Sif b s1 s2 -> match eval_bexpr_total_fun b st with
                         | Enormal b' -> if b' then eval_stmt_deterministic s1 st
                                         else eval_stmt_deterministic s2 st
-                        | Eabnormal e -> Eabnormal e
+                        | Eabnormal _ -> ()
                         end
-       | Swhile b i s -> match eval_bexpr_total_fun b st with
-                         | Enormal b' -> if b' then
-                                         match eval_stmt_deterministic s st with
-                                         | Enormal st' -> eval_stmt_deterministic (Swhile b i s) st'
-                                         | e -> e
-                                         end
-                                         else
-                                          Enormal st
-                         | Eabnormal e -> Eabnormal e
+       | Swhile b _ s -> match eval_bexpr_total_fun b st with
+                         | Enormal b' -> if b' then eval_stmt_deterministic s st
+                                         else ()
+                         | Eabnormal _ -> ()
                          end
        end
+       (* | Sskip -> Enormal st *)
+       (* | Sass x a -> match eval_aexpr_total_fun a st with *)
+       (*               | Enormal i -> Enormal (st[x <- Some i]) *)
+       (*               | Eabnormal e -> Eabnormal e *)
+       (*               end *)
+       (* | Sseq s1 s2 -> match eval_stmt_deterministic s1 st with *)
+       (*                 | Enormal st' -> eval_stmt_deterministic s2 st' *)
+       (*                 | Eabnormal e -> Eabnormal e *)
+       (*                 end *)
+       (* | Sassert _ -> Enormal st *)
+       (* | Sif b s1 s2 -> match eval_bexpr_total_fun b st with *)
+       (*                  | Enormal b' -> if b' then eval_stmt_deterministic s1 st *)
+       (*                                  else eval_stmt_deterministic s2 st *)
+       (*                  | Eabnormal e -> Eabnormal e *)
+       (*                  end *)
+       (* | Swhile b i s -> match eval_bexpr_total_fun b st with *)
+       (*                   | Enormal b' -> if b' then *)
+       (*                                   match eval_stmt_deterministic s st with *)
+       (*                                   | Enormal st' -> eval_stmt_deterministic (Swhile b i s) st' *)
+       (*                                   | e -> e *)
+       (*                                   end *)
+       (*                                   else *)
+       (*                                    Enormal st *)
+       (*                   | Eabnormal e -> Eabnormal e *)
+       (*                   end *)
 
   lemma seval_determ : forall st : store 'a, s b1 b2.
      eval_stmt s st b1 -> eval_stmt s st b2 -> b1 = b2
