@@ -99,19 +99,19 @@ To do so we must consider two of the same properties we just stated for a\texttt
 Monotonicity of WLP is that if for two formulas $p$ and $q$ the formula $\vDash p \Rightarrow q$ then $\vDash wp(s, p) \Rightarrow wp(s,q)$. Notice again that this must hold for all statements and states.
 Distribution of weakest precondition over conjuction, is similar to the lemma of abstract effects only the transformation on $p$ and $q$ are now considered for $wp$.
 
-\begin{lstlistings}
+\begin{lstlisting}
 lemma monotonicity: forall s p q.
       valid_formula (Fimp p q) -> valid_formula (Fimp (wp s p) (wp s q))
 
 lemma distrib_conj: forall s sigma p q.
       eval_formula (wp s p) sigma /\ eval_formula (wp s q) sigma ->
       eval_formula (wp s (Fand p q)) sigma
-\end{lstlistings}
+\end{lstlisting}
 
 Once again we, we not able to directly show this. We tried to unfold the recursion on $s$, in a similar manner to how we proved determinism.
 We did not achieve anything by this.
 We have a formalized proof of both properties in Isabelle.
-The proof for monotonicity can be seen in \cite{lst:isamono}.
+The proof for monotonicity can be seen in \autoref{lst:isamono}.
 As mentioned we prove the lemma by induction on $s$.
 And mark $p$ and $q$ as arbitrary, since the lemma should hold for any non-fixed $p$ and $q$.
 The proof only shows the cases for sequences, assignments and while.

@@ -18,19 +18,25 @@ There is a clear distinction between logical functions and program functions in 
 All program functions is specified with a \texttt{let} and can be extracted,
 while the logical functions can be used to reason about the program functions.
 Actually extracting the code has been a bit of a challenge.
-Firstly, as mentioned earlier we compromised in regards to assertions in the operational semantics of the program. For the reason it is hard to argue about logical quantifiers on a program level, while it is much easier to do on a logical level. Hence why evaluation of Formulas is done with a predicate and not a program function.
+Firstly, as mentioned earlier we compromised in regards to assertions in the operational semantics of the program. For the reason that it is hard to argue about logical quantifiers on a program level, while it is much easier to do on a logical level. Hence why evaluation of Formulas is done with a predicate and not a program function.
 Furthermore, making the actual evaluator was quite troublesome.
 For defining the actual semantics we used inductive predicates, which is a logical construct, and this is extremely useful because we can argue the correctness of evaluation of a statement on a program level.
 In this reasoning we used maps, which is simply functions, with some syntactical sugar for updates and computations.
-The problem arises when we need to define the environment for the actual interpreter. We were not able
-to find any module which was extractable and would adhere to the same logical meaning as that of maps.
-Hence we had to implement the module explained in \ref{sec:env}. And while there might be better ways to
-handle the store, Our current approach seems to suffice.
+The problem arises when we need to define the environment for the actual interpreter.
+
+We were not able to find any module which was extractable and would adhere to the same logical meaning as that of maps.
+Hence we had to implement the module explained in \ref{sec:env}.
+And while there might be better ways to handle the store, Our current approach seems to suffice.
 
 In regards to the verification condition generation, we did not run into too much trouble.
-As mentioned previously our approach to the weakest precondition generation follows the same structure as WP revisited in why3\cite{TODO wp revisited}, but deviates in how functions are defined. Axiomatized functions can clearly not be exported, since they dont have a function body but simply must adhere to a set of axioms.
-And therfore we need to prove explicitly that our function is correct, whereas axiomatization will be correct by definition.
+As mentioned previously our approach to the weakest precondition generation follows the same structure as WP revisited in why3\cite{},
+but deviates in how functions are defined.
+Axiomatized functions can clearly not be exported,
+since they dont have a function body but simply must adhere to a set of axioms.
+And therfore we need to prove explicitly that our function is correct,
+whereas axiomatization will be correct by definition.
 But actually extracting the $wp$ function is rather simple, as it essentially just transforms an ADT.
+And clearly can be defined in on the program level.
 
 
 \paragraph{Using the extracted code.}
@@ -38,9 +44,9 @@ The code is essentially split into two different functionalities.
 The evaluator does imperative evaluation on some statement in the mutable environment.
 We can extract the code for evaluation by the following command:
 
-\begin{lstlistings}
-$ why3 extract --recursive -D ocaml64 -L . evaluator.mlw -o eval.ml
-\end{lstlistings}
+\begin{lstlisting}
+why3 extract --recursive -D ocaml64 -L . evaluator.mlw -o eval.ml
+\end{lstlisting}
 
 This will tell to recursively add dependencies into the module defined in the evaluator.mlw file, using the ocaml64 driver and create a module in the file eval.ml.
 We can then use the module in an ocaml project (where we might define a parser etc. for the language).
@@ -49,7 +55,7 @@ The program, defines two WHILE programs, which are very simple.
 \texttt{prog} is a simple assignment. One thing to note is that because we used the int type in why3, we have to use the \(Z.of\_int\) because int's in why3 are unbounded integers from the zarith library.
 \texttt{prog'} defines a slightly more complicated program, which does 2 assignments, and the second assignment tries to assign an expression with an unbound variable to a variable.
 
-\begin{lstlistings}[caption={ocaml program using the evaluator},label={lst:ocamlexample},language=sml]
+\begin{lstlisting}[caption={ocaml program using the evaluator},label={lst:ocamlexample},language=sml]
 open Eval
 let prog =
              Sass  (Z.of_int 1, ABin (
@@ -69,26 +75,26 @@ let res = eval_prog prog
 let () = List.iter (fun (k,v) -> Format.printf "%d, %d\n" (Z.to_int k) (Z.to_int v)) res
 let () = List.iter (fun (k,v) -> Format.printf "%d, %d\n" (Z.to_int k) (Z.to_int v)) sigma.lst
 let res' = eval_prog prog'
-\end{lstlistings}
+\end{lstlisting}
 
 Compiling the program with
 
-\begin{lstlistings}
+\begin{lstlisting}
 \textdollar ocamlbuild -pkg zarith main.native
-\end{lstlistings}
+\end{lstlisting}
 
 and running it by:
 
-\begin{lstlistings}
+\begin{lstlisting}
 \textdollar ./main.native
-\end{lstlistings}
+\end{lstlisting}
 
 The following output is produced:
 
-\begin{lstlistings}
+\begin{lstlisting}
 1, 50
 Fatal error: exception Eval.Unbound
-\end{lstlistings}
+\end{lstlisting}
 
 The evaluation of the first program is that variable 1 is 50. The second List.iter prints nothing,
 this shows that we correctly resets the environment. Lastly \texttt{prog'} correctly produces an Unbound exception.
@@ -96,28 +102,27 @@ this shows that we correctly resets the environment. Lastly \texttt{prog'} corre
 The procedure for the verification condition generator is the same.
 It is worth noting that we have not implemented any way to use the generated formula for anything.
 And thus it may render useless for now to extract it.
-In case one want to actually verify the correctness of a WHILE program, we need an SMT solver.
+In case one want to actually verify the correctness of a WHILE program, we can use the povers of Why3 and use the meta level of logic using a goal.
 Take the following program
 
-\begin{lstlistings}[caption={WHILE program which multiples q and r by repeated addition},label={lst:whileexample},language=sml]
+\begin{lstlisting}[caption={WHILE program which multiples q and r by repeated addition},label={lst:whileexample},language=sml]
 q = 10;
 r = 5;
 res = 0;
 ghost = q;
 while (q > 0)
-invariant {(res \leq (ghost - q) * r && (ghost - q) * r \leq res) /\ 0 \leq} {
+invariant {(res $\leq$ (ghost - q) * r && (ghost - q) * r $\leq$ res) /\ 0 \leq q} {
       res = res + r;
       q = q - 1;
 };
-#{res \leq ghost * r /\ ghost * r \leq res};
-\end{lstlistings}
+assert {res $\leq$ ghost * r /\ ghost * r $\leq$ res};
+\end{lstlisting}
 
 The syntax should be straight forward. The program will define 4 variables, $q,r,res$ and $ghost$.
 The program will execute the while loop $q$ times. In the body of the loop we add $r$ to $res$ and decrement $q$ by 1. We keep as invariant that $res = (ghost - q) * r$. Lastly we assert that $res$ is the orignal value of $q$, described by $ghost$, multiplied with $r$.
-
 Writing this as an AST, we have:
 
-\begin{lstlistings}[caption={WHILE AST in why3},label={lst:whileast},language=sml]
+\begin{lstlisting}[caption={WHILE AST in why3},label={lst:whileast},language=sml]
 let function prog () =
   (* var 2 is q *)
   (Sseq (Sass 2 (Acst 10))
@@ -141,13 +146,13 @@ let function prog () =
         (* Assert {res = ghost * r} *)
         (Sassert (Fterm (Band (Bleq (Avar 1) (ABin (Avar (-1)) Mul (Avar 0)))
         (Bleq (ABin (Avar (-1)) Mul (Avar 0)) (Avar 1))))))))))
-      \end{lstlistings}
+      \end{lstlisting}
 
-We can then construct a lemma checking if the weakest precondition of this program is valid.
+We can then construct a goal checking if the weakest precondition of this program is valid.
 
-\begin{lstlistings}
-lemma mult_is_correct :
+\begin{lstlisting}
+goal mult_is_correct :
    valid_formula (wp (prog ()) (Fterm (BCst true)))
-\end{lstlistings}
+\end{lstlisting}
 
-Feeding this to an SMT solver such as Eprover, we can show the program to be correct.
+Feeding this to an SMT solver such as Eprover, we can show the program to be correct, in around half a second.

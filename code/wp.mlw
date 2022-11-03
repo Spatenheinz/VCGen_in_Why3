@@ -175,7 +175,7 @@ module WP
           (Sassert (Fterm (Band (Bleq (Avar 1) (ABin (Avar (-1)) Mul (Avar 0)))
                         (Bleq (ABin (Avar (-1)) Mul (Avar 0)) (Avar 1))))))))))
 
-  lemma mult_is_correct :
+  goal mult_is_correct :
      valid_formula (wp (prog ()) (Fterm (BCst true)))
 
   lemma soundness_wp : forall st st' : store int, s.
