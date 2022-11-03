@@ -53,12 +53,37 @@ For the weakest liberal precondition calculus to be meaningful to us, we must as
 This is done by proving that \textit{for all statements s and formula Q, {WLP(s, Q)}s{Q} is valid for partial correctness}.
 We present here the stategy and intuition behind the proof, using the prcedure presented in \cite{wlp}.
 
-The proof is done by considering the rules of finding the wlp for the different statements, thus it uses induction on $s$.
+The proof is done by considering the rules of finding the wlp for the different statements, thus it uses structural induction on $s$.
 As a preliminary remark it should be noted that for any formula $\phi$ and any state $\Sigma$, we have that the interpretation of $\forall x_{1} ... x_{k} \phi [w_{i} \leftarrow x_{i}]$ in $\Sigma$ does not depend on the values of variables in $\Sigma$, thus if it holds for one state $\Sigma$ then it should hold for all states $\Sigma'$ that only differs from $\Sigma$ in the value of the variables.
 
-Now lets look at the struvture of the proof.
+Now lets look at the structure of the proof.
 We consider each possible case of $s$, thus considering all the different types of statements.
 Most of these are straightforward, but the case for $while$-expressions is somewhat tricky.
 Therefore we will dive a bit into the intuition behind that case.
 
-Lets assume that $s =$ \texttt{while $cond$ invariant $inv$ $body$}. Now we want to show that {WLP(s, Q)}s{Q} holds. We assume that we have a state $\Sigma$ such that {WLP(s, Q)} holds, and that $s$ executes in $\Sigma$ and terminates, given by $\Sigma, s \leadsto * \Sigma '$.
+Lets assume that $s =$ \texttt{while $cond$ invariant $inv$ $body$}.
+Now we want to show that \{WLP(s, Q)\}s\{Q\} holds. We assume that we have a state $\Sigma$ such that $\llbracket WLP(s, Q)\rrbracket_{\Sigma}$ holds, and that $s$ executes in $\Sigma$ and terminates, given by $\Sigma, s \rightsquigarrow^{*} \Sigma '$.
+The rest of the proof uses induction on the length of the execution denoted by $\rightsquigarrow^{*}$.
+
+\subparagraph{Case $e=0$.}
+This terminates the loop, thus $\Sigma = \Sigma'$.
+In this case we have that $\llbracket e \rrbracket_{\Sigma} = 0$, by the assumption.
+From the wlp rule for while expressions, we get that $\llbracket I \rrbracket_{\Sigma}$ and $\llbracket ((e = 0 \land I) \Rightarrow Q) [ w_{i} \leftarrow x_{i}] \rrbracket_{\Sigma}$.
+By the preliminary notion, we know that we can instatiate each $w_{i}$ to the variables of $\Sigma$, and then we get $\llbracket (e = 0 \land I) \Rightarrow Q \rrbracket_{\Sigma}$.
+Now, as $\llbracket I \rrbracket_{\Sigma}$ and $\llbracket e \rrbracket_{\Sigma} = 0$ we get that $\llbracket Q \rrbracket_{\Sigma}$, which was exactly what we wanted to show.
+
+\subparagraph{Case $e \neq 0 $.}
+In this case the loop does not terminate, but executes another iteration of the body.
+That means $\Sigma \neq \Sigma'$, and that the execution must first execute $\Sigma, s \rightsquigarrow \Sigma$, as the state does not change at first.
+Then the execution must execute the sequence $b;s$ in $\Sigma$, and end in some state $\Sigma''$.
+Lastly, from that state executing $s$ again will get us to the final state $\Sigma$.
+
+\textbf{TODO: explain this better}.
+We can prove that $\{WLP(s, Q)\}s\{Q\}$ for this case by proving that $\llbracket I \rrbracket_{\Sigma''}$ and $\llbracket WLP(s, Q)\rrbracket_{\Sigma''}$, from where we can use induction on the length of the execution to say that $\llbracket Q \rrbracket_{\Sigma'}$.
+
+By the assumption we know that $\llbracket e \rrbracket_{\Sigma} \neq 0$, and by the wlp rule we have that $\llbracket I \rrbracket_{\Sigma}$ and $\llbracket ((e \neq 0 \land I) \Rightarrow WLP(b, I)) [ w_{i} \leftarrow x_{i}] \rrbracket_{\Sigma}$.
+Again we instatiate all variables to those in $\Sigma$, and get $\llbracket ((e \neq 0 \land I) \Rightarrow WLP(b, I)) \rrbracket_{\Sigma}$.
+Because we have that $\llbracket e \rrbracket_{\Sigma} \neq 0$ and $\llbracket I \rrbracket_{\Sigma}$, we get that $\llbracket WLP(b, I) \rrbracket_{\Sigma}$.
+First we need to know that $I$ holds in $\Sigma''$. By IH we have $\{WLP(b, I)\}b\{I\}$, which means that $\llbracket I \rrbracket_{\Sigma''}$.
+As described in \cite{wlp} the only difference between $\Sigma''$ and $\Sigma$ is the values of the variables $w_{i}$, and by the preliminary remark we get that $\llbracket ((e \neq 0 \land I) \Rightarrow WLP(b, I)) [ w_{i} \leftarrow x_{i}] \rrbracket_{\Sigma''}$, which means that we now have all we need to know that $\llbracket WLP(s, Q) \rrbracket_{\Sigma''}$.
+We now use
