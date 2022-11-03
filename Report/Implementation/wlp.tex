@@ -29,7 +29,7 @@ $((cond \wedge inv) \Rightarrow wp(body,inv)) \wedge ((\neg cond \wedge inv) \Ri
 If the statement is an assignment
 a fresh variable is made and substituted into $f$, and we then quantify the freshly made variable.
 This is not the most efficient solution, as multiple assignment to the same variable will create unused quantifiers.
-All ther cases will traverse the abstract syntaxt tree or is a leaf and does nothing.
+All the cases will traverse the abstract syntaxt tree or is a leaf and does nothing.
 
 \begin{lstlisting}
 let rec function abstract_effects (s : stmt int) (f : formula int) : formula int
@@ -45,7 +45,7 @@ let rec function abstract_effects (s : stmt int) (f : formula int) : formula int
 \end{lstlisting}
 
 Whilst we implemented this function directly, we still want the properties for the function to hold.
-Firstly, we have
+\parapgraph{specialization.} Firstly, we have
 
 \begin{lstlisting}
   lemma abstract_effects_specialize : forall st : store int, s f.
@@ -54,6 +54,8 @@ Firstly, we have
 
 which states that evaluation of applying abstract effects off s on f in state st implies that f evaluates to true in st. Essentially it states that if we quantify the variables in f and the formula is true under the quantification, then $f$ also hold if the variables are not quantified.
 THIS DOES NOT MAKE ANY SENSE??? PLEASE LOOK AT IT TOMORROW.
+
+\paragraph{Quatification over conjunction.}
 Secondly, we have
 \begin{lstlisting}
 lemma abstract_effects_distrib_conj : forall s p q st.
@@ -62,8 +64,10 @@ lemma abstract_effects_distrib_conj : forall s p q st.
  \end{lstlisting}
 
 Which states that if we apply abstract effects of s on two formulas p and q and they both evaluates to true,
-then evaluating the result of applying the abstract effects of s on the conjunction of p and q, must also be true.
-Thirdly, we have the property of monotinicity.
+then evaluating the result of applying the abstract effects of s over the conjunction of p and q, must also be true.
+
+\paragraph{Monotonicity.}
+Thirdly, we have the property of monotonicity.
 
 \begin{lstlisting}
 lemma abstract_effects_monotonic : forall s p q.
@@ -72,12 +76,41 @@ lemma abstract_effects_monotonic : forall s p q.
    eval_formula (abstract_effects s q) st
  \end{lstlisting}
 
-If the formula $p \Rightarrow q$ is valid,
+Essentially what monotonicity states, is that applying additional assumptions to a formula will not change the meaning. It should be noted that we want to quantify all states in the entailment, as the property does not hold for a fixed state.
 
+\paragraph{Invariance.}
+Lastly, we consider the notion of invariance.
+TODO: I DONT THINK THIS IS NECESSARY.
 
+In \cite{TODO} the axiomatized version of the following lemma, is used to define which variables should be quantified.
+We explicitly state this in the body of \texttt{abstract\_effects},
+but for good measure we include it as a lemma. The property states that if a the formula $q$ abstracted by $s$ is true in some state, then the weakest precondition on the same abstraction on $q$ by $s$ is true should also be true. When \cite{} uses this as an axiom, it ensures, that \texttt{abstract\_effects}
 
-\paragraph{Properties of WLP}
-How do we ensure that it is correct? I.e follows the semantics.
+\paragraph{Proofs of properties for abstract\_effects}
+We have not been able to automatically prove these lemmas in why3.
+At the moment we have a partial proof for the function in Isabelle.
+???? WRITE SOME MORE ????
+
+\paragraph{Properties Soundness of WLP}
+One of the main goals in making a formally verified Verification condition generator is to ensure the correctness of the implementation.
+We consider the correctness through its soundness.
+To do so we must consider two of the same properties we just stated for a\texttt{abstract\_effects}, namely monotonicity and conjunction distribution.
+
+Monotonicity of WLP is that if for two formulas $p$ and $q$ the formula $\vDash p \Rightarrow q$ then $\vDash wp(s, p) \Rightarrow wp(s,q)$. Notice again that this must hold for all statements and states.
+Distribution of weakest precondition over conjuction, is similar to the lemma of abstract effects only the transformation on $p$ and $q$ are now considered for $wp$.
+
+\begin{lstlistings}
+lemma monotonicity: forall s p q.
+      valid_formula (Fimp p q) -> valid_formula (Fimp (wp s p) (wp s q))
+
+lemma distrib_conj: forall s sigma p q.
+      eval_formula (wp s p) sigma /\ eval_formula (wp s q) sigma ->
+      eval_formula (wp s (Fand p q)) sigma
+\end{lstlistings}
+
+Once again we, we not able to directly show this.
+TODO: should we consider making recursive lemmas for this?
+
 
 
 \paragraph{Soundness and Completeness???}

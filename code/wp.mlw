@@ -53,7 +53,8 @@ module WP
     end
 
   lemma abstract_effects_specialize : forall st : store int, s f.
-    eval_formula (abstract_effects s f) st -> eval_formula f st
+    eval_formula (abstract_effects s f) st ->
+    eval_formula f st
 
   (* let rec lemma abstract_effects_specialize (s : stmt int) (f : formula int) (st: store int) *)
   (*    requires {  eval_formula (abstract_effects s f) st  } *)
@@ -118,6 +119,16 @@ module WP
 
   lemma monotonicity: forall s p q.
         valid_formula (Fimp p q) -> valid_formula (Fimp (wp s p) (wp s q))
+
+  let rec lemma monotonicity_rec (s: stmt int) (p : formula int) (q : formula int)
+     variant { s }
+     ensures { valid_formula (Fimp p q) -> valid_formula (Fimp (wp s p) (wp s q)) }
+  = match s with
+    | Sskip | Sassert _ | Sass _ _ -> ()
+    | Sseq s1 s2 | Sif _ s1 s2 -> monotonicity_rec s1 p q; monotonicity_rec s2 p q
+    | Swhile _ _ s -> monotonicity_rec s p q
+    end
+
 
   lemma distrib_conj: forall s sigma p q.
         eval_formula (wp s p) sigma /\ eval_formula (wp s q) sigma ->
