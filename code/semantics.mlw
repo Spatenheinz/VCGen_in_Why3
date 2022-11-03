@@ -46,10 +46,10 @@ module Semantics
     (*            eval_aexpr a2 s (Enormal n2) -> *)
     (*            op = Add -> *)
     (*            eval_aexpr (ABin a1 op a2) s (Enormal (n1 + n2)) *)
-    | EAOp_err1 : forall a1 a2, s : store 'a, op e.
+    | EABin_err1 : forall a1 a2, s : store 'a, op e.
                eval_aexpr a1 s (Eabnormal e) ->
                eval_aexpr (ABin a1 op a2) s (Eabnormal e)
-    | EAOp_err2 : forall a1 a2 n1, s : store 'a, op e.           (* can we skip eval of a1? *)
+    | EABin_err2 : forall a1 a2 n1, s : store 'a, op e.           (* can we skip eval of a1? *)
                eval_aexpr a1 s (Enormal n1) ->
                eval_aexpr a2 s (Eabnormal e) ->
                eval_aexpr (ABin a1 op a2) s (Eabnormal e)

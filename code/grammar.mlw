@@ -10,10 +10,10 @@ module Grammar
   type aexpr 'a =
        | Acst int
        | Avar 'a
-       | ABin (aexpr 'a) aop (aexpr 'a)
+       | Abin (aexpr 'a) aop (aexpr 'a)
 
   type bexpr 'a =
-       | BCst bool
+       | Bcst bool
        | Bleq (aexpr 'a) (aexpr 'a)
        | Band (bexpr 'a) (bexpr 'a)
        | Bnot (bexpr 'a)
@@ -51,7 +51,7 @@ module Formula
   = match a with
     | Acst _ -> true
     | Avar v   -> id <> v
-    | ABin a1 _ a2 -> andb (fresh_in_aexpr id a1) (fresh_in_aexpr id a2)
+    | Abin a1 _ a2 -> andb (fresh_in_aexpr id a1) (fresh_in_aexpr id a2)
     end
 
   predicate fresh_in_bexpr (id: 'a) (b: bexpr 'a) =
@@ -59,7 +59,7 @@ module Formula
     | Bleq a1 a2 -> fresh_in_aexpr id a1 /\ fresh_in_aexpr id a2
     | Band b1 b2 -> fresh_in_bexpr id b1 /\ fresh_in_bexpr id b2
     | Bnot b -> fresh_in_bexpr id b
-    | BCst _ -> true
+    | Bcst _ -> true
     end
 
   predicate fresh_in_formula (id: 'a) (f: formula 'a) =
@@ -76,7 +76,7 @@ module Formula
   = match a with
     | Acst _       -> id
     | Avar v       -> max id v
-    | ABin a1 _ a2 -> max (max_id_aexpr id a1) (max_id_aexpr id a2)
+    | Abin a1 _ a2 -> max (max_id_aexpr id a1) (max_id_aexpr id a2)
     end
 
   let rec function max_id_bexpr (id: id) (b: bexpr id) : id
@@ -85,7 +85,7 @@ module Formula
     | Bleq a1 a2 -> max (max_id_aexpr id a1) (max_id_aexpr id a2)
     | Band b1 b2 -> max (max_id_bexpr id b1) (max_id_bexpr id b2)
     | Bnot b     -> max_id_bexpr id b
-    | BCst _     -> id
+    | Bcst _     -> id
     end
 
   let rec function max_id_formula (id: id) (f: formula id) : id
@@ -104,7 +104,7 @@ module Formula
   = match a with
     | (Acst _) -> empty
     | (Avar v) -> singleton v
-    | (ABin a1 _ a2) -> union (vars_in_aexpr a1) (vars_in_aexpr a2)
+    | (Abin a1 _ a2) -> union (vars_in_aexpr a1) (vars_in_aexpr a2)
     end
 
   lemma max_id_trivial : forall a. max_id_aexpr 0 a >= 0
@@ -115,7 +115,7 @@ module Formula
   = match a with
     | (Acst n) -> max_id_aexpr 0 (Acst n)
     | (Avar v) -> max_id_aexpr 0 (Avar v)
-    | (ABin a1 op a2) -> max_id_aexpr 0 (ABin a1 op a2)
+    | (Abin a1 op a2) -> max_id_aexpr 0 (Abin a1 op a2)
     end
 
   (* lemma max_id_geq : forall v a. *)
@@ -160,7 +160,7 @@ module Formula
   (* = match a with *)
   (*   | Acst _ -> true *)
   (*   | Avar v   -> id <> v *)
-  (*   | ABin a1 _ a2 -> fresh_in_aexpr id a1 && fresh_in_aexpr id a2 *)
+  (*   | Abin a1 _ a2 -> fresh_in_aexpr id a1 && fresh_in_aexpr id a2 *)
   (*   end *)
 
   (* let rec function fresh_in_bexpr (id: 'a) (b: bexpr 'a) : bool *)
@@ -169,7 +169,7 @@ module Formula
   (*   | Bleq a1 a2 -> fresh_in_aexpr id a1 && fresh_in_aexpr id a2 *)
   (*   | Band b1 b2 -> fresh_in_bexpr id b1 && fresh_in_bexpr id b2 *)
   (*   | Bnot b -> fresh_in_bexpr id b *)
-  (*   | BCst _ -> true *)
+  (*   | Bcst _ -> true *)
   (*   end *)
 
   (* let rec function fresh_in_formula (id: 'a) (f: formula 'a) : bool *)

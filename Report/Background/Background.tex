@@ -1,17 +1,17 @@
 \section{Background}
 When writing a verified VC generator, we must consider both the language that we want to interpret, the syntax and semantics, both operational and axiomatic, of the object language, and the language that we use for writing the VC generator in.
 
-Firstly, we consider an object language \textbf{WHILE} which will be the input for the compiler.
-In \autoref{sec:while} we describe the syntax and semantics of the object language.
+Firstly, we consider an object language WHILE which will be the input for the compiler.
+In \ref{sec:while} we describe the syntax and semantics of the object language.
 
-Secondly, we consider the axiomatic semantics of the language, which we use for generating verification conditions for a given program. This is presented in \autoref{sec:hoarewp}, where we describe the Hoare logic and weakest precondiion calculus that we build VC generation on.
+Secondly, we consider the axiomatic semantics of the language, which we use for generating verification conditions for a given program. This is presented in \ref{sec:hoarewp}, where we describe the Hoare logic and weakest precondition calculus that we build VC generation on.
 
 Thirdly, we consider the host language used for writing the compiler.
-We use Why3 and Isabelle as our two host languages. A brief introduction to both is given in \autoref{sec:why3} and \autoref{sec:isabelle} respectively.
+We use Why3 as our host language, with some additional proofs conducted in Isabelle. A brief introduction to both is given in \ref{sec:why3} and \ref{sec:isabelle} respectively.
 
 \subsection{WHILE}\label{sec:while}
-In this project we work with a simple WHILE language, which is designed to be a minimal but still expressive language.
-In \autoref{sec:syntax} we define the syntax of the language, and in \autoref{sec:semantics} the operational semantics.
+In this project we work with a simple WHILE language. We design it to be a minimal language in which we can still express meaningful programs.
+In \ref{sec:syntax} we define the syntax of the language, and in \ref{sec:semantics} the operational semantics.
 
 \subsubsection{Syntax}\label{sec:syntax}
 \input{Background/grammar}
@@ -19,7 +19,7 @@ In \autoref{sec:syntax} we define the syntax of the language, and in \autoref{se
 \input{Background/semantics}
 
 \subsubsection{Assertion language}\label{sec:assert}
-TODO: remember to write about unbound variables in assertions. (Variables connato be unbound).
+\textbf{TODO: remember to write about unbound variables in assertions. (Variables connato be unbound).}
 
 \subsection{Hoare logic and WP calculus}\label{sec:hoarewp}
 
@@ -52,6 +52,6 @@ The HOL stands for Higher Order Logic and uses higher order logics and builds on
 This means that lemmas can only be proven from previously defined functions and lemmas, corresponding to the inference rules of higher order logic.
 
 Despite the fact that Isabelle, like Why3, is developed in ML, the syntax of Isabelle differs a lot and is fairly extensible in terms of user defined operators etc.
-The syntax might me too ``cumbersome'' to define at once and we will go through the relevant parts along the way in \autoref{}.
+The syntax might me too ``cumbersome'' to define at once and we will go through the relevant parts along the way in \ref{}.
 
-What actually to write????
+\textbf{TODO: What actually to write????}

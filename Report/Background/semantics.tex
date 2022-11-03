@@ -1,32 +1,35 @@
-We describe WHILE by its Natural semantics.
+We describe WHILE by its natural semantics.
 We use a store to keep the values of any program variables, and this is implemented using a finite map:
 $$\sigma \in \Sigma = Var \longrightarrow \mathbb{Z} \cup \{\bot\}$$
-where $Var$ defines all possible variables and $\bot$ denotes the result of unbound variables.
+where $Var$ denotes all possible variables and $\bot$ denotes the abnormal result in case of unbound variables.
 Hence we consider a store to be a total function and define a judgement for arithmetic expressions as
-$\judge{a,\sigma}{(n | \bot)}$, where $n \in \mathbb{Z}$, $a$ is an arithmetic expression, and $x | y$ denotes either $x$ or $y$.
+\[
+  \judge{a,\sigma}{(n | \bot)}
+\]
+where $n \in \mathbb{Z}$, $a$ is an arithmetic expression, and $x | y$ denotes either $x$ or $y$.
 All the inference rules for arithmetic expressions are shown in \autoref{fig:aexprsemantics}.
 
 \begin{figure}[h!]
-\inference[ACst]{}
+\inference[EACst]{}
 {\judge{n,\sigma}{n}}
 
-\inference[Var]{}
+\inference[EAVar]{}
 {\judge{v,\sigma}{n}}[$(\sigma(v) = n)$]
 
-\inference[Var\_Unbound]{}
+\inference[EAVar\_Err]{}
 {\judge{v,\sigma}{\bot}}[$( \sigma(v) = \bot )$]
 
-\inference[BinOp]{\judge{a_{0}, \sigma}{n_{0}} & \judge{a_{1}, \sigma}{n_{1}}}
+\inference[EABin]{\judge{a_{0}, \sigma}{n_{0}} & \judge{a_{1}, \sigma}{n_{1}}}
 {\judge{a_{0} \oplus a_{1},\sigma}{n_{0} \oplus n_{1}}}
 
-\inference[BinOp\_Unbound1]{\judge{a_{0}, \sigma}{\bot}}
+\inference[EABin\_Err1]{\judge{a_{0}, \sigma}{\bot}}
 {\judge{a_{0} \oplus a_{1},\sigma}{\bot}}
 
 \inference[BinOp\_Unbound2]{\judge{a_{1}, \sigma}{\bot}}
 {\judge{a_{0} \oplus a_{1},\sigma}{\bot}}
 
-\label{fig:aexprsemantics}
 \caption{Semantics of arithmetic expressions in WHILE.}
+\label{fig:aexprsemantics}
 \end{figure}
 
 In a similar manner we define a judgement for boolean expressions as $\judge{b,\sigma}{(t | \bot)}$, where $t \in \{true, false\}$ and $b$ is a boolean expression.
