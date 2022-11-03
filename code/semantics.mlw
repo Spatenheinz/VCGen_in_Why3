@@ -30,29 +30,29 @@ module Semantics
     | EABin : forall a1 a2 n1 n2, s : store 'a, op.
                eval_aexpr a1 s (Enormal n1) ->
                eval_aexpr a2 s (Enormal n2) ->
-               eval_aexpr (ABin a1 op a2) s (Enormal ((eval_op op) n1 n2))
+               eval_aexpr (Abin a1 op a2) s (Enormal ((eval_op op) n1 n2))
     (* | EASub : forall a1 a2 n1 n2, s : store 'a, op. *)
     (*            eval_aexpr a1 s (Enormal n1) -> *)
     (*            eval_aexpr a2 s (Enormal n2) -> *)
     (*            op = Sub -> *)
-    (*            eval_aexpr (ABin a1 op a2) s (Enormal (n1 - n2)) *)
+    (*            eval_aexpr (Abin a1 op a2) s (Enormal (n1 - n2)) *)
     (* | EAMul : forall a1 a2 n1 n2, s : store 'a, op. *)
     (*            eval_aexpr a1 s (Enormal n1) -> *)
     (*            eval_aexpr a2 s (Enormal n2) -> *)
     (*            op = Mul -> *)
-    (*            eval_aexpr (ABin a1 op a2) s (Enormal (n1 * n2)) *)
+    (*            eval_aexpr (Abin a1 op a2) s (Enormal (n1 * n2)) *)
     (* | EAAdd : forall a1 a2 n1 n2, s : store 'a, op. *)
     (*            eval_aexpr a1 s (Enormal n1) -> *)
     (*            eval_aexpr a2 s (Enormal n2) -> *)
     (*            op = Add -> *)
-    (*            eval_aexpr (ABin a1 op a2) s (Enormal (n1 + n2)) *)
+    (*            eval_aexpr (Abin a1 op a2) s (Enormal (n1 + n2)) *)
     | EABin_err1 : forall a1 a2, s : store 'a, op e.
                eval_aexpr a1 s (Eabnormal e) ->
-               eval_aexpr (ABin a1 op a2) s (Eabnormal e)
+               eval_aexpr (Abin a1 op a2) s (Eabnormal e)
     | EABin_err2 : forall a1 a2 n1, s : store 'a, op e.           (* can we skip eval of a1? *)
                eval_aexpr a1 s (Enormal n1) ->
                eval_aexpr a2 s (Eabnormal e) ->
-               eval_aexpr (ABin a1 op a2) s (Eabnormal e)
+               eval_aexpr (Abin a1 op a2) s (Eabnormal e)
 
 
   (* lemma eval_aexpr_total_cannot_show : forall a, s : store 'a. *)
@@ -71,7 +71,7 @@ module Semantics
                      | Some n -> Enormal n
                      | None -> Eabnormal Eunbound
                    end
-       | ABin a1 op a2 ->
+       | Abin a1 op a2 ->
          match eval_aexpr_total_fun a1 s, eval_aexpr_total_fun a2 s with
            | Enormal n1, Enormal n2 -> Enormal ((eval_op op) n1 n2)
            | Eabnormal e, _   -> Eabnormal e
@@ -87,7 +87,7 @@ module Semantics
       }
     = match a with
       | Acst _ | Avar _ -> ()
-      | ABin a1 _ a2 -> eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
+      | Abin a1 _ a2 -> eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
       end
 
   let rec lemma eval_aexpr_total (a: aexpr 'a) (s : store 'a)
@@ -96,12 +96,12 @@ module Semantics
       }
     = match a with
       | Acst _ | Avar _ -> ()
-      | ABin a1 _ a2 -> eval_aexpr_total a1 s; eval_aexpr_total a2 s
+      | Abin a1 _ a2 -> eval_aexpr_total a1 s; eval_aexpr_total a2 s
       end
 
   inductive eval_bexpr (bexpr 'a) (store 'a) (e_behaviour bool) =
     | EBCst      : forall b, s : store 'a.
-                   eval_bexpr (BCst b) s (Enormal b)
+                   eval_bexpr (Bcst b) s (Enormal b)
     | EBLeq      : forall a1 a2 n1 n2, s : store 'a.
                    eval_aexpr a1 s (Enormal n1) ->
                    eval_aexpr a2 s (Enormal n2) ->
@@ -138,7 +138,7 @@ module Semantics
        variant { b }
        ensures { eval_bexpr b s result }
      = match b with
-       | BCst b     -> Enormal b
+       | Bcst b     -> Enormal b
        | Bleq a1 a2 -> match eval_aexpr_total_fun a1 s, eval_aexpr_total_fun a2 s with
                        | Enormal n1, Enormal n2 -> Enormal (n1 <= n2)
                        | Eabnormal e, _   -> Eabnormal e
@@ -166,7 +166,7 @@ module Semantics
       variant { b }
       ensures { eval_bexpr b s (Eabnormal Eunbound) \/ exists n. eval_bexpr b s (Enormal n) }
   = match b with
-    | BCst _ -> ()
+    | Bcst _ -> ()
     | Bleq a1 a2 -> eval_aexpr_total a1 s; eval_aexpr_total a2 s
     | Band b1 b2 -> eval_bexpr_total b1 s; eval_bexpr_total b2 s
     | Bnot b     -> eval_bexpr_total b s
@@ -179,7 +179,7 @@ module Semantics
                               b1 = b2
       }
   = match b with
-    | BCst _ -> ()
+    | Bcst _ -> ()
     | Bleq a1 a2 -> eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
     | Band b1 b2 -> eval_bexpr_fun b1 s; eval_bexpr_fun b2 s
     | Bnot b     -> eval_bexpr_fun b s
@@ -280,12 +280,12 @@ module Semantics
                 | Some _ -> true
                 | None -> false
                 end
-    | ABin a1 _ a2 -> is_closed_aexpr a1 st /\ is_closed_aexpr a2 st
+    | Abin a1 _ a2 -> is_closed_aexpr a1 st /\ is_closed_aexpr a2 st
     end
 
   predicate is_closed_bexpr (b : bexpr 'a) (st : store 'a) =
     match b with
-    | BCst _ -> true
+    | Bcst _ -> true
     | Bleq a1 a2 -> is_closed_aexpr a1 st /\ is_closed_aexpr a2 st
     | Band b1 b2 -> is_closed_bexpr b1 st /\ is_closed_bexpr b2 st
     | Bnot b -> is_closed_bexpr b st
