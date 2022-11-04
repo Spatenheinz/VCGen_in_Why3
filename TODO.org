@@ -1,140 +1,20 @@
 #+title: Todo
 
+The overall goal of the project is to explore different techniques for implementing a Verification Condition Generator, which itself can be formally verified. In the future it would be interesting to further investigate this approach for building a verified VC Generator for eBPF.
 
-* QUESTIONS
+The idea is that by writing the VC Generator in WhyML, we can formally verify the generator with Why3. Explicitly all lemmas and goals can be verified with little or no user involvement. Furthermore it should be possible to extract the generator in OCaml or C code based on the formalization.
 
-Hvorfor prover den?
+In this project we will
 
-Hvornår bruger vi inductive vs non-inductive
+    Define a VC Generator for a simple While-language using Why3 by:
+        Formalizing the While Language
+        Implement the weakest precondition calculus
+    Investigate effectiveness and expressiveness of different SMT-solvers in the Why3 back-end.
+    Test if it is at all possible to fully automate verification of said VC Generator (preferably without the use of proof assistants).
+    Determine whether our VC generator is effective in generating verification conditions for a given While program.
 
-Er der en måde at lave "alias" / definition
+Learning Objectives:
 
-I WP revisited bruger de `WP(assert a, Q) = a /\ (a -> q)` de siger de bruger det som man gør i praksis?
-Hvad er det for en praksis? og de nævner at det tvinger f til at fremstå som hypotese i den anden "proof obligation", hvad menes der her?
-
-Hvorfor kan vi ikke vise goal ImpNone (in semantics.mlw)
-
-* NOTES AST
-Vi starter med denne AST:
-
-Aexpr ::= int
-          sub
-
-Bexpr ::= true
-          false
-          not
-          leq
-
- stmt  ::= seq
-           ass
-           skip
-
-
-* EVT
-- Reductions in p.35 of xavier leroy (in github IFC)
-
-- Lemma without inductive definition
-
-* Uge 3??
-
-** NO : implement band throughout all stages.
-** DONE : implement bnot throughout all stages.
-** DONE : try reimplement eval_bexpr leq
-  reduced number of steps from ~2272 to ~1427
-** DONE : make subst function
-** DONE : make fresh_from an exportable function
-  It is not possible to use ghost functions in non-ghost context.
-** DONE : make eval_formula
-*** IDEA : this does not work all that much, why?
-** DONE : make valid formula and test it
-** TODO : lemmas om WP
-  We cannot use our wp in lemma's because it is not a pure function. This is annoying. We need a terminating
-  function for finding a fresh_variable.
-** TODO : a single case for atoms in bexpr
-** TODO : imp unnecessary in formula??
-  p --> q == ~(p /\ ~ q)
-
-** TODO : At the moment, the imperative dict cannot be exported.
-  This is a problem if we want to export the evaluator.
-** WAIT : Are we cheating when we are using divergent code?
-
-** Flere noter
-Vi har kun en mulig fejl, den hedder unbound så den propergeres gennem programmerne.
-
-* Uge 4, rapport skrivning.
-** TODO : læs artiklen om Colis
-** TODO : læs artiklen "Instrumenting WP ..."
-** Write background [0/3]
-*** TODO : noget om WP
-*** TODO : Noget om Why3
-*** TODO : Noget om artiklerne
-** Write about implementation [0/4]
-*** TODO : the language
-*** TODO : the infrastructure
-*** TODO : logical reasoning about the language [/]
-**** TODO : Semantics
-**** TODO : Soundness of WP
-**** TODO : Partial corrctness
-*** TODO : adventures in extraction
-** Findings [0/1]
-*** TODO : what are our results?
-** TODO : Conclusion
-
-
-* TODO of Friday
-** Make free var in why3 work
-** Try to implement aexpr in Isabelle
-** What do we want to tell in our report
-
-
-* NEW TODO
--  BCst bool
-
-- stmt:
-  - Sskip
-  - Sass
-  - Sseq
-  - Sassert (missing)
-  - Sif (missing)
-  - While (missing)
-
-- formula
-
-
-File semantics.mlw:
-Goal eval_aexpr_total_fun'vc.
-Prover result is: Valid (0.08s, 2246 steps).
-
-File semantics.mlw:
-Goal eval_aexpr_fun'vc.
-Prover result is: Valid (0.14s, 3414 steps).
-
-File semantics.mlw:
-Goal eval_aexpr_total'vc.
-Prover result is: Valid (0.01s, 132 steps).
-
-File semantics.mlw:
-Goal eval_bexpr_total_fun'vc.
-Prover result is: Valid (0.66s, 12008 steps).
-
-File semantics.mlw:
-Goal eval_bexpr_total'vc.
-Prover result is: Valid (0.06s, 1058 steps).
-
-File semantics.mlw:
-Goal eval_bexpr_fun'vc.
-Prover result is: Valid (3.48s, 51046 steps).
-
-File semantics.mlw:
-Goal eval_stmt_deterministic'vc.
-Prover result is: Timeout (30.00s).
-
-File "semantics.mlw", line 268, characters 23-108:
-Goal seval_determ.
-Prover result is: Timeout (30.00s).
-
-
-
-Interestingly enough we can prove this when we have the formula functions defined.
-We should be very careful about having unproven lemmas around. If you import a lemma which is not proven,
-then it is assumed to be true and imported as an axiom by the import.
+    Knowledge of previous work with program verification in Why3
+    Get a deeper understanding of what it takes to formally verify a program, and what limitations there are for verification. Hence, being able to explain exactly what it takes to prove lemmas and goals without any user envolvement.
+    Practical experience with formalizing functions that analyses and transforms an object language in WhyML.
