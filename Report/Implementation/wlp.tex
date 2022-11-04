@@ -143,11 +143,14 @@ lemma distrib_conj: forall s sigma p q.
 Once again we not able to directly show these lemmas.
 We tried to unfold the recursion on $s$, in a similar manner to how we proved determinism, but
  did not achieve anything by doing this.
+
 We have a formalized proof of both properties in Isabelle.
 The proof for monotonicity can be seen in \autoref{lst:isamono}.
+
 As mentioned we prove the lemma by induction on $s$,
 and mark $p$ and $q$ as arbitrary, since the lemma should hold for any non-fixed $p$ and $q$.
-The proof only shows the cases for sequences, assignments and while.
+The listing only shows the cases for sequences, assignments and while, as the rest can trivially be proven by simplification.
+
 The case for sequences are actually directly proved from the assumptions.
 We only distinguish this case because we need to simplify the other trivial cases.
 For both assignment and while we used the sledgehammer to find the proofs by metis,
@@ -173,24 +176,28 @@ qed (simp_all add: valid_formula_def)
 \end{lstlisting}
 
 For distribution over a conjuction, the proof is straight forward.
-We do induction with the same setup.
-Again the sequences, assignments and while cannot trivially be proved by simplification,
+We do induction with the same setup,
+and again the sequences, assignments and while cannot trivially be proved by simplification,
 but the same metis proof used for monotonicity can be used for all three cases.
-
+\\~\\
 With these two properties, we should be able to show soundness for the wp function.
-We decided to not prove the completeness of the function because this says something about the expressiveness of the function, whereas it is more important to ensure that
+We decided to not prove the completeness of the function because this says something about the expressiveness of the function, whereas our goal with the project is to ensure that
 the function is correct.
-Using soundness to show correctness is two-fold.
-On the one hand showing the soundness of $wp$ ensures that $\hoare{wp(s,Q)}{s}{Q}$ is valid for partial correctness for all $s$ and $q$, ensures that we cannot generate invalid verification conditions.
-On the other hand, we already know weakest precondition to be sound and proving it for the function $wp$ ensures that our implementation adheres to the semantics or atleast an equivalent semantic.
-We can formalize the soundness proof as follows:
 
-\begin{lstlisting}[caption={WLP soundness lemma in Why3},label={lst:isamono},language=sml]
+Using soundness to show correctness is two-fold.
+On the one hand showing the soundness of $wp$ ensures that $\hoare{wp(s,Q)}{s}{Q}$ is valid for
+partial correctness for all $s$ and $q$, thus ensuring that we cannot generate invalid verification conditions.
+
+On the other hand, we already know weakest precondition to be sound and proving it for the
+function $wp$ ensures that our implementation adheres to the semantics.
+We formalize the soundness proof in \autoref{lst:soundness}.
+
+\begin{lstlisting}[caption={WLP soundness lemma in Why3},label={lst:soundness},language=sml]
   lemma soundness_wp : forall st st' : store int, s, q.
   eval_stmt s st (Enormal st') /\ eval_formula (wp s q) st -> eval_formula q st'
 \end{lstlisting}
 
-The lemma states that if $s$ terminates normally in $st$ and $wp(s,q)$ then $q$ must also hold.
-This is exactly, what we formally proved by pen-and-paper in \ref{sec:wp}.
-We have not been able to prove this. But obviously we would not be able to show this automatically since it requires induction.
-
+The lemma states that if $s$ terminates normally from state $st$ resulting in state $st'$ and $wp(s,q)$ holds in $st$ then $q$ must also hold.
+This is exactly the proof presented in \ref{sec:wp}.
+We have not been able to prove this automatically, as this requires induction, and we have
+not found a way to achieve that for this proof.
