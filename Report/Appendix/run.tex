@@ -1,0 +1,15 @@
+\section{How to run}
+We have used version 1.5.1 of the Why3 platform. The version was installed through the Coq platform using opam.
+The Isabelle version used is 2021-1.
+\\~\\
+To discharge the proof obligations to an SMT-solver, use the following command:
+
+\begin{lstlisting}
+$ why3 prove -P <prover> -L . -t <seconds> <file>.mlw
+\end{lstlisting}
+
+To export the defined code use
+
+\begin{lstlisting}
+why3 extract --recursive -D <driver> -L . <source>.mlw -o <target>.ml
+\end{lstlisting}

@@ -1,0 +1,40 @@
+module Syntax
+
+  use option.Option
+
+  type id = int
+  type store 'a = 'a -> option int
+
+  type aop = Mul | Sub | Add
+
+  type aexpr 'a =
+       | Acst int
+       | Avar 'a
+       | Abin (aexpr 'a) aop (aexpr 'a)
+
+  type bexpr 'a =
+       | Bcst bool
+       | Bleq (aexpr 'a) (aexpr 'a)
+       | Band (bexpr 'a) (bexpr 'a)
+       | Bnot (bexpr 'a)
+
+  type formula 'a =
+       | Fterm (bexpr 'a)
+       | Fand (formula 'a) (formula 'a)
+       | Fnot (formula 'a)
+       | Fimp (formula 'a) (formula 'a)
+       (* Flet = Fall *)
+       (* let x = t in f ≍ ∀ y. y = t → f[x ← y] *)
+       | Fall 'a (formula 'a)
+
+  type stmt 'a =
+       | Sskip
+       | Sass 'a (aexpr 'a)
+       | Sseq (stmt 'a) (stmt 'a)
+       | Sassert (formula 'a)
+       | Sif (bexpr 'a) (stmt 'a) (stmt 'a)
+       | Swhile (bexpr 'a) (formula 'a) (stmt 'a)
+
+  type prog 'a = stmt 'a
+
+end

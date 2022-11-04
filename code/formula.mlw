@@ -1,0 +1,49 @@
+module Formula
+
+  use syntax.Syntax
+  use semantics.Semantics
+  use option.Option
+  use map.Map
+
+  predicate is_closed_aexpr (a : aexpr 'a) (st: store 'a) =
+    match a with
+    | Acst _ -> true
+    | Avar x -> match st x with
+                | Some _ -> true
+                | None -> false
+                end
+    | Abin a1 _ a2 -> is_closed_aexpr a1 st /\ is_closed_aexpr a2 st
+    end
+
+  predicate is_closed_bexpr (b : bexpr 'a) (st : store 'a) =
+    match b with
+    | Bcst _ -> true
+    | Bleq a1 a2 -> is_closed_aexpr a1 st /\ is_closed_aexpr a2 st
+    | Band b1 b2 -> is_closed_bexpr b1 st /\ is_closed_bexpr b2 st
+    | Bnot b -> is_closed_bexpr b st
+    end
+
+  predicate is_closed_formula (f : formula 'a) (st : store 'a) =
+    match f with
+    | Fterm b -> is_closed_bexpr b st
+    | Fand f1 f2 | Fimp f1 f2 -> is_closed_formula f1 st /\ is_closed_formula f2 st
+    | Fnot f -> is_closed_formula f st
+    | Fall y f -> is_closed_formula f st[y <- Some 0]
+    end
+
+  predicate eval_closed_formula (f: formula 'a) (st: store 'a)  =
+    match f with
+    | Fterm b -> eval_bexpr b st (Enormal true)
+    | Fand f1 f2 -> eval_closed_formula f1 st /\ eval_closed_formula f2 st
+    | Fnot f -> not (eval_closed_formula f st)
+    | Fimp f1 f2 -> eval_closed_formula f1 st -> eval_closed_formula f2 st
+    | Fall y f -> forall n. eval_closed_formula f st[y <- n]
+    end
+
+  predicate eval_formula (f : formula 'a) (st : store 'a) =
+    if is_closed_formula f st then eval_closed_formula f st
+    else false
+
+  predicate valid_formula (f : formula 'a) = forall sigma: (store 'a). eval_formula f sigma
+
+end

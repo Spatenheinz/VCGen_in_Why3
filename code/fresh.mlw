@@ -1,0 +1,79 @@
+module Fresh
+  use syntax.Syntax
+  use int.Int
+  use int.MinMax
+  use bool.Bool
+  use set.Set
+
+  predicate fresh_in_aexpr (id: 'a) (a: aexpr 'a)
+  = match a with
+    | Acst _ -> true
+    | Avar v   -> id <> v
+    | Abin a1 _ a2 -> andb (fresh_in_aexpr id a1) (fresh_in_aexpr id a2)
+    end
+
+  predicate fresh_in_bexpr (id: 'a) (b: bexpr 'a) =
+    match b with
+    | Bleq a1 a2 -> fresh_in_aexpr id a1 /\ fresh_in_aexpr id a2
+    | Band b1 b2 -> fresh_in_bexpr id b1 /\ fresh_in_bexpr id b2
+    | Bnot b -> fresh_in_bexpr id b
+    | Bcst _ -> true
+    end
+
+  predicate fresh_in_formula (id: 'a) (f: formula 'a) =
+    match f with
+    | Fterm b                 -> fresh_in_bexpr id b
+    | Fand f1 f2 | Fimp f1 f2 -> fresh_in_formula id f1 /\ fresh_in_formula id f2
+    | Fnot f                  -> fresh_in_formula id f
+    | Fall y f                -> id <> y /\ fresh_in_formula id f
+    end
+
+  let rec function max_id_aexpr (id : id) (a: aexpr id) : id
+    variant { a }
+    ensures { result >= id }
+  = match a with
+    | Acst _       -> id
+    | Avar v       -> max id v
+    | Abin a1 _ a2 -> max (max_id_aexpr id a1) (max_id_aexpr id a2)
+    end
+
+  let rec function max_id_bexpr (id: id) (b: bexpr id) : id
+    variant { b }
+  = match b with
+    | Bleq a1 a2 -> max (max_id_aexpr id a1) (max_id_aexpr id a2)
+    | Band b1 b2 -> max (max_id_bexpr id b1) (max_id_bexpr id b2)
+    | Bnot b     -> max_id_bexpr id b
+    | Bcst _     -> id
+    end
+
+  let rec function max_id_formula (id: id) (f: formula id) : id
+    variant { f }
+  = match f with
+    | Fterm b                 -> max_id_bexpr id b
+    | Fand f1 f2 | Fimp f1 f2 -> max (max_id_formula id f1) (max_id_formula id f2)
+    | Fnot f                  -> max_id_formula id f
+    | Fall y f                -> max y (max_id_formula id f)
+    end
+
+  let function fresh_from (f: formula id) : id
+  = max_id_formula 0 f + 1
+
+  function vars_in_aexpr (a : aexpr 'a) : set 'a
+  = match a with
+    | (Acst _) -> empty
+    | (Avar v) -> singleton v
+    | (Abin a1 _ a2) -> union (vars_in_aexpr a1) (vars_in_aexpr a2)
+    end
+
+  lemma max_id_trivial : forall a. max_id_aexpr 0 a >= 0
+
+  let rec lemma max_id_geq (a : aexpr int)
+    variant { a }
+    ensures { forall x. mem x (vars_in_aexpr a) -> result >= x }
+  = match a with
+    | (Acst n) -> max_id_aexpr 0 (Acst n)
+    | (Avar v) -> max_id_aexpr 0 (Avar v)
+    | (Abin a1 op a2) -> max_id_aexpr 0 (Abin a1 op a2)
+    end
+
+end
