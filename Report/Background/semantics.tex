@@ -7,124 +7,138 @@ Hence we consider a store to be a total function.
 \paragraph{Arithmetic expressions.}
 We define the judgement for arithmetic expressions as
 \[
-  \judge{a,\sigma}{(n | \bot)}
+  \judgea{a,\sigma}{(n | \bot)}
 \]
 where $n \in \mathbb{Z}$, $a$ is an arithmetic expression, and $x | y$ denotes either $x$ or $y$.
 All the inference rules for arithmetic expressions are shown in \autoref{fig:aexprsemantics}.
 The rules intuitively describes evaluation of expressions. Not that when encountering abnormal behaviour $\bot$ the behaviour is propagated.
 
 \begin{figure}[h!]
-\inference[EACst]{}
-{\judge{n,\sigma}{n}}
+\begin{equation*}
+\inference[EACst ]{}
+{\judgea{n,\sigma}{n}}
+\end{equation*}
 
-\inference[EAVar]{}
-{\judge{v,\sigma}{n}}[$(\sigma(v) = n)$]
-
+\begin{equation*}
+\inference[EAVar ]{}
+{\judgea{v,\sigma}{n}}[$(\sigma(v) = n)$]
+\qquad
 \inference[EAVar\_Err]{}
-{\judge{v,\sigma}{\bot}}[$( \sigma(v) = \bot )$]
+{\judgea{v,\sigma}{\bot}}[$( \sigma(v) = \bot )$]
+\end{equation*}
 
-\inference[EABin]{\judge{a_{0}, \sigma}{n_{0}} & \judge{a_{1}, \sigma}{n_{1}}}
-{\judge{a_{0} \oplus a_{1},\sigma}{n_{0} \oplus n_{1}}}
+\begin{equation*}
+\inference[EABin ]{\judgea{a_{0}, \sigma}{n_{0}} & \judgea{a_{1}, \sigma}{n_{1}}}
+{\judgea{a_{0} \oplus a_{1},\sigma}{n_{0} \oplus n_{1}}}
+\end{equation*}
 
-\inference[EABin\_Err1]{\judge{a_{0}, \sigma}{\bot}}
-{\judge{a_{0} \oplus a_{1},\sigma}{\bot}}
-
-\inference[EABin\_Err2]{\judge{a_{0}, \sigma}{n_{0}} & \judge{a_{1}, \sigma}{\bot}}
-{\judge{a_{0} \oplus a_{1},\sigma}{\bot}}
-
+\begin{equation*}
+\inference[EABin\_Err1 ]{\judgea{a_{0}, \sigma}{\bot}}
+{\judgea{a_{0} \oplus a_{1},\sigma}{\bot}}
+\qquad
+\inference[EABin\_Err2 ]{\judgea{a_{0}, \sigma}{n_{0}} & \judgea{a_{1}, \sigma}{\bot}}
+{\judgea{a_{0} \oplus a_{1},\sigma}{\bot}}
+\end{equation*}
 \caption{Semantics of arithmetic expressions in WHILE.}
 \label{fig:aexprsemantics}
 \end{figure}
 
 \paragraph{Boolean expressions.}
 In a similar manner we define a judgement for boolean expressions as
-$$\judge{b,\sigma}{(t | \bot)}$$
+$$\judgeb{b,\sigma}{(t | \bot)}$$
 where $t \in \{true, false\}$ and $b$ is a boolean expression.
 The semantics for boolean expressions are presented in \autoref{fig:bexprsemantics}.
 
 \begin{figure}[h!]
-\inference[EBCst]{}
-{\judge{t,\sigma}{t}}
-
-
-\inference[EBLeq]{\judge{a_0,\sigma}{n_0} & \judge{a_1,\sigma}{n_1}}
-{\judge{a_0 \leq a_1 ,\sigma}{(n_0 \leq n_1)}}
-
-\inference[EBLeq\_Err1]{\judge{a_0,\sigma}{\bot}}
-{\judge{a_0 \leq a_1, \sigma}{\bot}}
-
-\inference[EBLeq\_Err2]{\judge{a_0,\sigma}{n_0} & \judge{a_1,\sigma}{\bot}}
-{\judge{a_0 \leq a_1, \sigma}{\bot}}
-
-
-\inference[EBAnd]{\judge{b_0, \sigma}{b_0'} & \judge{b_1, \sigma}{b_1'}}
-{\judge{b_0 \land b_1, \sigma}{b_0' \land b_1'}}
-
-\inference[EBAnd\_Err1]{\judge{b_0, \sigma}{\bot}}
-{\judge{b_0 \land b_1, \sigma}{\bot}}
-
-\inference[EBAnd\_Err2]{\judge{b_0, \sigma}{b_0'} & \judge{b_1, \sigma}{\bot}}
-{\judge{b_0 \land b_1, \sigma}{\bot}}
-
-
-\inference[EBNot]{\judge{b,\sigma}{b'}}
-{\judge{ \neg b, \sigma}{\neg b'}}
-
-\inference[EBNot\_Err]{\judge{b,\sigma}{\bot}}
-{\judge{ \neg b, \sigma}{\bot}}
-
+\begin{equation*}
+\inference[EBCst ]{}
+{\judgeb{t,\sigma}{t}}
+\end{equation*}
+\begin{equation*}
+\inference[EBLeq ]{\judgeb{a_0,\sigma}{n_0} & \judgeb{a_1,\sigma}{n_1}}
+{\judgeb{a_0 \leq a_1 ,\sigma}{(n_0 \leq n_1)}}
+\end{equation*}
+\begin{equation*}
+\inference[EBLeq\_Err1 ]{\judgeb{a_0,\sigma}{\bot}}
+{\judgeb{a_0 \leq a_1, \sigma}{\bot}}
+\qquad
+\inference[EBLeq\_Err2 ]{\judgeb{a_0,\sigma}{n_0} & \judgeb{a_1,\sigma}{\bot}}
+{\judgeb{a_0 \leq a_1, \sigma}{\bot}}
+\end{equation*}
+\begin{equation*}
+\inference[EBAnd ]{\judgeb{b_0, \sigma}{b_0'} & \judgeb{b_1, \sigma}{b_1'}}
+{\judgeb{b_0 \land b_1, \sigma}{b_0' \land b_1'}}
+\end{equation*}
+\begin{equation*}
+\inference[EBAnd\_Err1 ]{\judgeb{b_0, \sigma}{\bot}}
+{\judgeb{b_0 \land b_1, \sigma}{\bot}}
+\qquad
+\inference[EBAnd\_Err2 ]{\judgeb{b_0, \sigma}{b_0'} & \judgeb{b_1, \sigma}{\bot}}
+{\judgeb{b_0 \land b_1, \sigma}{\bot}}
+\end{equation*}
+\begin{equation*}
+\inference[EBNot ]{\judgeb{b,\sigma}{b'}}
+{\judgeb{ \neg b, \sigma}{\neg b'}}
+\qquad
+\inference[EBNot\_Err ]{\judgeb{b,\sigma}{\bot}}
+{\judgeb{ \neg b, \sigma}{\bot}}
+\end{equation*}
 \caption{Semantics of boolean expressions in WHILE.}
 \label{fig:bexprsemantics}
 \end{figure}
 
 \paragraph{Statements.}\label{sec:stmtsemantics}
 Likewise for statements a judgement will either end in a new state, or an abnormal behaviour, caused by unbound variables. Thus the judgement is defined by
-$$\judge{s, \sigma}{(\sigma | \bot)}$$
+$$\judges{s, \sigma}{(\sigma | \bot)}$$
 where $s$ is a statement.
 The semantics of statements are presented in \autoref{fig:stmtsemantics}.
 
 \begin{figure}[h!]
-
-\inference[ESSkip]{}
-{\judge{\mathbf{skip},\sigma}{\sigma}}
-
-
-\inference[ESAss]{\judge{a,\sigma}{n}}
-{\judge{x \mathbf{:=} a,\sigma}{\sigma[x \mapsto n]}}
-
-\inference[ESAss\_Err]{\judge{a,\sigma}{\bot}}
-{\judge{x \mathbf{:=} a,\sigma}{\bot}}
-
-
-\inference[ESSeq]{\judge{s_0, \sigma}{\sigma''} & \judge{s_1, \sigma''}{\sigma'} \; \; \; \text{where} \; \sigma'' \neq \bot}
-{\judge{s_0 \; ; \; s_1, \sigma}{\sigma'}}
-
-\inference[ESSeq\_Err]{\judge{s_0, \sigma}{\bot}}
-{\judge{s_0 \; ; \; s_1, \sigma}{\bot}}
-
-
-\inference[ESIfT]{\judge{b, \sigma}{true} & \judge{s_0, \sigma}{\sigma'}}
-{\judge{\mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\sigma'}}
-
-\inference[ESIfF]{\judge{b, \sigma}{false} & \judge{s_1, \sigma}{\sigma'}}
-{\judge{\mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\sigma'}}
-
-\inference[ESIf\_Err]{\judge{b, \sigma}{\bot}}
-{\judge{\mathbf{if} \; b \; \{ \; s_0 \; \} \; \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\bot}}
-
-
-\inference[ESWhileT]{\judge{b, \sigma}{true} & \judge{s, \sigma}{\sigma''} & \judge{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma''}{\sigma'}}
-{\judge{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma}{\sigma'}}
-
-\inference[ESWhileF]{\judge{b, \sigma}{false}}
-{\judge{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma}{\sigma}}
-
-\inference[ESWhile\_ErrC]{\judge{b, \sigma}{\bot}}
-{\judge{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma}{\bot}}
-
-\inference[ESWhile\_ErrB]{\judge{b, \sigma}{true} & \judge{s, \sigma}{\bot}}
-{\judge{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma}{\bot}}
-
+\begin{equation*}
+\inference[ESSkip ]{}
+{\judges{\mathbf{skip},\sigma}{\sigma}}
+\end{equation*}
+\begin{equation*}
+\inference[ESAss ]{\judges{a,\sigma}{n}}
+{\judges{x \mathbf{:=} a,\sigma}{\sigma[x \mapsto n]}}
+\qquad
+\inference[ESAss\_Err ]{\judges{a,\sigma}{\bot}}
+{\judges{x \mathbf{:=} a,\sigma}{\bot}}
+\end{equation*}
+\begin{equation*}
+\inference[ESSeq ]{\judges{s_0, \sigma}{\sigma''} & \judges{s_1, \sigma''}{\sigma'} \; \; \; \text{where} \; \sigma'' \neq \bot}
+{\judges{s_0 \; ; \; s_1, \sigma}{\sigma'}}
+\end{equation*}
+\begin{equation*}
+\inference[ESSeq\_Err ]{\judges{s_0, \sigma}{\bot}}
+{\judges{s_0 \; ; \; s_1, \sigma}{\bot}}
+\qquad
+\inference[ESIfT ]{\judges{b, \sigma}{true} & \judges{s_0, \sigma}{\sigma'}}
+{\judges{\mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\sigma'}}
+\end{equation*}
+\begin{equation*}
+\inference[ESIfF ]{\judges{b, \sigma}{false} & \judges{s_1, \sigma}{\sigma'}}
+{\judges{\mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\sigma'}}
+\qquad
+\inference[ESIf\_Err ]{\judges{b, \sigma}{\bot}}
+{\judges{\mathbf{if} \; b \; \{ \; s_0 \; \} \; \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\bot}}
+\end{equation*}
+\begin{equation*}
+\inference[ESWhileT ]{\judges{b, \sigma}{true} & \judges{s, \sigma}{\sigma''} & \judges{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma''}{\sigma'}}
+{\judges{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma}{\sigma'}}
+\end{equation*}
+\begin{equation*}
+\inference[ESWhileF ]{\judges{b, \sigma}{false}}
+{\judges{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma}{\sigma}}
+\end{equation*}
+\begin{equation*}
+\inference[ESWhile\_ErrB ]{\judges{b, \sigma}{\bot}}
+{\judges{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma}{\bot}}
+\end{equation*}
+\begin{equation*}
+\inference[ESWhile\_ErrS ]{\judges{b, \sigma}{true} & \judges{s, \sigma}{\bot}}
+{\judges{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma}{\bot}}
+\end{equation*}
 \caption{Semantics of statements in WHILE.}
 \label{fig:stmtsemantics}
 \end{figure}

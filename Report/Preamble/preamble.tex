@@ -102,8 +102,12 @@
 
 \newcommand{\judge}[2]{\lra{#1} \Downarrow #2}
 
+\newcommand{\judgea}[2]{\lra{#1} \Downarrow_{a} #2}
+\newcommand{\judgeb}[2]{\lra{#1} \Downarrow_{b} #2}
+\newcommand{\judges}[2]{\lra{#1} \Downarrow_{s} #2}
+
 \newcommand{\hoare}[3]{\{#1\}#2\{#3\}}
 
 \newcommand{\hoarePQ}[1]{\{P\}#1\{Q\}}
 
-\newcommand{\subst}[3]{#1[#2 \leftarrow #3]}
+\newcommand{\subst}[3]{#1[#2 \mapsto #3]}

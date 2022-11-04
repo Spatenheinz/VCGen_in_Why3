@@ -6,9 +6,8 @@ The rules are as follows, we only consider cases where variables might occur. $f
 
 \begin{align*}
 \subst{x}{x}{y} &= y \\
-\subst{z}{x}{y} &= x \\
+\subst{z}{x}{y} &= z \\
 &\\
-\subst{z}{x}{y} &= x \\
 \subst{(a_{1} \leq a_{2})}{x}{y} &= \subst{a_{1}}{x}{y} \le \subst{a_{2}}{x}{y} \\
 \subst{(b_{1} \wedge b_{2})}{x}{y} &= \subst{b_{1}}{x}{y} \wedge \subst{b_{2}}{x}{y} \\
 \subst{(\neg b)}{x}{y} &= \neg\subst{b}{x}{y} \\

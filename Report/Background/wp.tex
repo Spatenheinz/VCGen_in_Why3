@@ -27,16 +27,16 @@ The \textit{wlp} for our WHILE language (see \ref{sec:syntax} for syntax) is det
 \begin{figure}[h!]
 \begin{align*}
 WLP(\texttt{skip}, Q) &= Q \\
-WLP(x:=e,Q) &= \forall y, y = e \Rightarrow Q[x \mapsto y] \\
+WLP(x:=a,Q) &= \forall y, y = a \Rightarrow Q[x \mapsto y] \\
 WLP(s_0;s_1, Q) &= WLP(s_0, WLP(s_1, Q)) \\
 WLP(\{P\}, Q) &= P \land Q \quad \text{where P is an assertion} \\
 WLP(\texttt{if } e \texttt{ then } s_0 \texttt{ else } s_1, Q) &= (e \Rightarrow WLP(s_0, Q)) \\
     &\quad \land (\neg e \Rightarrow WLP(s_1, Q)) \\
-WLP(\texttt{while } e \texttt{ invariant } I \texttt{ do } s, Q) &=
+WLP(\texttt{while } b \texttt{ invariant } I \texttt{ do } s, Q) &=
     I \land \\
 &\forall x_1, ..., x_k, \\
-&(((e \land I) \Rightarrow WLP(s, I)) \\
-&\quad \land (( \neg e \land I) \Rightarrow Q))
+&(((b \land I) \Rightarrow WLP(s, I)) \\
+&\quad \land (( \neg b \land I) \Rightarrow Q))
     [w_i \mapsto x_i] \\
 &\text{where } w_1, ..., w_k \text{ is the set of assigned variables in} \\
 &\text{statement } s \text{ and } x_1, ..., x_k \text{ are fresh logical variables.}
@@ -46,7 +46,6 @@ WLP(\texttt{while } e \texttt{ invariant } I \texttt{ do } s, Q) &=
 \end{figure}
 
 The rules define how to compute the $wlp$ when given a statement $s$ and a formula $Q$, meaning that it is a function $WLP(s,Q)$ which outputs the $wlp$.
-We will now briefly describe each rule.
 
 The $wlp$ of \texttt{skip} is just the formula $Q$, as the statement has no effect.
 The $wpl$ of \texttt{x:=e} with $Q$ is simply $Q$ where each occurence of $x$ is exchanged with $e$, as that is the effect of the assignment.
@@ -62,41 +61,57 @@ The last rule concerns assertion statements, and this case is trivial, as we sim
 \paragraph{Soundness of wlp}
 % soundness etc. refer to automated proofs in section ???
 For the weakest liberal precondition calculus to be meaningful to us, we must assert that the calculus is actually sound.
-This is done by proving that \textit{for all statements s and formula Q, \{WLP(s, Q)\}s\{Q\} is valid for partial correctness}.
+This is done by proving that \textit{for all statements s and formula $Q$, $\{WLP(s, Q)\}s\{Q\}$ is valid for partial correctness}.
+
 We present here the stategy and intuition behind the proof, using the prcedure presented in \cite{wlp}.
 
 The proof is done by considering the rules of finding the wlp for the different statements, thus it uses structural induction on $s$.
-As a preliminary remark it should be noted that for any formula $\phi$ and any state $\Sigma$, we have that the interpretation of $\forall x_{1} ... x_{k} \phi [w_{i} \mapsto x_{i}]$ in $\Sigma$ does not depend on the values of variables in $\Sigma$, thus if it holds for one state $\Sigma$ then it should hold for all states $\Sigma'$ that only differs from $\Sigma$ in the value of the variables.
+As a preliminary remark it should be noted that for any formula $\phi$ and any state $\sigma$, we have that the interpretation of $\forall x_{1} ... x_{k} . \phi [w_{i} \mapsto x_{i}]$ in $\sigma$ does not depend on the values of variables in $\sigma$, thus if it holds for one state $\sigma$ then it should hold for all states $\sigma'$ that only differs from $\sigma$ in the value of the variables.
 \\~\\
 Now lets look at the structure of the proof.
 We consider each possible case of $s$, thus considering all the different types of statements.
 Most of these are straightforward, but the case for $while$-expressions is somewhat tricky.
 Therefore we will dive a bit into the intuition behind that case.
 
-Lets assume that $s =$ \texttt{while $cond$ invariant $inv$ $body$}.
-Now we want to show that \{WLP(s, Q)\}s\{Q\} holds. We assume that we have a state $\Sigma$ such that $\llbracket WLP(s, Q)\rrbracket_{\Sigma}$ holds, and that $s$ executes in $\Sigma$ and terminates, given by $\Sigma, s \rightsquigarrow^{*} \Sigma '$.
-The rest of the proof uses induction on the length of the execution denoted by $\rightsquigarrow^{*}$.
+Lets assume that $s =$ \texttt{while $b$ invariant $I$ $s'$}.
+Now we want to show that $\{WLP(s, Q)\}s\{Q\}$ holds for any $Q$.
+Assume that we have a state $\sigma$ such that $\sigma \vDash WLP(s, Q)$ holds, and that $\judge{s,\sigma}{\sigma'}$
 
-\subparagraph{Case $e=0$.}
-This terminates the loop, thus $\Sigma = \Sigma'$.
-In this case we have that $\llbracket e \rrbracket_{\Sigma} = 0$, by the assumption.
-From the wlp rule for while expressions, we get that $\llbracket I \rrbracket_{\Sigma}$ and $\llbracket ((e = 0 \land I) \Rightarrow Q) [ w_{i} \mapsto x_{i}] \rrbracket_{\Sigma}$.
-By the preliminary notion, we know that we can instatiate each $w_{i}$ to the variables of $\Sigma$, and then we get $\llbracket (e = 0 \land I) \Rightarrow Q \rrbracket_{\Sigma}$.
-Now, as $\llbracket I \rrbracket_{\Sigma}$ and $\llbracket e \rrbracket_{\Sigma} = 0$ we get that $\llbracket Q \rrbracket_{\Sigma}$, which was exactly what we wanted to show.
+The rest of the proof uses induction on the length of the execution.
 
-\subparagraph{Case $e \neq 0 $.}
+\subparagraph{Case $b=false$.}
+This terminates the loop, thus $\sigma = \sigma'$.
+In this case we have that $\sigma \vDash b = false$, by the assumption.
+From the wlp rule for while expressions, we get that $\sigma \vDash I$ and $\sigma \vDash ((b = false \land I) \Rightarrow Q) [ w_{i} \mapsto x_{i}]$.
+By the preliminary notion, we know that we can instatiate each $w_{i}$ to the variables of $\sigma$,
+and then we get $\sigma \vDash (b = false \land I) \Rightarrow Q$.
+Now, as $\sigma \vDash I$ and $\sigma \vDash b = false$ we get that $\sigma \vDash Q $, which was exactly what we wanted to show.
+
+\subparagraph{Case $b = true $.}
 In this case the loop does not terminate, but executes another iteration of the body.
-That means $\Sigma \neq \Sigma'$, and that the execution must first execute $\Sigma, s \rightsquigarrow \Sigma$, as the state does not change at first.
-Then the execution must execute the sequence $b;s$ in $\Sigma$, and end in some state $\Sigma''$.
-Lastly, from that state executing $s$ again will get us to the final state $\Sigma$.
+That means $\sigma \neq \sigma'$, and that $\judge{s',\sigma}{\sigma''}$ and than $\judge{s, \sigma''}{\sigma'}$.
 
-\textbf{TODO: explain this better}.
+% the execution must first execute $\sigma, s \rightsquigarrow \sigma, b$, as the state does not change at first.
+% Then the execution must execute the sequence $b;s$ in $\sigma$, and end in some state $\sigma''$.
+% Lastly, from that state executing $s$ again will get us to the final state $\sigma$.
 
-We can prove that $\{WLP(s, Q)\}s\{Q\}$ by proving that $\llbracket I \rrbracket_{\Sigma''}$ and $\llbracket WLP(s, Q)\rrbracket_{\Sigma''}$, from where we can use induction on the length of the execution to say that $\llbracket Q \rrbracket_{\Sigma'}$.
-By the assumption we know that $\llbracket e \rrbracket_{\Sigma} \neq 0$, and by the wlp rule we have that $\llbracket I \rrbracket_{\Sigma}$ and $\llbracket ((e \neq 0 \land I) \Rightarrow WLP(b, I)) [ w_{i} \mapsto x_{i}] \rrbracket_{\Sigma}$.
-Again we instatiate all variables to those in $\Sigma$, and get $\llbracket ((e \neq 0 \land I) \Rightarrow WLP(b, I)) \rrbracket_{\Sigma}$.
-Because we have that $\llbracket e \rrbracket_{\Sigma} \neq 0$ and $\llbracket I \rrbracket_{\Sigma}$, we get that $\llbracket WLP(b, I) \rrbracket_{\Sigma}$.
-First we need to know that $I$ holds in $\Sigma''$. By IH we have $\{WLP(b, I)\}b\{I\}$, which means that $\llbracket I \rrbracket_{\Sigma''}$.
+We can prove that $\{WLP(s, Q)\}s\{Q\}$ by proving that $\sigma'' \vDash I$ and $\sigma'' \vDash WLP(s, Q)$,
+from where we can use induction on the length of the execution to say that $\sigma' \vDash Q$.
 
-As described in \cite{wlp} the only difference between $\Sigma''$ and $\Sigma$ is the values of the variables $w_{i}$, and by the preliminary remark we get that $\llbracket ((e \neq 0 \land I) \Rightarrow WLP(b, I)) [ w_{i} \mapsto x_{i}] \rrbracket_{\Sigma''}$, which means that we now have all we need to know that $\llbracket WLP(s, Q) \rrbracket_{\Sigma''}$.
-We now use the induction on the length of the execution to say that $\llbracket Q \rrbracket_{\Sigma'}$, which is exactly what we wanted to show.
+By the assumption we know that $\sigma \vDash b = true$,
+and by the wlp rule we have that $\sigma \vDash I$ and
+$\sigma \vDash (((b = true \land I) \Rightarrow WLP(s', I)) \wedge ((b = false \wedge I) \Rightarrow Q)) [ w_{i} \mapsto x_{i}]$.
+The second part of the conjunction is trivially true, hence we dont consider it in the rest of the proof.
+Again we instatiate all variables to those in $\sigma$, and get $\sigma \vDash (b = true \land I) \Rightarrow WLP(s', I))$.
+Because we have that $\sigma \vDash b = true$ and $\sigma \vDash I$, we get that $\sigma \vDash WLP(s', I)$.
+\\~\\
+
+By IH on the structure we have $\{WLP(s', I)\}s'\{I\}$, hence $\sigma'' \vDash I$.
+
+As the only difference between $\sigma''$ and $\sigma$ is the values of the variables $w_{i}$ then by the preliminary remark we get that $\sigma'' \vDash ((b = true \land I) \Rightarrow WLP(s', I)) [ w_{i} \mapsto x_{i}]$,
+which means that we now have all we need to know that $\sigma'' \vDash WLP(s, Q)$.
+We now use the induction on the length of the execution to get $\sigma' \vDash Q$,
+which is exactly what we wanted to show.
+\\~\\
+As a consequence of soundness $\vDash P \Rightarrow WLP(s, Q)$ suffices to show partial correctness.
+Hence For a VC generator for partial correctness, only an implementation of $WLP$ is needed.

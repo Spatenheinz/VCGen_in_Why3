@@ -7,37 +7,37 @@ and $s$ terminates from that state, then $Q$ holds in the halting state of $s$. 
 
 $$\hoarePQ{s} = \forall \sigma, \sigma' \in \Sigma. (\sigma \vDash P) \wedge \judge{s, \sigma}{\sigma'} \Rightarrow (\sigma' \vDash Q)$$
 
-Thus if a hoare triple holds, it is correct wrt to the assertions.
+Thus if a hoare triple holds, it is correct w.r.t. to the assertions.
 
 Hoare logic provides axioms and inference rules for an imperative language.
 The statements included in these rules corresponds to statements provided in \ref{sec:syntax}-\ref{sec:semantics}. \autoref{fig:hoare} shows the inference rules.
-Notice that we show the formalization in the traditional sense and do not consider behaviour of unbound variables.
 
 \begin{figure}[h!]
-
-\inference[HSkip]{}
+\begin{equation*}
+\inference[HSkip ]{}
 {\hoarePQ{\mathbf{skip}}}
-
-\inference[HAssign]{}
+\qquad
+\inference[HAssign ]{}
 {\hoare{Q[x \mapsto a]}{x := a}{Q}}
-
-\inference[HIf]{\hoare{P \wedge b}{s_0}{Q} & \hoare{P \wedge \neg b}{s_1}{Q}}
+\end{equation*}
+\begin{equation*}
+\inference[HIf ]{\hoare{P \wedge b}{s_0}{Q} & \hoare{P \wedge \neg b}{s_1}{Q}}
 {\hoarePQ{ \mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \} }}
-
+\qquad
+\inference[HSeq ]{\hoare{P}{s_0}{R} & \hoare{R}{s_1}{Q}}
+{\hoarePQ{s_0 \; ; \; s_1}}
+\end{equation*}
+\begin{equation*}
 \inference[HWhile]{\hoare{I \wedge b}{s}{I}}
 {\hoare{I}{ \mathbf{while} \; b \; \mathbf{invariant} \; I \; \{ \; s \; \} }{I \wedge \neg b}}
-
-\inference[HSeq]{\hoare{P}{s_0}{R} & \hoare{R}{s_1}{Q}}
-{\hoarePQ{s_0 \; ; \; s_1}}
-
+\end{equation*}
+\begin{equation*}
 \inference[HCons]{\vDash P \rightarrow P' & \hoare{P}{s_0}{Q} & \vDash Q' \rightarrow Q}
 {\hoarePQ{s_0}}
-
+\end{equation*}
 \caption{Hoare logic inference rules.}
 \label{fig:hoare}
 \end{figure}
-
-\textbf{TODO: update to include invariant in while statement?}
 
 The rules are rather intuitive.
 For Hskip, the pre and postcondition must be the same.
@@ -46,26 +46,28 @@ For conditionals HIf we have that if the precondition P and the conditional chec
 For while the assertion I is called the invariant and must hold before each iteration of the loop and after the loop.
 In a similar fashion if the conditional b holds before an iteration of s, then the invariant must still hold afterwards.
 When the loop ends, the condition must not hold any longer.
-Sequences are rather intuitive. If P holds in the state $st$, R holds in the state $st''$ that
-is the result of executing $s_{0}$ in $st$, and Q holds in state $st'$ that is the result of
-executing $s_{1}$ in $st''$, then P holds before the sequence $s_{0}; s_{1}$, and Q holds after.
-Lastly the conseqeuce rule HCons is used to strengthen a precondition or weaken a postcondtion.
+Sequences are rather intuitive. If P holds in the state $\sigma$, R holds in the state $\sigma''$ that
+is the result of executing $s_{0}$ in $\sigma$, and Q holds in state $\sigma'$ that is the result of
+executing $s_{1}$ in $\sigma''$, then P holds before the sequence $s_{0}; s_{1}$, and $Q$ holds after.
+Lastly the conseqeuce rule HCons is used to strengthen a precondition or weaken a postcondition.
 \\~\\
 Using these inference rules one can show a program to be partially correct.
-The reason we can only show partial correctness is because the transitional sequence of statements might be infinite, i.e. a while loop might not terminate.
-
-To prove total correctness we need to be bale to prove termination for while-loops.
-To do this we need additional information, hence a variant $v$ must be provided and it must
+The reason we can only show partial correctness is because the transitional sequence of statements might be infinite, i.e. a while loop might not terminate, and the triple only considers $s$ executing normally, which we can only show for terminating functions.
+Thus for total correctness we need to be able to prove termination for while-loops.
+To do this we need additional information.
+A variant $v$ must be provided and it must
 be subject to a well-founded relation $\prec$.
 We can express the Hoare triple as follows:
 \[
 \inference[HWhile]{\hoare{I \wedge b \wedge v = \xi }{s}{I \wedge \xi}}
 {\hoare{I}{ \mathbf{while} \; b \; \mathbf{invariant} \; I \; \mathbf{variant} \; v, \prec \; \{ \; s \; \} }{I \wedge \neg b}} \; \text{where} \; wf(\prec)
 \]
-where, $\xi$ is a fresh variable. By this total correctness can be achieved.
+where, $\xi$ is a fresh variable.
+By this total correctness can be achieved.
 \\~\\
-Hoare logic can be shown to be sound, that is if a Hoare triple is proveable from the inference rules then the hoare triple is valid, i.e. $\vdash \hoarePQ{s}$ implies $\vDash \hoarePQ{s}$. This is an important
-property, since it ensures that it is impossible to derive partial correctness proofs that does not hold.
+Whether we consider total or partial correctness solely depends on the existence of a variant.
+In any case Hoare logic can be shown to be sound, that is if a Hoare triple is proveable from the inference rules then the hoare triple is valid, i.e. $\vdash \hoarePQ{s}$ implies $\vDash \hoarePQ{s}$.
+This is an important property, since it ensures that it is impossible to derive partial correctness proofs that does not hold.
 The proof goes by induction on the derivation of $\vdash \hoarePQ{s}$.
 We omit this proof, because we do not use Hoare logic in our formalization directly, but rather as a consequence for our Verification condition generation.
 \\~\\
@@ -73,6 +75,6 @@ With regards to completeness Hoare logic was in 1974 shown to be relatively comp
 That is, Hoare logic is no more incomplete than the assertion language.
 This means that $\vdash \hoarePQ{s}$ implies $\vDash \hoarePQ{s}$, given that the assertion language is expressive enough.
 Notice furthermore that without multiplication Hoare logic would not be complete.
+Since we are mostly interested in verification, we do not really care about completeness.
 
-The proof Cook provided used the notion of Weakest liberal precondition (wlp), whic is
-described in \ref{wp}.
+The proof Cook provided uses the notion of Weakest liberal precondition (wlp).
