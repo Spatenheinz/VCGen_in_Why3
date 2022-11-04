@@ -152,7 +152,7 @@ On the one hand showing the soundness of $wp$ ensures that $\hoare{wp(s,Q)}{s}{Q
 On the other hand, we already know weakest precondition to be sound and proving it for the function $wp$ ensures that our implementation adheres to the semantics or atleast an equivalent semantic.
 We can formalize the soundness proof as follows:
 
-\begin{lstlisting}[caption={Proof of monotonicity in Isabelle},label={lst:isamono},language=sml]
+\begin{lstlisting}[caption={WLP soundness lemma in Why3},label={lst:isamono},language=sml]
   lemma soundness_wp : forall st st' : store int, s, q.
   eval_stmt s st (Enormal st') /\ eval_formula (wp s q) st -> eval_formula q st'
 \end{lstlisting}
