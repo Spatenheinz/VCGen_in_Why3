@@ -35,7 +35,7 @@ To determine whether any free variables exists in the formula, we define a predi
 In case of universal quantification, we bind the quantified variable to 0,
 so it is present in the store. The value in this case is irrelevant, as we just want to determine whether the formula is closed or not, and not what it evaluates to.
 The \texttt{eval\_formula} and \texttt{eval\_closed\_formula} predicates are shown in
-\autoref{lst:why3formula}. For the rest of the implementation, see \autoref{appendix???}.
+\autoref{lst:why3formula}. For the rest of the implementation, see Appendix \ref{codeformulas}.
 
 \begin{lstlisting}[caption={Predicate defining the semantics of formulas},label={lst:why3formula},language=sml]
 predicate eval_closed_formula (f: formula 'a) (st: store 'a)  =
