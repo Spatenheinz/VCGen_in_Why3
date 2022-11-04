@@ -1,72 +1,82 @@
-As object language we consider a simple imperative language often in the literature referred to as either
-IMP or WHILE and from hereon out we will reference our definition as the latter. Notice the language might differ slightly from other definitions but any such derivations should be insignificant.
+As object language we consider a simple imperative language often in the literature referred to
+as either IMP or WHILE and from here on out we will refer to it as WHILE.
+Notice the language might differ slightly from other definitions but any such deviations should be insignificant.
+
 We consider a language with two basic types, integers and booleans.
-\autoref{fig:grammarexpr} shows the grammar for arithmetic and boolean expressions.
-An arithmetic expression might either be a variable, an integer, or a suvtraction of two arithmetic expressions.
-Notice here than we only define a single binary operation for arithmetic expressions, instead of defining both subtraction and addition.
-We do so for a simpler compiler, without loss of expressiveness, as we can define addition in form of subtraction by
-$a_{0} + a_{1} = a_{0} - (0 - a_{1})$.
+\autoref{fig:syntaxexpr} shows the syntax for arithmetic and boolean expressions.
+An arithmetic expression can be either a variable, an integer, or a binary operation on two arithmetic expressions in which the operation can be addition, subtraction or multiplication.
+Notice here than we only define a single rule for binary operation in arithmetic expressions, instead of defining both subtraction and addition. We then have an arithmetic operator type
+that can be either of the valid operators.
+Using this syntax it is easy for us to extend the language in case we wanted to include more operators.
+% We do so for a simpler compiler, without loss of expressiveness, as we can define addition in form of subtraction by
+% $a_{0} + a_{1} = a_{0} - (0 - a_{1})$.
 
-In a similar manner we can define boolean expressions as either $\top$ (true), $\bot$ (false), a negation, a conjunction or a relation. Again we limit relational operators to only a single operator as we can describe the rest in terms of $\leq$ paired with $\neg$.
-
-\colorbox{BurntOrange}{TODO???? We might make a table of the syntactic sugared versions. But is it kind of trivial?}
-
+Boolean expressions can be either a constant bool, a negation, a conjunction, or a binary relation. As of right now we only support the relational operation $\leq$, as this in combination with $\neg$ allows us to express all other relational operators.
 Likewise with the functionally complete set $\{\wedge, \neg\}$ we can define all possible boolean expressions.
+%\colorbox{BurntOrange}{TODO???? We might make a table of the syntactic sugared versions. But is it kind of trivial?}
 
-\begin{figure}[h!]
+\begin{figure}[H]
 \centering
 \begin{grammar}
 <aexpr> ::= <identifier>
 \alt <integer>
 \alt <aexpr> <aop> <aexpr>
-\alt '(' <aexpr> ')'
 
-<aop> ::= '$-$'
+<aop> ::= '$-$' | '$*$' | '$+$'
 
-<bexpr> ::= 'true' | 'false' | \alt '$\neg$'<bexpr>
+<bexpr> ::= <bool>
+\alt '$\neg$'<bexpr>
 \alt <bexpr> '$\wedge$' <bexpr>
 \alt <aexpr> <rop> <aexpr>
-\alt '(' <bexpr> ')'
+%\alt '(' <bexpr> ')'
 
-<rop> ::= '$\le$'
+<rop> ::= '$\leq$'
 \end{grammar}
-\label{fig:grammarexpr}
 \caption{Grammar for arithmetic \& boolean expressions}
+\label{fig:syntaxexpr}
 \end{figure}
 
-Next we want to define assertions in our language, corresponding to a first order logic.
-Assertions will be used for two things: 1) the Hoare logic and Verification condition generation, and 2) as regular assertions, which will terminate program execution if the assertion is not valid.
+Next we want to define assertions in our language, using formulas corresponding to a first order logic.
+These formulas are used for two things: 1) the Hoare logic and Verification condition generation,
+and 2) in assertions that the programmer can use throughout the program to strengthen the
+precondition. These assertions are non-blocking, meaning that they are not evaluated at runtime,
+but only used for computing the final verification condition.
 We have a functionally complete set in $\{\forall, \wedge, \neg\}$.
 
-Note here that in other definitions of assertion languages in relation to hoare logic it is common to include ghost variables, which are not allowed in the execution of programs and hence are only allowed in the logic language. In our current state, we do not include such variables.
-The grammar for assertions is depicted in \autoref{fig:grammarasserts}.
-\begin{figure}[h!]
+Note here that in other definitions of assertion languages in relation to hoare logic it is
+common to include ghost variables, which are not allowed in the execution of programs and hence
+are only allowed in the logic language. In our current state, we do not include such variables.
+The syntax for formulas is depicted in \autoref{fig:grammarasserts}.
+\begin{figure}[H]
 \centering
 \begin{grammar}
-<assertion> ::= '$\forall$' <identifier> '.' <assertion>
-\alt '$\neg$' <assertion>
-\alt <assertion> '$\wedge$' <assertion>
-\alt <bexpr>
+<formula> ::= <bexpr>
+\alt <formula> '$\wedge$' <formula>
+\alt '$\neg$' <formula>
+\alt <formula> '$\Rightarrow$' <formula>
+\alt '$\forall$' <identifier> '.' <formula>
 \end{grammar}
+\caption{Syntax of formulas}
 \label{fig:grammarasserts}
-\caption{Grammar of assertion language}
 \end{figure}
 
-Lastly we define the grammar of statements. A WHILE program is a possibly empty sequence of statements, and a statement can be either a variable binding, an if-else statement, a while loop, an assertion or a skip command. \autoref{fig:grammarstmts} shows the grammar of statements.
+Lastly we define the syntax of statements. A WHILE program is essentially a statement, where
+a statement can be either a variable binding, an if-else statement, a while loop, an assertion,
+a skip command, or a sequence of two statements. Thus an ``empty'' program consists of only
+skip commands. \autoref{fig:grammarstmts} shows the syntax of statements.
 
-\begin{figure}[h!]
+\begin{figure}[H]
 \centering
 \begin{grammar}
-<statements> ::= <statement> ';' <statements> | $\epsilon$
-
-<statement> ::= <identifier> ':=' <aexpr>
-\alt 'if' <bexpr> '\{' <statements> '\}' 'else' '\{' <statements> '\}'
-\alt 'while' <bexpr> 'invariant' <aexpr> '\{' <statements> '\}'
+<statement> ::= 'skip'
+\alt <identifier> ':=' <aexpr>
+\alt <statement> ';' <statement>
 \alt '\#\{' <assertion> '\}'
-\alt 'skip'
+\alt 'if' <bexpr> '\{' <statement> '\}' 'else' '\{' <statement> '\}'
+\alt 'while' <bexpr> 'invariant' <aexpr> '\{' <statement> '\}'
 \end{grammar}
-\label{fig:grammarstmts}
 \caption{Grammar for a WHILE program}
+\label{fig:grammarstmts}
 \end{figure}
 
-In future work it could be interesting to extend the language with additional types, but for now we keep the structure of the pbject language simple.
+In future work it could be interesting to extend the language with additional expressions in each category, but for now we keep the structure of the object language simple.

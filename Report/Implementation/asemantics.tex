@@ -75,7 +75,7 @@ Prover result is: Valid (0.01s, 105 steps).
 
 \end{lstlisting}
 \caption{Steps to prove properties for arithmetic expressions}
-\label{fig:aexpr_props}
+\label{fig:aexprprops}
 \end{figure}
 
 The new and improved semantic representation makes uses of a function \texttt{eval\_op :: axpr -> (int -> int -> int)} and used it in the conclusion as \texttt{eval\_aexpr (ABin a1 op a2) s (Enormal ((eval\_op op) a1 a2)}.
