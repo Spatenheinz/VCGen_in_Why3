@@ -1,8 +1,9 @@
-For the evaluation we define the imperative store, and four functions, one for each construct,
-arithmetic epressions, boolean expressions and statements, and a ``top-level'' function which evaluates
+For the evaluation we define the imperative store, and four functions: one for each construct,
+arithmetic expressions, boolean expressions and statements, and a ``top-level'' function which
 evaluates a statement and extracts the result of evaluation, and also clearing the store.
 
-In the contract of each function, we describe both what happens under normal execution and what happens under abnormal execution, using the \texttt{ensures} and \texttt{raises}, for instance we have:
+In the contract of each function, we describe both what happens under normal execution and what happens under abnormal execution, using the \texttt{ensures} and \texttt{raises}.
+For instance we have the evaluator for arithmetic expressions in \autoref{lst:why3aeval}.
 
 \begin{lstlisting}[caption={Evaluation of arithmetic expression},label={lst:why3aeval},language=sml]
 let rec aeval (a: aexpr id) : int
@@ -12,16 +13,17 @@ let rec aeval (a: aexpr id) : int
 = match a with
   | Acst i -> i
   | Avar v ->  IM.find v sigma
-  | ABin a1 op a2 -> (eval_op op) (aeval a1) (aeval a2)
+  | Abin a1 op a2 -> (eval_op op) (aeval a1) (aeval a2)
 end
 \end{lstlisting}
 
-\autoref{lst:why3aeval} present the evaluation of arithmetic expressions. Like for the lemma about the semantics
-being a total function, we want the evaluator to adhere to the semantics from the inductive predicate.
-In the case of an unbound variable the \texttt{Imperative Map find} will raise an exception, in this case
+Like for the lemma stating that the semantics
+are a total function, we want the evaluator to adhere to the semantics from the inductive predicate.
+In the case of an unbound variable the \texttt{Imperative Map find} will raise an exception, and in this case
 we will ensure that the behaviour of the evaluation is Eabnormal Eunbound.
 It should be clear, that this can easily be extended to other errors, by doing a conjunction of
-all possible (exception $\rightarrow$ semantical behaviour) pairs.
+all possible pairs of exceptions and semantical behaviour.
+
 We follow the same structure for evaluation of boolean expressions and statements.
-The vc is easily proved for arithmetic and boolean expressions.
-Again we cannot show it for statements, neither for total nor partial correctness.
+The verification condition is easily proven for arithmetic and boolean expressions,
+but again we cannot show it for statements, neither for total nor partial correctness.
