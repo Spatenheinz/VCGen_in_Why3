@@ -7,12 +7,13 @@ if we succeeded in making a verified Verification Condition Generator in Why3 an
 \subsection{Overview of Findings from Implementation}
 One of the goals we set out to do, was to investigate the expressiveness and effectiveness of different SMT solvers and ATP's in the why3 backend.
 The idea was that we should do this through the implementation of the interpreter and the VC generator.
-From \ref{sec:implementation} it should be apparent that most of the properties we want to hold cannot be proved, (atleast from our experiments),
+From \ref{sec:implementation} it should be apparent that most of the properties we want to hold cannot be proved, (at least from our experiments),
 hence we have abandoned the idea of making an analysis of which provers are capable of show specific lemmas.
-What we can say from the implementation is that whilst we are able to model some of the lemmas other than the straight forward way,
+What we can say from the implementation is that whilst we are able to model some of the lemmas other than the straightforward way,
 it is not easy to verify programs in Why3.
-Although it might be possible to model the lemmas in a way such that the goals we set out to do can be met, especially with better knowledge of transformations in the Why3 IDE.
-We still dont have enough experience with Why3 to use these effectively and from the naming of the transformations, and their fairly limited descriptions in the official manual, one might as well just use Coq when transformations are needed.
+Although it might be possible to model the lemmas in a way such that the goals we set out to prove can be met,
+but this requires better knowledge of transformations in the Why3 IDE.
+We still do not have enough experience with Why3 to use these effectively, and from the naming of the transformations, and their fairly limited descriptions in the official manual, one might as well just use Coq when transformations are needed.
 
 \subsection{limitiations for automated verification}
 In \textit{WP revisited in Why3} they make heavy use of both transformations and Coq to prove their lemmas,
@@ -26,19 +27,33 @@ Ltac ae := why3 ``alt-ergo'' timelimit 5
 
 By this they are able to interface with Why3 from Coq.
 So most of the proofs in the article, massages the proofs and then discharges the rest of the program to a Why3 back-end SMT solver, in this case Alt-ergo.
-This feature, is alledgedly still available\cite{TODO:LIERS}. However the files one has to use is nowhere to be found in the folders they are supposed to be in.
+This feature, is alledgedly still available\cite{why3manualold}. However the files one has to use is nowhere to be found in the folders they are supposed to be in.
 If this is a relic of the past or badly documented is hard to tell. In any case, we were not able to get this feature to work.
 When also considering that we are not able to discharge the proof obligation to Isabelle, we are in a place where we have less tools available than they had in the 2012 article.
 
+Due to either this fact, or to or limited experience with formalizations in Why3, we have not been able to prove many of the properties we set out to prove.
+The semantics for arithmetic and boolean expressions, and their corresponding evaluators, prove well, but as
+soon as we get to statements we experience problems.
+
+For verification condition generation, substitution of variables, and generation of fresh variables, we have many properties that we cannot prove. Whether this is due to the way we defined our language, the way we formalized it, or the way we use transformations in the Why3 IDE we do not know.
+
+We also encountered problems regarding the functionality of Why3, as we found it difficult to figure out
+what kind of data-structures were useful for which tasks. An example of this was the store, which we ended
+up finding a sufficient solution for, however this was after an extensive search through the predefined data-structures.
+
+Furthermore we have found out that one should be extremely careful when working in Why3, as all lemmas we
+try to prove will be made in to axioms in some way.
+This sometimes results in proofs validating when they should not, and it is not aways evident what makes the difference.
+We assumed that it would be a good thing if lemmas we knew in theory should be correct were axiomatized, as we
+could then use them as axioms later, even though we could not prove them.
+However, this did not always work out as we
+expected, and working in Why3 therefore requires the utmost vigilance in our experience.
+
+All in all this might be due to our still very limited experience with working in Why3.
+
 \subsection{Has this project been useful?}
-Although we have accomlplished the goals we set out to do, we still have gotten a good reason about or formalization of the weakest precondition calculus and how we can formalize the semantics in a programming language such as Why3.
-But to say that our product is useful would be a stretch. Without verifying our formalization we could just aswell have written the VC generator in another language.
+Although we have not accomplished all the things we set out to do, we still have gotten a good intuition about  reasoning in Why3, and of how the weakest precondition calculus and semantics of a programming language can be formalized in Why3.
+To say that our product is useful would be a stretch. Without verifying our formalization we could just as well have written the VC generator in another language.
 For what is it worth we have a partially proved implementation in Isabelle.
 We began exploring using Isabelle too late in the project to finish an implementation we could extract.
-Had we had more time, we would have finished the formalization and done a side by side comparison of the Why3 and Isabelle.
-In any case, it seems like it is ``easier'' to formalize a Verification Condition Generator in Isabelle.
-
-\textbf{TODO: soemthing about roadblocks regarding data-structures for the store}
-\textbf{TODO: soemthing about not being able to prove abtract effects lemmas}
-
-\section{Future Work}\label{sec:future}
+Had we had more time, we would have finished the formalization and done a side by side comparison between Why3 and Isabelle.
