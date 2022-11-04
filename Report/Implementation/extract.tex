@@ -13,30 +13,35 @@ Thus our choice to represent our object language as ADT's have limited our abili
 However structuring the code in C friendly manner would likely become quite tedious.
 
 \paragraph{Program functions and Logical functions.}
-Just as the object level limits what we can do in terms of extracted code, so is the logical level.
+Just as the object level limits what we can do in terms of extracted code, so does the logical level.
 There is a clear distinction between logical functions and program functions in why3.
-All program functions is specified with a \texttt{let} and can be extracted,
+All program functions are specified with a \texttt{let} and can be extracted,
 while the logical functions can be used to reason about the program functions.
 Actually extracting the code has been a bit of a challenge.
-Firstly, as mentioned earlier we compromised in regards to assertions in the operational semantics of the program. For the reason that it is hard to argue about logical quantifiers on a program level, while it is much easier to do on a logical level. Hence why evaluation of Formulas is done with a predicate and not a program function.
+Firstly, as mentioned earlier, we compromised in regards of assertions in the operational semantics of the program,
+for the reason that it is hard to argue about logical quantifiers on a program level,
+while it is much easier to do on a logical level.
+Hence why evaluation of formulas is done with a predicate and not a program function.
+
 Furthermore, making the actual evaluator was quite troublesome.
-For defining the actual semantics we used inductive predicates, which is a logical construct, and this is extremely useful because we can argue the correctness of evaluation of a statement on a program level.
-In this reasoning we used maps, which is simply functions, with some syntactical sugar for updates and computations.
+For defining the actual semantics we used inductive predicates, which are logical constructs, and this is extremely useful because we can argue about the correctness of evaluation of a statement on a program level.
+In this reasoning we used maps, which are simply functions with some syntactical sugar for updates and computations.
 The problem arises when we need to define the environment for the actual interpreter.
 
 We were not able to find any module which was extractable and would adhere to the same logical meaning as that of maps.
-Hence we had to implement the module explained in \ref{sec:env}.
-And while there might be better ways to handle the store, Our current approach seems to suffice.
+Hence we had to implement the module explained in \ref{sec:model}.
+And while there might be better ways to handle the store, our current approach seems to suffice.
 
 In regards to the verification condition generation, we did not run into too much trouble.
-As mentioned previously our approach to the weakest precondition generation follows the same structure as WP revisited in why3\cite{},
+As mentioned previously our approach to the weakest precondition generation follows the same
+structure as WP revisited in why3\cite{wp-revisited},
 but deviates in how functions are defined.
 Axiomatized functions can clearly not be exported,
 since they dont have a function body but simply must adhere to a set of axioms.
-And therfore we need to prove explicitly that our function is correct,
+Therfore we need to prove explicitly that our function is correct,
 whereas axiomatization will be correct by definition.
-But actually extracting the $wp$ function is rather simple, as it essentially just transforms an ADT.
-And clearly can be defined in on the program level.
+But actually extracting the $wp$ function is rather simple, as it essentially just transforms an ADT,
+and clearly can be defined on the program level.
 
 
 \paragraph{Using the extracted code.}
@@ -50,9 +55,11 @@ why3 extract --recursive -D ocaml64 -L . evaluator.mlw -o eval.ml
 
 This will tell to recursively add dependencies into the module defined in the evaluator.mlw file, using the ocaml64 driver and create a module in the file eval.ml.
 We can then use the module in an ocaml project (where we might define a parser etc. for the language).
-\autoref{lst:ocamlexample} shows an example of a very simple program.
-The program, defines two WHILE programs, which are very simple.
-\texttt{prog} is a simple assignment. One thing to note is that because we used the int type in why3, we have to use the \(Z.of\_int\) because int's in why3 are unbounded integers from the zarith library.
+\autoref{lst:ocamlexample} shows a simple example, defining two WHILE programs.
+
+\texttt{prog} is a simple assignment. One thing to note is that because we used the int type in
+why3, we have to use the \(Z.of\_int\) because ints in why3 are unbounded integers from the zarith library.
+
 \texttt{prog'} defines a slightly more complicated program, which does 2 assignments, and the second assignment tries to assign an expression with an unbound variable to a variable.
 
 \begin{lstlisting}[caption={ocaml program using the evaluator},label={lst:ocamlexample},language=sml]
@@ -80,13 +87,13 @@ let res' = eval_prog prog'
 Compiling the program with
 
 \begin{lstlisting}
-\textdollar ocamlbuild -pkg zarith main.native
+$ ocamlbuild -pkg zarith main.native
 \end{lstlisting}
 
 and running it by:
 
 \begin{lstlisting}
-\textdollar ./main.native
+$ ./main.native
 \end{lstlisting}
 
 The following output is produced:
@@ -97,13 +104,13 @@ Fatal error: exception Eval.Unbound
 \end{lstlisting}
 
 The evaluation of the first program is that variable 1 is 50. The second List.iter prints nothing,
-this shows that we correctly resets the environment. Lastly \texttt{prog'} correctly produces an Unbound exception.
+which shows that we correctly resets the environment. Lastly \texttt{prog'} correctly produces an Unbound exception.
 \\~\\
 The procedure for the verification condition generator is the same.
 It is worth noting that we have not implemented any way to use the generated formula for anything.
 And thus it may render useless for now to extract it.
-In case one want to actually verify the correctness of a WHILE program, we can use the povers of Why3 and use the meta level of logic using a goal.
-Take the following program
+In case one wants to actually verify the correctness of a WHILE program, we can use the povers of Why3 and use the meta level of logic using a goal.
+Take the following program:
 
 \begin{lstlisting}[caption={WHILE program which multiples q and r by repeated addition},label={lst:whileexample},language=sml]
 q = 10;
@@ -148,11 +155,11 @@ let function prog () =
         (Bleq (ABin (Avar (-1)) Mul (Avar 0)) (Avar 1))))))))))
       \end{lstlisting}
 
-We can then construct a goal checking if the weakest precondition of this program is valid.
+We can then construct a goal, checking if the weakest precondition of this program is valid.
 
 \begin{lstlisting}
 goal mult_is_correct :
    valid_formula (wp (prog ()) (Fterm (BCst true)))
 \end{lstlisting}
 
-Feeding this to an SMT solver such as Eprover, we can show the program to be correct, in around half a second.
+Feeding this to an SMT solver such as Eprover, we can show the program to be correct in around half a second.
