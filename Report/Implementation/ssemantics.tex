@@ -1,23 +1,25 @@
-\paragraph{Semantics.}
+\subsubsection{Semantics}
 Once again, we define the semantics by an inductive predicate. The semantics are generally not that complex,
 however there are many more cases to account for when dealing with statements.
-An example of this, is the inference rules for while.
+An example of this is the inference rules for while-statements.
 We must consider 4 different cases:
 
 \begin{enumerate}
-  \item The boolean condition is true, and thus the body ``evaluates'' to some new state, which is used for the next iteration of the while loop.
+  \item The boolean condition is true, and thus the body evaluates to some new state, which is used for the next iteration of the while loop.
   \item The boolean condition is false, and thus the loop ends in the same state.
-  \item The boolean condition results in abnormal behaviour and thus the enitre statement should result in abnormal behaviour.
+  \item The boolean condition results in abnormal behaviour and thus the entire statement should result in abnormal behaviour.
   \item The body results in abnormal behaviour and likewise the entire loop results in abnormal behaviour.
 \end{enumerate}
 
-However for assertions, we only consider a single case, since as mentioned in the inference rules \autoref{TODO},
-we dont consider assertions in the operational semantics, but rather include them for strengthening the
+However for assertions, we only consider a single case, since, as mentioned when presenting the inference rules in \ref{sec:stmtsemantics},
+we do not consider assertions in the operational semantics, but rather include them for strengthening the
 verification condition of a program.
 
-\paragraph{Properties.}
-The properties for asserting the correctness of the implementation of the semantics is build upon the lemmas regarding totality and determinism of boolean and arithmetic expressions. Hence we consider the lemma
-\texttt{eval_stmt_deterministic}. Unfortunately, our trick from the previous grammar constructs does not render useful for statements. Running the recursive lemma for 300 seconds in Alt-Ergo, does not provide a proof.
+\subsubsection{Properties}
+The properties for asserting the correctness of the implementation of the semantics is built
+upon the lemmas regarding totality and determinism of boolean and arithmetic expressions.
+Hence we consider the lemma
+\texttt{eval_stmt_deterministic}. Unfortunately, our trick from the previous grammar constructs of utilising a recursive lemma does not render useful for statements. Running the recursive lemma for 300 seconds in Alt-Ergo, does not provide a proof.
 There might be many reasons for this.
 
 First and foremost we cannot include while in the recursive lemma. The reason for this, is that we have to

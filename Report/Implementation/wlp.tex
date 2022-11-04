@@ -153,3 +153,14 @@ On the other hand, we already know weakest precondition to be sound and proving 
 
 We have not gotten to show this.
 TODO why have we not done this?????
+
+
+%%% NOTES %%%
+abstract effects property about specialize seems weird, but as the function is defined
+from these axioms, it simply states that it must hold for the function, ie. the formula f
+must be closed, or else the axiom wouldn't hold.
+We can fix this in our implementation by havin a \texttt{requires} that says the formula
+must be closed.
+Technically we could include all these axioms in an \texttt{ensures}, as they should hold
+for the function???? anyways, the way they define the function is wack, but pretty cool.
+But obviously we had to do it differently, as we want to be able to extract code.

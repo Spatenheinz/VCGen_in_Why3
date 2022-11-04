@@ -186,50 +186,50 @@ module Semantics
     end
 
   inductive eval_stmt (stmt 'a) (store 'a) (e_behaviour (store 'a)) =
-    | ESSkip : forall st : store 'a.
-               eval_stmt Sskip st (Enormal st)
-    | ESAss  : forall st : store 'a, x : 'a, e n.
-               eval_aexpr e st (Enormal n) ->
-               let st' = st[x <- Some n] in
-               eval_stmt (Sass x e) st (Enormal st')
-    | ESAss_err  : forall st : store 'a, x a e.
-                   eval_aexpr a st (Eabnormal e) ->
-                   eval_stmt (Sass x a) st (Eabnormal e)
-    | ESSeq  : forall s1 s2, st  st' : store 'a, b : e_behaviour (store 'a).
-          eval_stmt s1 st (Enormal st') ->
-          eval_stmt s2 st' b ->
-          eval_stmt (Sseq s1 s2) st b
-    | ESSeq_err  : forall s1 s2, st : store 'a, e.
-          eval_stmt s1 st (Eabnormal e)  ->
-          eval_stmt (Sseq s1 s2) st (Eabnormal e)
-    | ESAssert : forall f, st : store 'a.
-                 eval_stmt (Sassert f) st (Enormal st)
-    | ESIfT    : forall b s1 s2, st : store 'a, st'.
-                 eval_bexpr b st (Enormal true) ->
-                 eval_stmt s1 st st' ->
-                 eval_stmt (Sif b s1 s2) st st'
-    | ESIfF    : forall b s1 s2, st : store 'a, st'.
-                 eval_bexpr b st (Enormal false) ->
-                 eval_stmt s2 st st' ->
-                 eval_stmt (Sif b s1 s2) st st'
-    | ESIf_err : forall b s1 s2, st : store 'a, e.
-                 eval_bexpr b st (Eabnormal e) ->
-                 eval_stmt (Sif b s1 s2) st (Eabnormal e)
-    | ESWhileT  : forall cond inv body, st st' : store 'a, bhv.
-                 eval_bexpr cond st (Enormal true) ->
-                 eval_stmt body st (Enormal st') ->
-                 eval_stmt (Swhile cond inv body) st' bhv ->
-                 eval_stmt (Swhile cond inv body) st  bhv
-    | ESWhileF  : forall cond inv body, st : store 'a.
-                 eval_bexpr cond st (Enormal false) ->
-                 eval_stmt (Swhile cond inv body) st (Enormal st)
+    | ESSkip       : forall st : store 'a.
+                     eval_stmt Sskip st (Enormal st)
+    | ESAss        : forall st : store 'a, x : 'a, e n.
+                     eval_aexpr e st (Enormal n) ->
+                     let st' = st[x <- Some n] in
+                     eval_stmt (Sass x e) st (Enormal st')
+    | ESAss_err    : forall st : store 'a, x a e.
+                     eval_aexpr a st (Eabnormal e) ->
+                     eval_stmt (Sass x a) st (Eabnormal e)
+    | ESSeq        : forall s1 s2, st  st' : store 'a, b : e_behaviour (store 'a).
+                     eval_stmt s1 st (Enormal st') ->
+                     eval_stmt s2 st' b ->
+                     eval_stmt (Sseq s1 s2) st b
+    | ESSeq_err    : forall s1 s2, st : store 'a, e.
+                     eval_stmt s1 st (Eabnormal e)  ->
+                     eval_stmt (Sseq s1 s2) st (Eabnormal e)
+    | ESAssert     : forall f, st : store 'a.
+                     eval_stmt (Sassert f) st (Enormal st)
+    | ESIfT        : forall b s1 s2, st : store 'a, st'.
+                     eval_bexpr b st (Enormal true) ->
+                     eval_stmt s1 st st' ->
+                     eval_stmt (Sif b s1 s2) st st'
+    | ESIfF        : forall b s1 s2, st : store 'a, st'.
+                     eval_bexpr b st (Enormal false) ->
+                     eval_stmt s2 st st' ->
+                     eval_stmt (Sif b s1 s2) st st'
+    | ESIf_err     : forall b s1 s2, st : store 'a, e.
+                     eval_bexpr b st (Eabnormal e) ->
+                     eval_stmt (Sif b s1 s2) st (Eabnormal e)
+    | ESWhileT     : forall cond inv body, st st' : store 'a, bhv.
+                     eval_bexpr cond st (Enormal true) ->
+                     eval_stmt body st (Enormal st') ->
+                     eval_stmt (Swhile cond inv body) st' bhv ->
+                     eval_stmt (Swhile cond inv body) st  bhv
+    | ESWhileF     : forall cond inv body, st : store 'a.
+                     eval_bexpr cond st (Enormal false) ->
+                     eval_stmt (Swhile cond inv body) st (Enormal st)
     | ESWhile_errC : forall cond inv body, st : store 'a, e.
-                    eval_bexpr cond st (Eabnormal e) ->
-                    eval_stmt (Swhile cond inv body) st (Eabnormal e)
+                     eval_bexpr cond st (Eabnormal e) ->
+                     eval_stmt (Swhile cond inv body) st (Eabnormal e)
     | ESWhile_errB : forall cond inv body b, st : store 'a, e.
-                    eval_bexpr cond st (Enormal b) ->
-                    eval_stmt body st (Eabnormal e) ->
-                    eval_stmt (Swhile cond inv body) st (Eabnormal e)
+                     eval_bexpr cond st (Enormal b) ->
+                     eval_stmt body st (Eabnormal e) ->
+                     eval_stmt (Swhile cond inv body) st (Eabnormal e)
 
 
 

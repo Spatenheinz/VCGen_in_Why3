@@ -1,53 +1,66 @@
-In \autoref we defined the big-step semantics of WHILE.
-In both why3 and Isabelle it is possible to create inductive predicates.
-An inductive predicate is simply a predicate with a set of proof constructors defined inductively.
-This is a great tool to make a close to one to one mapping from the pen and paper version and a formalized
-version.
-We define the semantics of arithmetic expressions as follows:
-\begin{lstlisting}[caption={semantics of arithmetic expressions},label={lst:why3aexpr},language=sml]
-type e_behaviour 'a = Enormal 'a | Eabnormal
+In \ref{sec:semantics} we defined the big-step semantics of WHILE.
+To convert these semantics into Why3 we use inductive predicates.
+An inductive predicate in Why3 is simply a predicate with a set of proof constructors defined inductively.
+This is a great tool to make an almost one to one mapping from the pen and paper version and a formalized version.
+We define the semantics of arithmetic expressions in Why3 as follows:
 
-inductive eval_aexpr (aexpr 'a) (store 'a) (e_behaviour int) =
-  | EACst : forall n, s : store 'a.
-             eval_aexpr (Acst n) s (Enormal n)
-  | EAVar : forall x n, s : store 'a.
-             s[x] = Some n ->
-             eval_aexpr (Avar x) s (Enormal n)
-  | EAVar_err : forall x, s : store 'a.
-             s[x] = None ->
-             eval_aexpr (Avar x) s Eabnormal
-  | EASub : forall a1 a2 n1 n2, s : store 'a, op.
-             eval_aexpr a1 s (Enormal n1) ->
-             eval_aexpr a2 s (Enormal n2) ->
-             op = Sub ->
-             eval_aexpr (ABin a1 op a2) s (Enormal (n1 - n2))
-  | EAMul : forall a1 a2 n1 n2, s : store 'a, op.
-             eval_aexpr a1 s (Enormal n1) ->
-             eval_aexpr a2 s (Enormal n2) ->
-             op = Mul ->
-             eval_aexpr (ABin a1 op a2) s (Enormal (n1 * n2))
-  | EAOp_err1 : forall a1 a2, s : store 'a, op.
-             eval_aexpr a1 s Eabnormal ->
-             eval_aexpr (ABin a1 op a2) s Eabnormal
-  | EAOp_err2 : forall a1 a2, s : store 'a, op.
-             eval_aexpr a2 s Eabnormal ->
-             eval_aexpr (ABin a1 op a2) s Eabnormal
+\begin{lstlisting}[caption={Semantics of arithmetic expressions},label={lst:why3aexpr},language=sml]
+  type e_behaviour 'a = Enormal 'a | Eabnormal error
+
+  let function eval_op (op : aop) : (int -> int -> int) =
+      match op with
+      | Mul -> (*) | Sub -> (-) | Add -> (+)
+      end
+
+  inductive eval_aexpr (aexpr 'a) (store 'a) (e_behaviour int) =
+    | EACst : forall n, s : store 'a.
+               eval_aexpr (Acst n) s (Enormal n)
+    | EAVar : forall x n, s : store 'a.
+               s[x] = Some n ->
+               eval_aexpr (Avar x) s (Enormal n)
+    | EAVar_err : forall x, s : store 'a.
+               s[x] = None ->
+               eval_aexpr (Avar x) s (Eabnormal Eunbound)
+    | EABin : forall a1 a2 n1 n2, s : store 'a, op.
+               eval_aexpr a1 s (Enormal n1) ->
+               eval_aexpr a2 s (Enormal n2) ->
+               eval_aexpr (Abin a1 op a2) s
+                          (Enormal ((eval_op op) n1 n2))
+    | EABin_err1 : forall a1 a2, s : store 'a, op e.
+               eval_aexpr a1 s (Eabnormal e) ->
+               eval_aexpr (Abin a1 op a2) s (Eabnormal e)
+    | EABin_err2 : forall a1 a2 n1, s : store 'a, op e.
+               eval_aexpr a1 s (Enormal n1) ->
+               eval_aexpr a2 s (Eabnormal e) ->
+               eval_aexpr (Abin a1 op a2) s (Eabnormal e)
 \end{lstlisting}
 
-From \autoref{lst:why3aexpr} it should be straight forward to see that each of the predicates, corresponds to
-each of the inference rules in \autoref{}.
-Each subterm before \texttt{->} is the premises of the specific inference rule and the last term is the conclusion.
-There is however a slight difference.
-Initially we split the EAOp rule into an EAMul and EASub, since we though this would be a necessity,
-and more closely resembles how semantics usually are represented in text books and as such should be considered independently.
-However we found that this indeed is not necessary because of the rather trivial and mechanized reasoning about such binary operators and in fact reduces complexity of the automated proofs as is apparent in \autoref{fig:aexpr_props}.
-The figure shows the 3 goals for arithmetic expressions. For a description of each property see \autoref{TODO}.
-In both versions of the semantics the goals are Valid, however we see a big difference in the steps it takes to validate it.
-For the initial version the steps for Goal 1 and Goal 3 takes roughly 2.5 as many steps as the current version. For Goal 2 the initial version requires 4 times as many steps as the current.
+From \autoref{lst:why3aexpr} it can be seen that each of the predicates, corresponds to
+each of the inference rules in \autoref{fig:aexprsemantics}.
+Each subterm before the \texttt{->} symbol is the premise of the specific inference rule, and the last term is the conclusion.
+The name before the \texttt{:} is the name of that specific
+rule, and these correspond to those of the semantic inference rules.
+\\~\\
+At first we had semantic inference rules for each of the binary operators, as we assumed this
+would be necessary to prove correctness, and as it
+more closely resembles how semantics usually are represented in text books, indicating that operators as such should be considered independently.
+However we found that this indeed is not necessary to conduct the proofs, because of the rather
+trivial and mechanized reasoning about such binary operators.
+In fact it reduces complexity of the automated proofs as is apparent in \autoref{fig:aexprprops}.
+The figure shows 3 goals each corresponding to a property for arithmetic expressions, and how
+many steps it takes to validate each of them, first for the version using different rules for
+each operator, and afterwards for the version that combines them into one rule.
+It should be noted that for these tests we only have two operators, namely subtraction and
+multiplication, as we did not add addition until later.
+For a description of each property see \ref{sec:aprops}.
+
+In both versions of the semantics the goals are valid, however we see a big difference in the steps it takes to validate it.
+For the initial version, where each operator has its own inference rules, the steps for Goal 1 and Goal 3 takes roughly 2.5 as many steps as the current version.
+For Goal 2 the initial version requires 4 times as many steps as the current.
 
 \begin{figure}
 \begin{lstlisting}
-INITIAL VERSION (version where we specifically distingush the two cases)
+INITIAL VERSION (version where we specifically distingush between operators)
 File semantics.mlw:
 Goal eval_aexpr_total_fun'vc.
 Prover result is: Valid (0.19s, 4170 steps).
@@ -78,33 +91,51 @@ Prover result is: Valid (0.01s, 105 steps).
 \label{fig:aexprprops}
 \end{figure}
 
-The new and improved semantic representation makes uses of a function \texttt{eval\_op :: axpr -> (int -> int -> int)} and used it in the conclusion as \texttt{eval\_aexpr (ABin a1 op a2) s (Enormal ((eval\_op op) a1 a2)}.
-Hence we get a direct correspondence to the semantics presented in \autoref{fig:aexprsemantics}, by removing EAMul and EASub and replacing it with
+The new and improved semantic representation makes use of a function
+\[
+  \texttt{eval\_op :: axpr -> (int -> int -> int)}
+\]
+to ensure the correct conclusion of expressions with binary operators, using the rule
+\[
+  \texttt{eval\_aexpr (ABin a1 op a2) s (Enormal ((eval\_op op) a1 a2)}
+\]
+Hence we get a direct correspondence to the semantics presented in
+\autoref{fig:aexprsemantics}.
 
-\begin{lstlisting}
-let function eval_op (op : aop) : (int -> int -> int) =
-    match op with
-    | Mul -> (*) | Sub -> (-)
-    end
-...
+% \begin{lstlisting}
+% let function eval_op (op : aop) : (int -> int -> int) =
+%     match op with
+%     | Mul -> (*) | Sub -> (-)
+%     end
+% ...
 
-  | EABin : forall a1 a2 n1 n2, s : store 'a, op.
-             eval_aexpr a1 s (Enormal n1) ->
-             eval_aexpr a2 s (Enormal n2) ->
-             eval_aexpr (ABin a1 op a2) s (Enormal ((eval_op op) n1 n2))
-\end{lstlisting}
+%   | EABin : forall a1 a2 n1 n2, s : store 'a, op.
+%              eval_aexpr a1 s (Enormal n1) ->
+%              eval_aexpr a2 s (Enormal n2) ->
+%              eval_aexpr (ABin a1 op a2) s (Enormal ((eval_op op) n1 n2))
+% \end{lstlisting}
 
-Notice furthermore we can define the behaviour of an operation as a Discriminated union of either a polymorphic \texttt{Enormal} behaviour or an \texttt{Eabnormal error},
-we do so to reuse the same types for arithmetic and boolean expressions along with statements.
-In the current implementation the only way to not result in normal behaviour is when we have an unbound variable.
+Notice furthermore we can define the behaviour of an operation as a discriminated union of
+either a polymorphic \texttt{Enormal 'a} behaviour or an \texttt{Eabnormal error}.
+We do so to reuse the same types for arithmetic and boolean expressions along with statements.
 
-If we in the future were to add additional errors we let Eabnormal hold an ADT containing different errors.
+In the current implementation the only way to result in abnormal behaviour is when we have an unbound variable.
+If we in the future were to add additional errors, we can extend the \texttt{error} type with more
+instances of errors.
 We tried looking into this matter, by adding division as an operator and adding additional semantics,
 with possibility of resulting in an \texttt{Ebnormal Ediv0} error. We however did not find a way to prove this,
-as the SMT solvers would time out on the properties. It is hard to tell exactly why as, adding addition as an operator we get only a fairly small increase in number of steps.
-TODO what are the numbers.
-But the additional error cases might make the actual formula discharged be grow exponetially. Considering the structure of the inductive predicate, we cannot simply let division be part of
-Binop, thus we would need seperate rules for the different operators.
+as the SMT solvers would time out on the properties. It is hard to tell exactly why as, but it
+could be because the complexity is increased so much that the proof times out.
+When adding addition as an operator we get a small increase in number of steps, but it could be
+that a more complex operator, ie. division, adds too much complexity to the proofs.
+
+\textbf{TODO what are the numbers. Do we need them?}
+
+Hence it could be that the additional error cases make the discharged formula grow
+exponetially.
+Considering the structure of the inductive predicate, we cannot simply include division in the
+rules for binary operators, thus to include division we need new inference rules.
+This would also make the proof grow, as there would be many more rules to consider.
 
 % The equivalent predicate in Isabelle is nearly identical except for a few syntactical differences, for
 % instance we dont have to explicitly instantiate each variable as they implicitly instantiated to be fixed but arbitrary.

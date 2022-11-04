@@ -1,34 +1,41 @@
 \section{Implementation}
-In this section we go through the different components of the implementation and compare the Why3 and Isabelle
-implementation side by side.
-For each component we define a set of predicates which must hold for a correct implementation.
-We furthermore make an overall assessment of the qualities of the two languages gradually by comparing the result.
+In this section we describe how we implemented the presented syntactical and semantical system
+in Why3. This is presented for each syntactical component: arithmetic expressions, boolean expression, statements, and formulas. In \ref{sec:evaluator} we describe how we implemented
+an evaluator for the language, and in \ref{sec:vcg} the implementation of verification
+condition generation is presented.
+
+For each component we define a set of properties which must hold for a correct implementation.
+We sometimes accompany the Why3 implementations with proofs conducted in Isabelle, to reason
+about parts that were tricky in Why3.
 
 \subsection{Syntax}
 \input{Implementation/syntax}
 
 \subsection{Arithmetic Expressions}
+In the following we will describe how the semantics for arithmetic expressions are implemented,
+and which properties we want to hold to ensure correctness of the implementation.
 
 \subsubsection{Semantics}
 \input{Implementation/asemantics}
 
-\subsubsection{Properties}
+\subsubsection{Properties}\label{sec:aprops}
 \input{Implementation/aproperties}
 
 \subsection{Boolean Expressions}
+Now we will describe the implementation of semantics for boolean expressions, together with
+the properties we want to ensure holds.
 
-\subsubsection{Semantics and properties}
 \input{Implementation/bsemantics}
 
 \subsection{Statements}
-\subsubsection{Semantics and properties}
+Finally we present our implementation of semantics of statements.
 \input{Implementation/ssemantics}
 
 
 \subsection{Assertion Language (Formulas)}\label{sec:iformulas}
 \input{Implementation/formulas}
 
-\subsection{Evaluator}
+\subsection{Evaluator}\label{sec:evaluator}
 \input{Implementation/evaluator}
 
 \subsubsection{Modelling a store}
@@ -37,7 +44,7 @@ We furthermore make an overall assessment of the qualities of the two languages 
 \subsubsection{Evaluation}
 \input{Implementation/evaluation}
 
-\subsection{Verification Condition Generation}
+\subsection{Verification Condition Generation}\label{sec:vcg}
 \input{Implementation/vcgen}
 
 \subsubsection{Variable substitution}

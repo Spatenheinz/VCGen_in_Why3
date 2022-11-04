@@ -1,9 +1,7 @@
 Firstly our store $\sigma$ is defined as a mapping from a polymorphic type to an Option Int.
 We define the syntax by simple ADTs, which closely resembles the syntax described earlier.
-\\~\\
-\noindent
-\begin{minipage}{0.5\textwidth}
-\begin{lstlisting}
+
+\begin{lstlisting}[caption={Syntax if the WHILE language, implemented in Why3},label={lst:why3syntax},language=sml]
 type store 'a = 'a -> option int
 
 type aop = Mul | Sub
@@ -11,26 +9,38 @@ type aop = Mul | Sub
 type aexpr 'a =
      | Acst int
      | Avar 'a
-     | ABin (aexpr 'a) aop (aexpr 'a)
+     | Abin (aexpr 'a) aop (aexpr 'a)
 
 type bexpr 'a =
-     | Btrue
-     | Bfalse
+     | Bcst
      | Bleq (aexpr 'a) (aexpr 'a)
      | Band (bexpr 'a) (bexpr 'a)
      | Bnot (bexpr 'a)
-\end{lstlisting}
-\end{minipage}
-\hspace{0.01\textwidth}
-\begin{minipage}{0.5\textwidth}
-\begin{lstlisting}
-type_synonym 'a state = "'a \<Rightarrow> int option"
 
-datatype aop = Mul | Sub
+type formula 'a =
+     | Fterm (bexpr 'a)
+     | Fand (formula 'a) (formula 'a)
+     | Fnot (formula 'a)
+     | Fimp (formula 'a) (formula 'a)
+     | Fall 'a (formula 'a)
 
-datatype 'a aexpr =
-    Cst int
-  | Var 'a
-  | BinOp "'a aexpr" aop "'a aexpr"
+type stmt 'a =
+     | Sskip
+     | Sass 'a (aexpr 'a)
+     | Sseq (stmt 'a) (stmt 'a)
+     | Sassert (formula 'a)
+     | Sif (bexpr 'a) (stmt 'a) (stmt 'a)
+     | Swhile (bexpr 'a) (formula 'a) (stmt 'a)
+
+type prog 'a = stmt 'a
 \end{lstlisting}
-\end{minipage}
+
+\autoref{lst:why3syntax} shows the implementation of the syntax.
+Each syntactical construct has its own type. The types are declared in a straighforward manner.
+For example, a boolean expression $a_{0} \land a_{1}$ written as
+\[ \texttt{Band a0 a1} \]
+in this abstract syntax, and a while-statement $\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{s\}$ is written as
+\[ \texttt{SWhile b f s} \]
+
+Now we move on to the semantics of the different constructs, which is a bit more tricky than
+the syntax. The following subsections presents the imlementation of these semantics.

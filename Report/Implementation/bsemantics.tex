@@ -1,7 +1,10 @@
+\subsubsection{Semantics}
 The formulation of boolean expressions follows the same pattern as arithmetic expressions.
-We define an inductive predicate stating the inference rules in \autoref{TODO}.
-For reference see \autoref{TODO}.
+We define an inductive predicate stating the inference rules in \autoref{fig:bexprsemantics}.
+As this follows the same structure as for arithmetic expressions we exclude the code here,
+for reference see \autoref{appendix???}.
 
+\subsubsection{Properties}
 Likewise the properties we use for reasoning about correctness of our boolean semantics resemble the properties for arithmetic expressions. Thus we have the following lemmas:
 
 \begin{enumerate}
@@ -10,23 +13,23 @@ Likewise the properties we use for reasoning about correctness of our boolean se
   \item \texttt{eval\_bexpr\_total\_fun}
 \end{enumerate}
 
-In the formulation of the boolean semantics, we initially encounted some problems in proving our properties.
-In the first iteration of the inductive predicate we used the built0in operator \&\&, which works for boolean values.
+In the formulation of the boolean semantics, we initially encountered some problems in proving the properties.
+In the first iteration of the inductive predicate we used the built in operator \&\&, which works for boolean values.
 We then became aware of the function \texttt{andb}, which is defined in the standard library in module bool.Bool.
-\texttt{andb} is short-circuitting and presumably the \&\& operator is as well.
-From the properties these also
-seem the two functions have equivalent semantics.
+\texttt{andb} is short-circuiting and presumably the \&\& operator is as well.
+
+From the properties it also seem the two functions have equivalent semantics.
 Interestingly they do not require the same amount of steps in
-the proofs. \autoref{tab:stepsbexpr} shows the result of proving the properties with different combinations of
-use of the operators.
-The columns defines the operator used in the lemma \texttt{eval\_bexpr\_total\_fun},
-and the rows defines which operator is used in the inductive predicate.
-Each line in a cell corresponds to the number of steps require for Alt-Ergo to prove the lemma.
-The lemmas are stated in the order from above.
+the proofs. \autoref{tab:stepsbexpr} shows the result of proving the properties with different combinations of use of the two operators.
+The columns define the operator used in the lemma \texttt{eval\_bexpr\_total\_fun},
+and the rows define which operator is used in the inductive predicate.
+Each line in a cell corresponds to the number of steps required for Alt-Ergo to prove the lemma, stated in the order from above.
 
 From the figure, we can see that using \&\& makes the two sub-lemmas a little simpler to prove, however
-for the total function lemma, it requires substantially more steps. On the other hand \texttt{andb} requires a bit more steps for the two sub-lemmas but is more than 4 times more efficient for the total function lemma.
+for the total function lemma, it requires significantly more steps.
+On the other hand \texttt{andb} requires a bit more steps for the two sub-lemmas but is more than 4 times more efficient for the total function lemma.
 Most bizzarely is it that using \texttt{andb} in \texttt{eval\_bexpr} and using \&\& in \texttt{eval\_bexpr\_total\_fun} cannot even be shown, despite the fact that their semantics evidently should be the same.
+As a result of these considerations we ended up using \texttt{andb} in our implementation.
 \begin{table}
   \centering
   \begin{tabular}{c || c | c}

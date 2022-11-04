@@ -3,43 +3,44 @@ The following paragraphs describes the properties we want to hold for arithmetic
 \paragraph{Determinism.}
 We want our program to be deterministic which means each part of the semantics must be deterministic, i.e. the semantic relation must be functional.
 
-To show that a judgement or inductive relation is functional, we have
+To show that a judgement or inductive relation of an arithmetic expression is functional, we have
 
 \[
   \judge{a,\sigma}{n} \; \text{and also} \; \judge{a,\sigma}{n'} \; \text{then} \; n = n'
 \]
 
-We can formalize this very easily in Why3 using a lemma, as such.
+We can formalize this very easily in Why3 using a lemma, as shown in \autoref{lst:why3funnorec}.
 
 \begin{lstlisting}[caption={lemma for functional arithmetic expressions},label={lst:why3funnorec},language=sml]
 lemma eval_aexpr_fun_cannot_show : forall a, s : store 'a, b1 b2.
    eval_aexpr a s b1 -> eval_aexpr a s b2 -> b1 = b2
 \end{lstlisting}
 
-The problem arises when we try to discharge this proof obligation to an SMT solver. It seems like this cannot directly proven. And the reason can be found in the usual way such formalism is proved for ASTs.
-More specifically, we do so by computational induction, and lemmas in why3 has no notion of induction.
-It is possible to transformations on a lemma, and a strategy such as \texttt{induction_pr} would correspond
-to this computational induction. Doing such a transformation we split the lemma into 6 subgoals.
-One for each inductive predicate rule.
-These can then be discharged. The first three goals corresponds to EACst EAVar and EAVar\_err can be proven by Alt-Ergo, the remaining cases are for binary operators and these cannot be shown by an SMT solver. So in this we would want to use either Coq or Isabelle. We tried opening the proofs in both Isabelle and Coq.
-The Isabelle driver, simply does not work. gicing the following error:
-
-There is no verification condition "eval_aexpr_fun_cannot_show".
-
-And this suggest that we cannot reason about lemmas using Isabelle. Opening the proof in Coq allows us to
-perform usual reasoning in Coq. With our limited knowledge of Coq, we quickly abandoned this approach.
-
+The problem arises when we try to discharge this proof obligation to an SMT solver.
+It seems like this cannot directly be proven, and the reason can be found in the usual way such formalism is proved for ASTs.
+More specifically, we do so by induction, and lemmas in why3 has no notion of induction.
+It is possible to dotransformations on a lemma, and a strategy such as \texttt{induction_pr} would correspond to this induction.
+Doing such a transformation we split the lemma into 6 subgoals, one for each inductive predicate rule, which can then be discharged.
+The first three goals that corresponds to \texttt{EACst}, \texttt{EAVar} and \texttt{EAVar\_err} can be proven by Alt-Ergo, the remaining cases are for binary operators and these cannot be shown by an SMT solver.
+In this case we would want to use either Coq or Isabelle. We tried opening the proofs in both Isabelle and Coq.
+The Isabelle driver simply does not work, giving the following error:
+\\~\\
+\texttt{There is no verification condition "eval\_aexpr\_fun\_cannot\_show".}
+\\~\\
+This suggest that we cannot reason about lemmas using Isabelle.
+Opening the proof in Coq allows us to perform usual reasoning in Coq, but with our limited knowledge of Coq, we quickly had to abandon this approach.
+\\~\\
 Instead we tried a different approach. Although why3 does not allow for induction, it is possible to define
 recursive lemmas. A recursive lemma differs from a regular lemma, in that it looks more like a ``function''.
 We can define \texttt{eval_aexpr_fun_cannot_show} as a recursive lemma as seen in \autoref{lst:why3funrec}.
-The lemma is defined by two parameters the arithmetic expression and a state.
-Recursive lemmas is proved through a Verification condition,
-hence we define the variant, to ensure total correctness,
+The lemma is defined by two parameters: 1) the arithmetic expression and 2) a state.
+Recursive lemmas are proved through a Verification condition,
+hence we need to define a \texttt{variant} to ensure total correctness,
 and then we specify the post-condition in the \texttt{ensures}.
 The post-condition will serve as the conclusion of the lemma.
-This corresponds to the lemma in \autoref{lst:why3funnorec}.
-The body of the function will then dictate the unfolding of the recursive structure.
-Notice here, how the result of the body is (), and we only use ensures for the actual lemma.
+This header now corresponds to the lemma in \autoref{lst:why3funnorec}, and the body of the function will then dictate the unfolding of the recursive structure.
+Notice here how the result of the body is $()$, as we do not need a result because the logic
+of the lemma is defined in the header.
 
 \begin{lstlisting}[caption={Recursive lemma for functional arithmetic expressions},label={lst:why3funrec},language=sml]
 let rec lemma eval_aexpr_fun (a: aexpr 'a) (s: store 'a)
@@ -55,7 +56,7 @@ let rec lemma eval_aexpr_fun (a: aexpr 'a) (s: store 'a)
 \end{lstlisting}
 
 When discharged, a goal is defined through the verification condition of this lemma, in a similar manner to functions.
-After the goal (proven or not) the lemmas is axiomatised. The specific axiom for \texttt{eval_aexpr_fun} can be seen in \autoref{lst:why3funaxiom}.
+After the goal is found (proven or not) the lemma is axiomatised. The specific axiom for \texttt{eval_aexpr_fun} can be seen in \autoref{lst:why3funaxiom}.
 
 \begin{lstlisting}[caption={Axiom of functional lemma},label={lst:why3funaxiom},language=sml]
 axiom eval_aexpr_fun :
@@ -67,28 +68,30 @@ axiom eval_aexpr_fun :
 The axiom clearly is equivalent to the lemma. Notice here, that the arguments for the lemma gets universally quantified.
 
 \paragraph{Totality.}
-Furthermore we want the semantics to be total, meaning all input has an output, such that we never encounter undefined behaviour.
+Furthermore we want the semantics to be total, meaning all input have an output, such that we never encounter undefined behaviour.
 Formally we have
 \[
 \forall a \in A, \sigma \in \Sigma. (\exists n. \judge{a, \sigma}{n}) \vee \judge{a, \sigma}{\bot}
 \]
-where $A$ is the set of all arithmetic expressions.
-Again we first formalised it as a plain lemma, but as the proof follows the structure of a,
-we had to refomulate this as a recursive lemma. The resulting lemma is shown in \autoref{lst:why3tot}.
+which states that for all $a$ and $\sigma$ there either exists an $n$ where $a$ evaluates to $n$ in $\sigma$, or the evaluation of $s$ results in abnormal behaviour. Here $A$ is the set of all arithmetic expressions.
+
+Again we first formalised this as a plain lemma, but as the proof goes by induction on the structure of a,
+we had to rewrite this as a recursive lemma. The resulting lemma is shown in \autoref{lst:why3tot}.
 
 \begin{lstlisting}[caption={Axiom of functional lemma},label={lst:why3tot},language=sml]
   let rec lemma eval_aexpr_total (a: aexpr 'a) (s : store 'a)
       ensures {
-          eval_aexpr a s (Eabnormal Eunbound) \/ exists n. eval_aexpr a s (Enormal n)
+        eval_aexpr a s (Eabnormal Eunbound) \/
+        exists n. eval_aexpr a s (Enormal n)
       }
     = match a with
       | Acst _ | Avar _ -> ()
-      | ABin a1 _ a2 -> eval_aexpr_total a1 s; eval_aexpr_total a2 s
+      | Abin a1 _ a2 -> eval_aexpr_total a1 s; eval_aexpr_total a2 s
       end
 \end{lstlisting}
 
 \paragraph{Combination of determinism and totality.}
-Another way to state that arithmetic expression are both total and deterministic is to define the actual total function.
+Another way to state that arithmetic expressions are both total and deterministic is to define a lemma stating that it is an actual total function.
 We can do so, again by a recursive lemma, as presented in \autoref{lst:why3totfun}. Notice here that the lemma in this case will simulate the actual
 computation of the total function, thus we can use the \texttt{result} keyword in the post-condition.
 The post condition will ensure that the total function adheres to the semantics, since the inductive predicate
