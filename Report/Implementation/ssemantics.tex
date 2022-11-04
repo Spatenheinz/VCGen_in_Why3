@@ -31,11 +31,12 @@ Had we included a variant in WHILE we might have been able to express the termin
 
 We then considered the proof without including the While in the language. Also in this case we could not find a proof. We then tried to remove If. Yet again, the SMT solvers timed out. Finally we found that removing Sequences, would allow us to prove the determinism.
 
-specifically, when excluding Seq, If, While, it took Alt-Ergo 5956 steps to prove the lemma.
-While only excluding Seq and While the prover to 13965 steps. Again this shows how 3 additional inference rules
-can increase the number of step by a significant amount.
+Specifically, when excluding \texttt{Seq}, \texttt{If}, and \texttt{While}, it took Alt-Ergo 5956 steps to prove the lemma.
+Only excluding \texttt{Seq} and \texttt{While} the prover required 13965 steps. Again this shows how 3 additional inference rules
+can increase the number of steps by a significant amount.
 
-One perculiarity we further found was that one can compare mappings by = without importing the module map.MapExt (in the standard library), which specifically defines extensionality of mappings.
-But again this might be overlapping instances of the build in functionality and the standard library.
-However this, along with the conumdrum of \&\& and \texttt{andb}, begs the question as to how well the
+One peculiarity we further noticed was that one can compare mappings by $=$ without importing the module map.MapExt (in the standard library), which specifically defines extensionality of mappings.
+This might be caused by overlapping functionality between the built-in functionality and
+the standard library.
+However this, along with the conundrum of \&\& and \texttt{andb}, begs the question as to how well the
 standard library is structured.
