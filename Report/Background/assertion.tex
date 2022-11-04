@@ -1,0 +1,46 @@
+Now we examine the semantics of assertions, in the form of formulas.
+As formulas can contain quantifiers, we cannot define the semantics of formulas by a set
+of inference rules in terms of operational semantics.
+Instead we define it as a set of satisfaction relations $\sigma \vDash f$, which can be seen in \autoref{fig:formulasemantics}.
+Note that in the figure $\top$ and $\bot$ denotes that a formula holds or does not hold
+respectively, thus it is not used as an indication of normal versus abnormal behaviour
+in this case.
+It is evident from the rules that \mathbf{true} will hold for all $\sigma: \Sigma$,
+whereas \mathbf{false} will never hold.
+%This approach will be presented in \ref{sec:iformulas}.
+
+\begin{figure}[h!]
+  \begin{align*}
+    % terms
+    \sigma \vDash \mathbf{true} &\Longleftrightarrow \top \\
+    \sigma \vDash \mathbf{false} &\Longleftrightarrow \bot \\
+    % and
+    \sigma \vDash f_{0} \land f_{1} &\Longleftrightarrow
+           (\sigma \vDash f_{0}) \land (\sigma \vDash f_{1}) \\
+    % not
+    \sigma \vDash \neg f &\Longleftrightarrow \neg (\sigma \vDash f) \\
+    % imp
+    \sigma \vDash f_{0} \Rightarrow f_{1} &\Longleftrightarrow
+           (\sigma \vDash f_{0}) \Rightarrow (\sigma \vDash f_{1}) \\
+    % forall
+    \sigma \vDash \forall x.f &\Longleftrightarrow
+                                \forall n:\mathbb{Z}. (\sigma [x \mapsto n] \vDash f)
+  \end{align*}
+\caption{Satisfaction relation for evaluation of formulas.}
+\label{fig:formulasemantics}
+\end{figure}
+
+\textbf{TODO: more about this? or is this fine?}
+% \textbf{TODO: I am confused about this last part????}
+% see chapter3 of SATnotes.
+
+% \textbf{TODO: remember to write about unbound variables in assertions. (Variables connato be unbound).}
+
+Another interesting notion about evaluation of formulas is the case of unbound variables.
+One approach would be to treat abnormal behaviour, such as unbpund variables, as \mathbf{false},
+as a formula like $a \leq 0$ would not be valid if $a$ was unbound.
+However, in the case of a formula like $\neg (a \leq 0)$ the inner expression would evaluate to
+false, following the logic we just presented, and then the entire formula would evaluate to
+true. This would indeed be a mistake, thus we need to ensure that the formula is closed before
+starting to evaluate it. Therefore evaluation of a formula assumes that the formula is closed.
+We will see a solution for implementing this in Why3 in \ref{sec:iformulas}.
