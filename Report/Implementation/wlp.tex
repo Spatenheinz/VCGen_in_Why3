@@ -151,7 +151,7 @@ The proof only shows the cases for sequences, assignments and while.
 The case for sequences are actually directly proved from the assumptions.
 We only distinguish this case because we need to simplify the other trivial cases.
 For both assignment and while we used the sledgehammer to find the proofs by metis,
-which is a complete automatic theorem prover for first order logic with equality\cite{TODO sledgehammer paper}.
+which is a complete automatic theorem prover for first order logic with equality\cite{sledgehammer}.
 
 \begin{lstlisting}[caption={Proof of monotonicity in Isabelle},label={lst:isamono},language=sml]
 lemma monotonicity : "valid_formula (FImp p q) \<Longrightarrow>
