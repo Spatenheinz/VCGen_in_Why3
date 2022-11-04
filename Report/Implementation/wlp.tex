@@ -55,25 +55,24 @@ let rec function abstract_effects (s : stmt int) (f : formula int) : formula int
 Whilst we implemented this function directly, we still want the properties for the function to hold.
 The following paragraphs describes the different properties. We were not able to prove any of these automatically, for further details see \ref{sec:results}.
 
-\paragraph{Specialization.} Firstly, we have
+\paragraph{Specialization.} Firstly, they want their function to adhere to:
 
 \begin{lstlisting}
-  lemma abstract_effects_specialize : forall st : store int, s f.
+  axiom abstract_effects_specialize : forall st : store int, s f.
     eval_formula (abstract_effects s f) st -> eval_formula f st
 \end{lstlisting}
 
-\textbf{TODOOOO}
-which states that evaluation of applying abstract effects off s on f in state st implies that f evaluates to true in st. Essentially it states that if we quantify the variables in f and the formula is true under the quantification, then $f$ also hold if the variables are not quantified.
-THIS DOES NOT MAKE ANY SENSE??? PLEASE LOOK AT IT TOMORROW.
-%%% NOTES %%%
-abstract effects property about specialize seems weird, but as the function is defined
-from these axioms, it simply states that it must hold for the function, ie. the formula f
-must be closed, or else the axiom wouldn't hold.
-We can fix this in our implementation by havin a \texttt{requires} that says the formula
-must be closed.
-Technically we could include all these axioms in an \texttt{ensures}, as they should hold
-for the function???? anyways, the way they define the function is wack, but pretty cool.
-But obviously we had to do it differently, as we want to be able to extract code.
+which states that evaluation of applying abstract effects of $s$ on $f$ in state $st$ implies that $f$ evaluates to true in $st$. Essentially it states that if we quantify the variables in $f$ and the formula is true under the quantification, then $f$ also hold if the variables are not quantified.
+Notice here, that this should not be seen as an axiom that says the following is true, which it clearly is not
+if $f$ contains unbound variables, but rahter that abstract_effects only works correctly in the context of a closed formula. This should be fairly trivial, but is not for an SMT solver. In any case we formulate the lemma as follows:
+
+\begin{lstlisting}
+  lemma abstract_effects_specialize : forall st : store int, s f.
+    is_closed_formula f st /\ eval_formula (abstract_effects s f) st ->
+    eval_formula f st
+\end{lstlisting}
+
+So here we ensure that f must be a closed formula in the context of st, such that all variables appearing in the formula are bound.
 
 \paragraph{Quantification over conjunction.}
 Secondly, we have
@@ -84,7 +83,7 @@ lemma abstract_effects_distrib_conj : forall s p q st.
  \end{lstlisting}
 
 Which states that if we apply abstract effects of $s$ on two formulas $p$ and $q$ and they both evaluate to true,
-then evaluating the result of applying the abstract effects of $s$ over the conjunction of $p$ and $q$, must also be true.
+then evaluating the result of applying the abstract effects of $s$ over the conjunction of $p$ and $q$, must also be true. Again this is a fairly trivial proof but hard to automatically prove.
 
 \paragraph{Monotonicity.}
 Thirdly, we have the property of monotonicity.
@@ -110,14 +109,8 @@ lemma abstract_effect_writes : forall st s q.
    eval_formula (wp s (abstract_effects s q)) st
  \end{lstlisting}
 
- The property states that if a the formula $q$ abstracted by $s$ is true in some state,
+ The property states that if the formula $q$ abstracted by $s$ is true in some state,
  then the weakest precondition on the same abstraction on $q$ by $s$ should also be true.
-% When \cite{} uses this as an axiom, it ensures, that \texttt{abstract\_effects}
-
-% \paragraph{Proofs of properties for abstract\_effects}
-% We have not been able to automatically prove these lemmas in why3.
-% At the moment we have a partial proof for the function in Isabelle.
-% ???? WRITE SOME MORE ????
 
 \paragraph{Properties and Soundness of WLP.}
 One of the main goals in making a formally verified Verification condition generator is to ensure the correctness of the implementation.

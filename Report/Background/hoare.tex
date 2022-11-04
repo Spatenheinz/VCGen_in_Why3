@@ -15,21 +15,21 @@ The statements included in these rules corresponds to statements provided in \re
 \begin{figure}[h!]
 \begin{equation*}
 \inference[HSkip ]{}
-{\hoarePQ{\mathbf{skip}}}
+{\hoarePQ{\; \mathbf{skip}\;}}
 \qquad
 \inference[HAssign ]{}
 {\hoare{Q[x \mapsto a]}{x := a}{Q}}
 \end{equation*}
 \begin{equation*}
 \inference[HIf ]{\hoare{P \wedge b}{s_0}{Q} & \hoare{P \wedge \neg b}{s_1}{Q}}
-{\hoarePQ{ \mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \} }}
+{\hoarePQ{ \; \mathbf{if} \; b \; \{ \; s_0 \; \} \; \mathbf{else} \; \{ \; s_1 \; \} }}
 \qquad
 \inference[HSeq ]{\hoare{P}{s_0}{R} & \hoare{R}{s_1}{Q}}
 {\hoarePQ{s_0 \; ; \; s_1}}
 \end{equation*}
 \begin{equation*}
 \inference[HWhile]{\hoare{I \wedge b}{s}{I}}
-{\hoare{I}{ \mathbf{while} \; b \; \mathbf{invariant} \; I \; \{ \; s \; \} }{I \wedge \neg b}}
+{\hoare{I}{ \; \mathbf{while} \; b \; \mathbf{invariant} \; I \; \{ \; s \; \} }{I \wedge \neg b}}
 \end{equation*}
 \begin{equation*}
 \inference[HCons]{\vDash P \rightarrow P' & \hoare{P}{s_0}{Q} & \vDash Q' \rightarrow Q}
@@ -49,7 +49,7 @@ When the loop ends, the condition must not hold any longer.
 Sequences are rather intuitive. If P holds in the state $\sigma$, R holds in the state $\sigma''$ that
 is the result of executing $s_{0}$ in $\sigma$, and Q holds in state $\sigma'$ that is the result of
 executing $s_{1}$ in $\sigma''$, then P holds before the sequence $s_{0}; s_{1}$, and $Q$ holds after.
-Lastly the conseqeuce rule HCons is used to strengthen a precondition or weaken a postcondition.
+Lastly the consequence rule HCons is used to strengthen a precondition or weaken a postcondition.
 \\~\\
 Using these inference rules one can show a program to be partially correct.
 The reason we can only show partial correctness is because the transitional sequence of statements might be infinite, i.e. a while loop might not terminate, and the triple only considers $s$ executing normally, which we can only show for terminating functions.

@@ -9,38 +9,6 @@ module WP
   use list.Mem
   use int.Int
 
-  let rec function mem (x: int) (l: list int) = match l with
-    | Nil      -> false
-    | Cons y r -> x = y || mem x r
-    end
-
-  let rec function assigned_vars (s : stmt int) (vars: list int) : list int
-      variant { s }
-  = match s with
-    | Sskip -> vars
-    | Sseq s1 s2 -> assigned_vars s2 (assigned_vars s1 vars)
-    | Sass x _ -> Cons x vars
-    | Sassert _ -> vars
-    | Sif _ s1 s2 -> assigned_vars s2 (assigned_vars s1 vars)
-    | Swhile _ _ s -> assigned_vars s vars
-    end
-
-  let rec function abstract_all_vars (vars : list int) (seen : list int) (f : formula int) : formula int
-      variant { vars }
-  = match vars with
-    | Nil -> f
-    | Cons x xs -> if mem x seen then
-                     abstract_all_vars xs seen f
-                   else
-                     let v = fresh_from f in
-                     let f' = subst_fmla f x v in
-                     abstract_all_vars xs (Cons x seen) (Fall v f')
-    end
-
-  (* let function abstract_effects (s : stmt int) (f : formula int) : formula int *)
-  (* = let vars = assigned_vars s Nil in *)
-  (*   abstract_all_vars vars Nil f *)
-
   let rec function abstract_effects (s : stmt int) (f : formula int) : formula int
     variant { s }
     (* ensures { forall st. eval_formula result st -> eval_formula f st  } *)
@@ -54,7 +22,7 @@ module WP
     end
 
   lemma abstract_effects_specialize : forall st : store int, s f.
-    closed_formula f st /\ eval_formula (abstract_effects s f) st ->
+    is_closed_formula f st /\ eval_formula (abstract_effects s f) st ->
     eval_formula f st
 
   (* let rec lemma abstract_effects_specialize (s : stmt int) (f : formula int) (st: store int) *)
@@ -148,9 +116,9 @@ module WP
     | Swhile _ _ s -> distrib_conj_rec s sigma p q
     end
 
-  lemma normal_eval_is_closed_wp : forall sigma sigma' s.
-        eval_stmt s sigma (Enormal sigma') ->
-        is_closed_formula (wp s (Fterm (Bcst true))) sigma
+  (* lemma normal_eval_is_closed_wp : forall sigma sigma' s. *)
+  (*       eval_stmt s sigma (Enormal sigma') -> *)
+  (*       is_closed_formula (wp s (Fterm (Bcst true))) sigma *)
 
   let function prog () =
     (* var 2 is q *)

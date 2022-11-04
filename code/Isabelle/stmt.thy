@@ -81,9 +81,7 @@ lemma abstract_effects_distrib_conj :
   eval_formula (abstract_effects s (FAnd p q)) st"
 proof(induction s arbitrary: p q)
   case (SSeq s1 s2)
-  then show ?case
-    apply(conE)
-    apply(simp) sorry
+  then show ?case sorry
 next
   case (Sassign x1 x2)
   then show ?case sorry

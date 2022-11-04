@@ -1,2 +1,16 @@
 \section{Conclusion}\label{sec:conclusion}
-Was we successful at all and is in feasible to make VCGen verified.
+We have tried to formally verify a small imperative language, and a verification condition generator for this language.
+We have been partially succesful in doing so,
+as we have succeeded in formalising the semantics of our object language and made both the evaluator and Verification Condition Generator extractable.
+However, where we have fallen short is in the verification of the implementation.
+\\~\\
+A point we found challenging in working with Why3 was that to make the code both formally verifiable and
+extractable, we had to reason about our object level language on both a logical reasoning level and on a
+program basis.
+This means that some of the code is overlapping in nature, but with vastly different outcomes, and it can sometimes be tedious to keep the program and logical reasoning in check.
+Furthermore, a lot of what can usually be axiomatized in functions is not possible when doing extracted code and hence we need to prove more lemmata than we would otherwise.
+An example of this is evaluation, which is in theory included in the very definition of the semantics for the
+object language, but where it is necessary to also define the evaluator separately, as we want the code to be extractable.
+\\~\\
+Our findings from doing this project was that Why3 seems like a good tool in deductive program verification assuming one has a good understanding of Coq.
+We base our conclusion on the fact that we often found it difficult to state the lemma in such a way that it can automatically proven by an SMT solver, and hence gaining manual control over the proof, using either Coq or the Why3 transformations, seems necessary.
