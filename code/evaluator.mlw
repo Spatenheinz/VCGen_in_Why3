@@ -1,22 +1,14 @@
 module Evaluator
-  use grammar.Grammar
+  use syntax.Syntax
   use semantics.Semantics
   use int.Int
   use bool.Bool
   use list.List
-  (* use fmap.MapImp as M *)
-  (* clone fmap.MapImp as M with type key = id, val eq = Int.(=) *)
-  (* use map.Const *)
   use option.Option
-  (* use ocaml.Exceptions *)
-  (* use dict.Imperative as E *)
   use dict.ImpMap as IM
   use map.Map
-  (* exception Unbound *)
 
-  (* type state2 = M.t (option int) *)
   let sigma : IM.state = IM.empty ()
-  (* let sigma2 : state2 = M.create () *)
 
   let rec aeval (a: aexpr id) : int
     variant { a }
@@ -25,30 +17,15 @@ module Evaluator
   = match a with
     | Acst i -> i
     | Avar v ->  IM.find v sigma
-    | ABin a1 op a2 -> (eval_op op) (aeval a1) (aeval a2)
+    | Abin a1 op a2 -> (eval_op op) (aeval a1) (aeval a2)
   end
-
-  (* can we not use finite maps???? *)
-  (* val myfind (d: state2) (k: id) : int *)
-  (*   ensures { match M.find k d with None -> false | Some v -> result = v end } *)
-  (*   raises  { Not_found -> M.find k d = None} *)
-
-  (* let rec aeval2 (a: aexpr id) : int *)
-  (*   variant { a } *)
-  (*   ensures { eval_aexpr a sigma2 (Eint result) } *)
-  (*   raises { Not_found -> eval_aexpr a sigma2 (Eabnormal Eunbound) } *)
-  (* = match a with *)
-  (*   | Acst i -> i *)
-  (*   | Avar v ->  myfind sigma2 v *)
-  (*   | Asub a1 a2 -> aeval2 a1 - aeval2 a2 *)
-  (* end *)
 
   let rec beval (b: bexpr id) : bool
     variant { b }
     ensures { eval_bexpr b (IM.domain sigma) (Enormal result) }
     raises { IM.Unbound -> eval_bexpr b (IM.domain sigma) (Eabnormal Eunbound) }
   = match b with
-    | BCst b -> b
+    | Bcst b -> b
     | Bleq a1 a2 -> aeval a1 <= aeval a2
     (* Cannot be proven *)
     | Band b1 b2 -> andb (beval b1) (beval b2)
@@ -83,7 +60,6 @@ module Evaluator
     let res = IM.state_lst sigma in
     let _ = IM.clear sigma in
     res
-
 
     let test ()
       diverges

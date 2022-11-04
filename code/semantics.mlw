@@ -2,10 +2,8 @@ module Semantics
 
   use int.Int
   use map.Map
-  (* use map.MapExt *)
   use set.Fset
-  use grammar.Grammar
-  use grammar.Formula
+  use syntax.Syntax
   use option.Option
   use bool.Bool
 
@@ -285,91 +283,4 @@ module Semantics
   lemma seval_determ : forall st : store 'a, s b1 b2.
      eval_stmt s st b1 -> eval_stmt s st b2 -> b1 = b2
 
-
-
-  predicate is_closed_aexpr (a : aexpr 'a) (st: store 'a) =
-    match a with
-    | Acst _ -> true
-    | Avar x -> match st x with
-                | Some _ -> true
-                | None -> false
-                end
-    | Abin a1 _ a2 -> is_closed_aexpr a1 st /\ is_closed_aexpr a2 st
-    end
-
-  predicate is_closed_bexpr (b : bexpr 'a) (st : store 'a) =
-    match b with
-    | Bcst _ -> true
-    | Bleq a1 a2 -> is_closed_aexpr a1 st /\ is_closed_aexpr a2 st
-    | Band b1 b2 -> is_closed_bexpr b1 st /\ is_closed_bexpr b2 st
-    | Bnot b -> is_closed_bexpr b st
-    end
-
-  predicate is_closed_formula (f : formula 'a) (st : store 'a) =
-    match f with
-    | Fterm b -> is_closed_bexpr b st
-    | Fand f1 f2 | Fimp f1 f2 -> is_closed_formula f1 st /\ is_closed_formula f2 st
-    | Fnot f -> is_closed_formula f st
-    | Fall y f -> is_closed_formula f st[y <- Some 0]
-    end
-
-  predicate eval_closed_formula (f: formula 'a) (st: store 'a)  =
-    match f with
-    | Fterm b -> eval_bexpr b st (Enormal true)
-    | Fand f1 f2 -> eval_closed_formula f1 st /\ eval_closed_formula f2 st
-    | Fnot f -> not (eval_closed_formula f st)
-    | Fimp f1 f2 -> eval_closed_formula f1 st -> eval_closed_formula f2 st
-    | Fall y f -> forall n. eval_closed_formula f st[y <- n]
-    end
-
-  predicate eval_formula (f : formula 'a) (st : store 'a) =
-    if is_closed_formula f st then eval_closed_formula f st
-    else false
-
-(*   (\* goal G1 : forall st. eval_formula (Fand (Fterm (Btrue)) (Fterm (Btrue))) st *\) *)
-(*   (\* goal A  : forall n1 n2 st. n1 <= n2 -> *\) *)
-(*   (\*                   eval_formula (Fterm (Bleq (Acst n1) (Acst n2))) st *\) *)
-(*   (\* goal Imp : forall st. eval_formula (Fimp (Fterm Btrue) (Fterm Btrue)) st *\) *)
-(*   (\* goal AbsurdImp : forall st. eval_formula (Fimp (Fterm Bfalse) *\) *)
-(*   (\*                                                (Fterm (Bleq (Acst 4) (Acst 1)))) st *\) *)
-(*   (\* goal ImpNone : forall st y x. eval_formula (Fimp (Fterm (Bleq (Avar y) (Acst x))) *\) *)
-(*   (\*                                             (Fterm (Bleq (Avar y) (Acst (x+1)))) *\) *)
-(*   (\*                                       ) st *\) *)
-(*   (\* goal Simp : forall st y. eval_formula (Fall y (Fterm (Btrue))) st *\) *)
-(*   (\* goal ALL : forall st y. eval_formula (Fall y (Fimp (Fterm (Bleq (Avar y) (Acst 5))) *\) *)
-(*   (\*                                                   (Fterm (Bleq (Avar y) (Acst 6))) *\) *)
-(*   (\*                                 ) *\) *)
-(*   (\*                         ) st *\) *)
-(*   (\* goal A2  : forall st. eval_formula (Fterm (Bleq (Acst 4) (Acst 3))) st *\) *)
-(*   (\* goal G2 : forall st. eval_formula (Fand (Fterm (Btrue)) (Fterm (Bfalse))) st *\) *)
-(*   (\* goal False' : forall st. eval_formula (Fterm (Bfalse)) st *\) *)
-
-(*   goal test : forall y x. y <= x -> y <= x + 1 *)
-
-  predicate valid_formula (f : formula 'a) = forall sigma: (store 'a). eval_formula f sigma
-
-(*   (\* goal G1 : valid_formula (Fand (Fterm (Btrue)) (Fterm (Btrue))) *\) *)
-(*   (\* goal G1 : valid_formula (Fand (Fterm (Btrue)) (Fimp (Fterm Btrue) (Fterm (Btrue))) : formula int) *\) *)
-(*   (\* goal A  : forall n1 n2. n1 <= n2 -> *\) *)
-(*   (\*                   valid_formula (Fterm (Bleq (Acst n1) (Acst n2))) *\) *)
-(*   (\* goal Imp : valid_formula (Fimp (Fterm Btrue) (Fterm Btrue)) *\) *)
-(*   (\* goal AbsurdImp : valid_formula (Fimp (Fterm Bfalse) *\) *)
-(*   (\*                                                (Fterm (Bleq (Acst 4) (Acst 1)))) *\) *)
-(*   (\* goal ImpNone : forall n1 x. valid_formula (Fimp (Fterm (Bleq (Acst n1) (Acst x))) *\) *)
-(*   (\*                                             (Fterm (Bleq (Acst n1) (Acst (x+1)))) *\) *)
-(*   (\*                                       ) *\) *)
-(*   (\* goal Simp : forall y. valid_formula (Fall y (Fterm (Btrue))) *\) *)
-(*   (\* goal ALL : forall y. valid_formula (Fall y (Fimp (Fterm (Bleq (Avar y) (Acst 5))) *\) *)
-(*   (\*                                                   (Fterm (Bleq (Avar y) (Acst 6))) *\) *)
-(*   (\*                                 ) *\) *)
-(*   (\*                         ) *\) *)
-(*   (\* goal A2  : valid_formula (Fterm (Bleq (Acst 4) (Acst 3))) *\) *)
-(*   (\* goal G2 : valid_formula (Fand (Fterm (Btrue)) (Fterm (Bfalse))) *\) *)
-(*   (\* goal False' : valid_formula (Fterm (Bfalse)) *\) *)
-
 end
-
-
-(*   (\*   goal G1: forall s:state. eval_bexpr Btrue s ((Enormal ()) true) *\) *)
-
-(*   (\*   goal G2: forall n1 n2:int, s:state. eval_bexpr (Bleq (Acst n1) (Acst n2)) s ((Enormal ()) (n1 <= n2)) *\) *)
