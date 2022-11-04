@@ -30,7 +30,7 @@ Notice that we show the formalization in the traditional sense and do not consid
 \inference[HSeq]{\hoare{P}{s_0}{R} & \hoare{R}{s_1}{Q}}
 {\hoarePQ{s_0 \; ; \; s_1}}
 
-\inference[HCons]{\vDash P \rightarrow P' \hoare{P}{s_0}{Q} & \vDash Q' \rightarrow Q}
+\inference[HCons]{\vDash P \rightarrow P' & \hoare{P}{s_0}{Q} & \vDash Q' \rightarrow Q}
 {\hoarePQ{s_0}}
 
 \caption{Hoare logic inference rules.}

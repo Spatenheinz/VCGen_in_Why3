@@ -30,14 +30,13 @@ whereas \mathbf{false} will never hold.
 \label{fig:formulasemantics}
 \end{figure}
 
-\textbf{TODO: more about this? or is this fine?}
 % \textbf{TODO: I am confused about this last part????}
 % see chapter3 of SATnotes.
 
 % \textbf{TODO: remember to write about unbound variables in assertions. (Variables connato be unbound).}
 
 Another interesting notion about evaluation of formulas is the case of unbound variables.
-One approach would be to treat abnormal behaviour, such as unbpund variables, as \mathbf{false},
+One approach would be to treat abnormal behaviour, such as unbound variables, as \mathbf{false},
 as a formula like $a \leq 0$ would not be valid if $a$ was unbound.
 However, in the case of a formula like $\neg (a \leq 0)$ the inner expression would evaluate to
 false, following the logic we just presented, and then the entire formula would evaluate to

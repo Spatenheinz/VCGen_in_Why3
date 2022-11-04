@@ -86,14 +86,14 @@ The semantics of statements are presented in \autoref{fig:stmtsemantics}.
 \begin{figure}[h!]
 
 \inference[ESSkip]{}
-{\judge{skip,\sigma}{\sigma}}
+{\judge{\mathbf{skip},\sigma}{\sigma}}
 
 
 \inference[ESAss]{\judge{a,\sigma}{n}}
-{\judge{x := a,\sigma}{\sigma[x \mapsto n]}}
+{\judge{x \mathbf{:=} a,\sigma}{\sigma[x \mapsto n]}}
 
 \inference[ESAss\_Err]{\judge{a,\sigma}{\bot}}
-{\judge{x := a,\sigma}{\bot}}
+{\judge{x \mathbf{:=} a,\sigma}{\bot}}
 
 
 \inference[ESSeq]{\judge{s_0, \sigma}{\sigma''} & \judge{s_1, \sigma''}{\sigma'} \; \; \; \text{where} \; \sigma'' \neq \bot}
@@ -110,20 +110,20 @@ The semantics of statements are presented in \autoref{fig:stmtsemantics}.
 {\judge{\mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\sigma'}}
 
 \inference[ESIf\_Err]{\judge{b, \sigma}{\bot}}
-{\judge{\mathbf{if} \; b \; \{ \; s_0 \; \} \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\bot}}
+{\judge{\mathbf{if} \; b \; \{ \; s_0 \; \} \; \mathbf{else} \; \{ \; s_1 \; \}, \sigma}{\bot}}
 
 
-\inference[ESWhileT]{\judge{c, \sigma}{true} & \judge{b, \sigma}{\sigma''} & \judge{\mathbf{while} \; c \; \mathbf{invariant} \; i \; \{ \; b \; \}, \sigma''}{\sigma'}}
-{\judge{\mathbf{while} \; c \; \mathbf{invariant} \; i \; \{ \; b \; \}, \sigma}{\sigma'}}
+\inference[ESWhileT]{\judge{b, \sigma}{true} & \judge{s, \sigma}{\sigma''} & \judge{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma''}{\sigma'}}
+{\judge{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma}{\sigma'}}
 
-\inference[ESWhileF]{\judge{c, \sigma}{false}}
-{\judge{\mathbf{while} \; c \; \mathbf{invariant} \; i \; \{ \; b \; \}, \sigma}{\sigma}}
+\inference[ESWhileF]{\judge{b, \sigma}{false}}
+{\judge{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma}{\sigma}}
 
-\inference[ESWhile\_ErrC]{\judge{c, \sigma}{\bot}}
-{\judge{\mathbf{while} \; c \; \mathbf{invariant} \; i \; \{ \; b \; \}, \sigma}{\bot}}
+\inference[ESWhile\_ErrC]{\judge{b, \sigma}{\bot}}
+{\judge{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma}{\bot}}
 
-\inference[ESWhile\_ErrB]{\judge{c, \sigma}{true} & \judge{b, \sigma}{\bot}}
-{\judge{\mathbf{while} \; c \; \mathbf{invariant} \; i \; \{ \; b \; \}, \sigma}{\bot}}
+\inference[ESWhile\_ErrB]{\judge{b, \sigma}{true} & \judge{s, \sigma}{\bot}}
+{\judge{\mathbf{while} \; b \; \mathbf{invariant} \; f \; \{ \; s \; \}, \sigma}{\bot}}
 
 \caption{Semantics of statements in WHILE.}
 \label{fig:stmtsemantics}
