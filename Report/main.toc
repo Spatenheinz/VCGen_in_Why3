@@ -1,1 +1,60 @@
 \babel@toc {english}{}\relax 
+\contentsline {section}{\numberline {1}Introduction}{4}{section.1}%
+\contentsline {section}{\numberline {2}Background}{4}{section.2}%
+\contentsline {subsection}{\numberline {2.1}WHILE}{4}{subsection.2.1}%
+\contentsline {subsubsection}{\numberline {2.1.1}Syntax}{4}{subsubsection.2.1.1}%
+\contentsline {subsubsection}{\numberline {2.1.2}Semantics}{6}{subsubsection.2.1.2}%
+\contentsline {paragraph}{Arithmetic expressions.}{6}{paragraph*.4}%
+\contentsline {paragraph}{Boolean expressions.}{6}{paragraph*.6}%
+\contentsline {paragraph}{Statements.}{7}{paragraph*.8}%
+\contentsline {subsubsection}{\numberline {2.1.3}Assertion language}{7}{subsubsection.2.1.3}%
+\contentsline {subsection}{\numberline {2.2}Hoare logic and WP calculus}{8}{subsection.2.2}%
+\contentsline {subsubsection}{\numberline {2.2.1}Hoare logic}{8}{subsubsection.2.2.1}%
+\contentsline {subsubsection}{\numberline {2.2.2}Weakest Precondition Calculus}{10}{subsubsection.2.2.2}%
+\contentsline {paragraph}{Rules for determining weakest liberal precondition}{10}{paragraph*.12}%
+\contentsline {paragraph}{Soundness of wlp}{11}{paragraph*.14}%
+\contentsline {subparagraph}{Case $e=0$.}{12}{subparagraph*.15}%
+\contentsline {subparagraph}{Case $e \neq 0 $.}{12}{subparagraph*.16}%
+\contentsline {subsection}{\numberline {2.3}Tools}{12}{subsection.2.3}%
+\contentsline {subsubsection}{\numberline {2.3.1}SMT solvers and ATP}{12}{subsubsection.2.3.1}%
+\contentsline {paragraph}{ATPs}{13}{paragraph*.17}%
+\contentsline {subsubsection}{\numberline {2.3.2}Why3}{13}{subsubsection.2.3.2}%
+\contentsline {subsubsection}{\numberline {2.3.3}Isabelle/HOL}{15}{subsubsection.2.3.3}%
+\contentsline {section}{\numberline {3}Implementation}{15}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Syntax}{15}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Arithmetic Expressions}{15}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}Semantics}{15}{subsubsection.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.2.2}Properties}{17}{subsubsection.3.2.2}%
+\contentsline {paragraph}{Determinism.}{18}{paragraph*.19}%
+\contentsline {paragraph}{Totality.}{19}{paragraph*.20}%
+\contentsline {paragraph}{Combination of determinism and totality.}{19}{paragraph*.21}%
+\contentsline {subsection}{\numberline {3.3}Boolean Expressions}{20}{subsection.3.3}%
+\contentsline {subsubsection}{\numberline {3.3.1}Semantics and properties}{20}{subsubsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.4}Statements}{20}{subsection.3.4}%
+\contentsline {subsubsection}{\numberline {3.4.1}Semantics and properties}{20}{subsubsection.3.4.1}%
+\contentsline {paragraph}{Semantics.}{20}{paragraph*.23}%
+\contentsline {paragraph}{Properties.}{21}{paragraph*.24}%
+\contentsline {subsection}{\numberline {3.5}Assertion Language (Formulas)}{21}{subsection.3.5}%
+\contentsline {paragraph}{Formalization.}{21}{paragraph*.25}%
+\contentsline {paragraph}{Why the semantics are non-blocking.}{22}{paragraph*.26}%
+\contentsline {subsection}{\numberline {3.6}Evaluator}{23}{subsection.3.6}%
+\contentsline {subsubsection}{\numberline {3.6.1}Modelling a store}{23}{subsubsection.3.6.1}%
+\contentsline {subsubsection}{\numberline {3.6.2}Evaluation}{24}{subsubsection.3.6.2}%
+\contentsline {subsection}{\numberline {3.7}Verification Condition Generation}{25}{subsection.3.7}%
+\contentsline {subsubsection}{\numberline {3.7.1}Variable substitution}{25}{subsubsection.3.7.1}%
+\contentsline {subsubsection}{\numberline {3.7.2}Weakest Liberal Precondtion}{26}{subsubsection.3.7.2}%
+\contentsline {paragraph}{Implementation of Weakest Liberal Precondition calculus.}{26}{paragraph*.27}%
+\contentsline {paragraph}{Quatification over conjunction.}{27}{paragraph*.28}%
+\contentsline {paragraph}{Monotonicity.}{27}{paragraph*.29}%
+\contentsline {paragraph}{Invariance.}{27}{paragraph*.30}%
+\contentsline {paragraph}{Proofs of properties for abstract\_effects}{28}{paragraph*.31}%
+\contentsline {paragraph}{Properties and Soundness of WLP}{28}{paragraph*.32}%
+\contentsline {subsection}{\numberline {3.8}Extraction of code}{29}{subsection.3.8}%
+\contentsline {paragraph}{Extraction is correct by construction.}{29}{paragraph*.33}%
+\contentsline {paragraph}{Program functions and Logical functions.}{29}{paragraph*.34}%
+\contentsline {paragraph}{Using the extracted code.}{30}{paragraph*.35}%
+\contentsline {section}{\numberline {4}Results}{32}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Overview of Findings from Implementation}{32}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}limitiations for automated verification}{32}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Has this project been useful?}{33}{subsection.4.3}%
+\contentsline {section}{\numberline {5}Conclusion}{33}{section.5}%
