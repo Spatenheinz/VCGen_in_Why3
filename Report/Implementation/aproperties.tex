@@ -6,7 +6,7 @@ We want our program to be deterministic which means each part of the semantics m
 To show that a judgement or inductive relation of an arithmetic expression is functional, we have
 
 \[
-  \judge{a,\sigma}{n} \; \text{and also} \; \judge{a,\sigma}{n'} \; \text{then} \; n = n'
+  \judgea{a,\sigma}{n} \; \text{and also} \; \judgea{a,\sigma}{n'} \; \text{then} \; n = n'
 \]
 
 We can formalize this very easily in Why3 using a lemma, as shown in \autoref{lst:why3funnorec}.
@@ -18,7 +18,7 @@ lemma eval_aexpr_fun_cannot_show : forall a, s : store 'a, b1 b2.
 
 The problem arises when we try to discharge this proof obligation to an SMT solver.
 It seems like this cannot directly be proven, and the reason can be found in the usual way such formalism is proved for ASTs.
-More specifically, we do so by induction, and lemmas in why3 has no notion of induction.
+More specifically, we do so by induction, and lemmas in Why3 has no notion of induction.
 It is possible to dotransformations on a lemma, and a strategy such as \texttt{induction_pr} would correspond to this induction.
 Doing such a transformation we split the lemma into 6 subgoals, one for each inductive predicate rule, which can then be discharged.
 The first three goals that corresponds to \texttt{EACst}, \texttt{EAVar} and \texttt{EAVar\_err} can be proven by Alt-Ergo, the remaining cases are for binary operators and these cannot be shown by an SMT solver.
@@ -30,7 +30,7 @@ The Isabelle driver simply does not work, giving the following error:
 This suggest that we cannot reason about lemmas using Isabelle.
 Opening the proof in Coq allows us to perform usual reasoning in Coq, but with our limited knowledge of Coq, we quickly had to abandon this approach.
 \\~\\
-Instead we tried a different approach. Although why3 does not allow for induction, it is possible to define
+Instead we tried a different approach. Although Why3 does not allow for induction, it is possible to define
 recursive lemmas. A recursive lemma differs from a regular lemma, in that it looks more like a ``function''.
 We can define \texttt{eval_aexpr_fun_cannot_show} as a recursive lemma as seen in \autoref{lst:why3funrec}.
 The lemma is defined by two parameters: 1) the arithmetic expression and 2) a state.
@@ -51,7 +51,7 @@ let rec lemma eval_aexpr_fun (a: aexpr 'a) (s: store 'a)
     }
   = match a with
     | Acst _ | Avar _ -> ()
-    | ABin a1 _ a2 -> eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
+    | Abin a1 _ a2 -> eval_aexpr_fun a1 s; eval_aexpr_fun a2 s
       end
 \end{lstlisting}
 
@@ -71,7 +71,7 @@ The axiom clearly is equivalent to the lemma. Notice here, that the arguments fo
 Furthermore we want the semantics to be total, meaning all input have an output, such that we never encounter undefined behaviour.
 Formally we have
 \[
-\forall a \in A, \sigma \in \Sigma. (\exists n. \judge{a, \sigma}{n}) \vee \judge{a, \sigma}{\bot}
+\forall a \in A, \sigma \in \Sigma. (\exists n. \judgea{a, \sigma}{n}) \vee \judgea{a, \sigma}{\bot}
 \]
 which states that for all $a$ and $\sigma$ there either exists an $n$ where $a$ evaluates to $n$ in $\sigma$, or the evaluation of $s$ results in abnormal behaviour. Here $A$ is the set of all arithmetic expressions.
 
@@ -107,7 +107,7 @@ let rec lemma eval_aexpr_total_fun (a: aexpr 'a) (s: store 'a)
                    | Some n -> Enormal n
                    | None -> Eabnormal Eunbound
                  end
-     | ABin a1 op a2 ->
+     | Abin a1 op a2 ->
        match eval_aexpr_total_fun a1 s, eval_aexpr_total_fun a2 s with
          | Enormal n1, Enormal n2 -> Enormal ((eval_op op) n1 n2)
          | Eabnormal e, _   -> Eabnormal e

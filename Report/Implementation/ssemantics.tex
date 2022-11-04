@@ -25,7 +25,7 @@ There can be multiple reasons for this.
 
 First and foremost we cannot include while-statements in the recursive lemma. The reason for this, is that we have to
 include the variant for a recursive lemma to even discharge the proof.
-I.e. if we cannot prove termination of a lemma it cannot hold true in the system of why3, since this would only entail partial correctness.
+I.e. if we cannot prove termination of a lemma it cannot hold true in the system of Why3, since this would only entail partial correctness.
 It should be clear from the ESWhileT case of the inference rules, that we do not reduce the structure of s and hence s does not respect the well founded order.
 Had we included a variant in WHILE we might have been able to express the termination.
 

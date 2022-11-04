@@ -19,7 +19,7 @@ We denote the weakest liberal precodition as $P = wlp(s,Q)$.
 Now we present the rules for determining the weakest liberal precondition of an expression.
 Next we will present the intuition behind proving the soundness of this system.
 
-\paragraph{Rules for determining weakest liberal precondition}
+\paragraph{Rules for determining weakest liberal precondition.}
 % rules of wp for the construct of our WHILE language
 The weakest liberal precondition is the minimal condition that must hold to prove correctness of a program, assuming that it terminates.
 The \textit{wlp} for our WHILE language (see \ref{sec:syntax} for syntax) is determined using the rules presented in \autoref{fig:wlp}.
@@ -30,8 +30,8 @@ WLP(\texttt{skip}, Q) &= Q \\
 WLP(x:=a,Q) &= \forall y, y = a \Rightarrow Q[x \mapsto y] \\
 WLP(s_0;s_1, Q) &= WLP(s_0, WLP(s_1, Q)) \\
 WLP(\{P\}, Q) &= P \land Q \quad \text{where P is an assertion} \\
-WLP(\texttt{if } e \texttt{ then } s_0 \texttt{ else } s_1, Q) &= (e \Rightarrow WLP(s_0, Q)) \\
-    &\quad \land (\neg e \Rightarrow WLP(s_1, Q)) \\
+WLP(\texttt{if } b \texttt{ then } s_0 \texttt{ else } s_1, Q) &= (b \Rightarrow WLP(s_0, Q)) \\
+    &\quad \land (\neg b \Rightarrow WLP(s_1, Q)) \\
 WLP(\texttt{while } b \texttt{ invariant } I \texttt{ do } s, Q) &=
     I \land \\
 &\forall x_1, ..., x_k, \\
@@ -49,7 +49,7 @@ The rules define how to compute the $wlp$ when given a statement $s$ and a formu
 
 The $wlp$ of \texttt{skip} is just the formula $Q$, as the statement has no effect.
 The $wpl$ of \texttt{x:=e} with $Q$ is simply $Q$ where each occurence of $x$ is exchanged with $e$, as that is the effect of the assignment.
-The $wlp$ of \texttt{s_0;s_1} is the result of first determining $WLP(s_{1},Q) = Q_{1}$, and then using that result to compute the overall $wlp$ as $WLP(s_{0}, Q_{1})$. This is because we always compute the $wlp$ by looking at the last statement, building up a formula from right to left.
+The $wlp$ of $s_0;s_1$ is the result of first determining $WLP(s_{1},Q) = Q_{1}$, and then using that result to compute the overall $wlp$ as $WLP(s_{0}, Q_{1})$. This is because we always compute the $wlp$ by looking at the last statement, building up a formula from right to left.
 
 The next two rules are more interesting.
 For determining the $wlp$ of an \texttt{if} statement, the rule states that \textit{if} $e$ is true, then the $wlp$ is $WLP(s_{0}, Q)$, else it is $WLP(s_{1},Q)$, thus choosing a branch according to the condition.
@@ -58,7 +58,7 @@ It states that firstly the invariant $I$ must hold. Secondly we want to exchange
 
 The last rule concerns assertion statements, and this case is trivial, as we simply add the assertion to the formula $Q$ by conjunction.
 
-\paragraph{Soundness of wlp}
+\paragraph{Soundness of wlp.}
 % soundness etc. refer to automated proofs in section ???
 For the weakest liberal precondition calculus to be meaningful to us, we must assert that the calculus is actually sound.
 This is done by proving that \textit{for all statements s and formula $Q$, $\{WLP(s, Q)\}s\{Q\}$ is valid for partial correctness}.
@@ -75,7 +75,7 @@ Therefore we will dive a bit into the intuition behind that case.
 
 Lets assume that $s =$ \texttt{while $b$ invariant $I$ $s'$}.
 Now we want to show that $\{WLP(s, Q)\}s\{Q\}$ holds for any $Q$.
-Assume that we have a state $\sigma$ such that $\sigma \vDash WLP(s, Q)$ holds, and that $\judge{s,\sigma}{\sigma'}$
+Assume that we have a state $\sigma$ such that $\sigma \vDash WLP(s, Q)$ holds, and that $\judges{s,\sigma}{\sigma'}$
 
 The rest of the proof uses induction on the length of the execution.
 
@@ -89,7 +89,7 @@ Now, as $\sigma \vDash I$ and $\sigma \vDash b = false$ we get that $\sigma \vDa
 
 \subparagraph{Case $b = true $.}
 In this case the loop does not terminate, but executes another iteration of the body.
-That means $\sigma \neq \sigma'$, and that $\judge{s',\sigma}{\sigma''}$ and than $\judge{s, \sigma''}{\sigma'}$.
+That means $\sigma \neq \sigma'$, and that $\judges{s',\sigma}{\sigma''}$ and than $\judges{s, \sigma''}{\sigma'}$.
 
 % the execution must first execute $\sigma, s \rightsquigarrow \sigma, b$, as the state does not change at first.
 % Then the execution must execute the sequence $b;s$ in $\sigma$, and end in some state $\sigma''$.

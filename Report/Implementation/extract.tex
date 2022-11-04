@@ -14,7 +14,7 @@ However structuring the code in C friendly manner would likely become quite tedi
 
 \paragraph{Program functions and Logical functions.}
 Just as the object level limits what we can do in terms of extracted code, so does the logical level.
-There is a clear distinction between logical functions and program functions in why3.
+There is a clear distinction between logical functions and program functions in Why3.
 All program functions are specified with a \texttt{let} and can be extracted,
 while the logical functions can be used to reason about the program functions.
 Actually extracting the code has been a bit of a challenge.
@@ -34,7 +34,7 @@ And while there might be better ways to handle the store, our current approach s
 
 In regards to the verification condition generation, we did not run into too much trouble.
 As mentioned previously our approach to the weakest precondition generation follows the same
-structure as WP revisited in why3\cite{wp-revisited},
+structure as WP revisited in Why3\cite{wp-revisited},
 but deviates in how functions are defined.
 Axiomatized functions can clearly not be exported,
 since they dont have a function body but simply must adhere to a set of axioms.
@@ -58,7 +58,7 @@ We can then use the module in an ocaml project (where we might define a parser e
 \autoref{lst:ocamlexample} shows a simple example, defining two WHILE programs.
 
 \texttt{prog} is a simple assignment. One thing to note is that because we used the int type in
-why3, we have to use the \(Z.of\_int\) because ints in why3 are unbounded integers from the zarith library.
+why3, we have to use the \(Z.of\_int\) because ints in Why3 are unbounded integers from the zarith library.
 
 \texttt{prog'} defines a slightly more complicated program, which does 2 assignments, and the second assignment tries to assign an expression with an unbound variable to a variable.
 

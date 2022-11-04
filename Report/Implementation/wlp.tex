@@ -150,7 +150,7 @@ For both assignment and while we used the sledgehammer to find the proofs by met
 which is a complete automatic theorem prover for first order logic with equality\cite{sledgehammer}.
 
 \begin{lstlisting}[caption={Proof of monotonicity in Isabelle},label={lst:isamono},language=sml]
-lemma monotonicity : "valid_formula (FImp p q) \<Longrightarrow>
+lemma monotonicity : "valid_formula (FImp p q) ==>
   valid_formula (FImp (wp s p) (wp s q))"
 proof(induction s arbitrary: p q)
   case (SSeq s1 s2)

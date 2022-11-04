@@ -66,7 +66,7 @@ where, $\xi$ is a fresh variable.
 By this total correctness can be achieved.
 \\~\\
 Whether we consider total or partial correctness solely depends on the existence of a variant.
-In any case Hoare logic can be shown to be sound, that is if a Hoare triple is proveable from the inference rules then the hoare triple is valid, i.e. $\vdash \hoarePQ{s}$ implies $\vDash \hoarePQ{s}$.
+In any case Hoare logic can be shown to be sound, that is if a Hoare triple is proveable from the inference rules then the hoare triple is valid, i.e. $\vDash \hoarePQ{s}$ implies $\vdash \hoarePQ{s}$.
 This is an important property, since it ensures that it is impossible to derive partial correctness proofs that does not hold.
 The proof goes by induction on the derivation of $\vdash \hoarePQ{s}$.
 We omit this proof, because we do not use Hoare logic in our formalization directly, but rather as a consequence for our Verification condition generation.

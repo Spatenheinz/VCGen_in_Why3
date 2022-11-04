@@ -5,10 +5,10 @@ what limitations we encountered,
 if we succeeded in making a verified Verification Condition Generator in Why3 and if it is even feasible to do so.
 
 \subsection{Overview of Findings from Implementation}
-One of the goals we set out to do, was to investigate the expressiveness and effectiveness of different SMT solvers and ATP's in the why3 backend.
+One of the goals we set out to do, was to investigate the expressiveness and effectiveness of different SMT solvers and ATP's in the Why3 backend.
 The idea was that we should do this through the implementation of the interpreter and the VC generator.
 From \ref{sec:implementation} it should be apparent that most of the properties we want to hold cannot be proved, (at least from our experiments),
-hence we have abandoned the idea of making an analysis of which provers are capable of show specific lemmas.
+hence we have abandoned the idea of making an analysis of which provers are capable of showing specific lemmas.
 What we can say from the implementation is that whilst we are able to model some of the lemmas other than the straightforward way,
 it is not easy to verify programs in Why3.
 Although it might be possible to model the lemmas in a way such that the goals we set out to prove can be met,
@@ -51,7 +51,7 @@ expected, and working in Why3 therefore requires the utmost vigilance in our exp
 
 All in all this might be due to our still very limited experience with working in Why3.
 
-\subsection{Has this project been useful?}
+\subsection{Relevance}
 Although we have not accomplished all the things we set out to do, we still have gotten a good intuition about  reasoning in Why3, and of how the weakest precondition calculus and semantics of a programming language can be formalized in Why3.
 To say that our product is useful would be a stretch. Without verifying our formalization we could just as well have written the VC generator in another language.
 For what is it worth we have a partially proved implementation in Isabelle.

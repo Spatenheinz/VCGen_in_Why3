@@ -5,7 +5,7 @@ As mentioned in \ref{sec:assert}, we cannot formalize the assertion language in 
 the other language constructs because of quantifers.
 We instead decided to use a predicate to describe the semantics.
 As formulas are logic constructs the choice naturally was to use a predicate over a function,
-since predicates are part of why3's logical languages and therefore is useful in reasoning about logics.
+since predicates are part of Why3's logical languages and therefore is useful in reasoning about logics.
 
 We want to formalize that the evaluation of a formula depends on the evaluation of subterms
 of that formula. This will eventually use the evaluation of boolean expressions, and thus
@@ -13,8 +13,8 @@ the result will be whether the formula holds or not.
 This is formalized in the predicate \texttt{eval\_closed\_formula}, shown in \autoref{lst:why3formula}.
 \\~\\
 The semantics for conjuction, implication and negation are rather simple and directly follows the corresponding
-semantics of why3's logic.
-Universal quantification uses the \texttt{forall} defined in why3, and updates the state accordingly.
+semantics of Why3's logic.
+Universal quantification uses the \texttt{forall} defined in Why3, and updates the state accordingly.
 
 For the term expression we use the semantics defined earlier for binary expressions.
 We state that for a term to be true, the term should evaluate to true under the judgement of binary expressions.
@@ -56,7 +56,7 @@ predicate eval_formula (f : formula 'a) (st : store 'a) =
 We mentioned briefly in \ref{sec:stmtsemantics} that the semantics for formulas in statements
 are non-blocking.
 The reason we opted for this approach, was that we preemptively knew that dealing with quantifiers could be problematic.
-We want to make the code extractable to OCaml, and this means we cannot rely on the runtime of why3 and hence
+We want to make the code extractable to OCaml, and this means we cannot rely on the runtime of Why3 and hence
 we would need to implement some algorithm to deal with quantified proofs.
 This was not an objective of this project, and thus we chose a non-blocking semantics.
 
