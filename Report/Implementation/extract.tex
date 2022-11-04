@@ -4,7 +4,7 @@ To achieve this we had to adhere to some limitations.
 Mostly these are related the expressiveness and hierachy of whyML.
 
 \paragraph{Extraction is correct by construction.}
-The extraction of whyML programs is correct by construction\cite{TODO : manual for why3}.
+The extraction of whyML programs is correct by construction.
 This means that each syntactical object is directly translated into an equivalent object
 in the target language. For instance a program function written in whyML denoted by either \texttt{let}, \texttt{let function}, \texttt{let rec function} or \texttt{let rec} directly translate into its equivalent Ocaml function. This ensures that extracted code does the same when exported.
 On the downside this means that we can only extract our code to Ocaml, but not to C, since there is no
