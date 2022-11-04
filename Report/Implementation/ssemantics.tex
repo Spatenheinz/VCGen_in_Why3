@@ -19,11 +19,13 @@ verification condition of a program.
 The properties for asserting the correctness of the implementation of the semantics is built
 upon the lemmas regarding totality and determinism of boolean and arithmetic expressions.
 Hence we consider the lemma
-\texttt{eval_stmt_deterministic}. Unfortunately, our trick from the previous grammar constructs of utilising a recursive lemma does not render useful for statements. Running the recursive lemma for 300 seconds in Alt-Ergo, does not provide a proof.
-There might be many reasons for this.
+\texttt{eval_stmt_deterministic}. Unfortunately, our trick from the previous grammar constructs of utilising a recursive lemma does not render useful for statements.
+Running the recursive lemma for 300 seconds using Alt-Ergo, does not provide a proof.
+There can be multiple reasons for this.
 
-First and foremost we cannot include while in the recursive lemma. The reason for this, is that we have to
-include the variant for a recursive lemma to even discharge the proof. I.e. if we cannot prove termination of a lemma it cannot hold true in the system if why3. Since this would only entail partial correctness.
+First and foremost we cannot include while-statements in the recursive lemma. The reason for this, is that we have to
+include the variant for a recursive lemma to even discharge the proof.
+I.e. if we cannot prove termination of a lemma it cannot hold true in the system of why3, since this would only entail partial correctness.
 It should be clear from the ESWhileT case of the inference rules, that we do not reduce the structure of s and hence s does not respect the well founded order.
 Had we included a variant in WHILE we might have been able to express the termination.
 
