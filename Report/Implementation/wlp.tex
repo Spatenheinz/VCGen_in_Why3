@@ -1,3 +1,5 @@
+We now go over the implementation of the weakest liberal precondition calculus, and the different properties that we want to hold for the verification condition generation.
+
 \paragraph{Implementation of Weakest Liberal Precondition calculus.}
 We implemented the rules for weakest liberal precondition by a recursive function that directly
 follows the inference rules.
@@ -24,14 +26,20 @@ The other interesting rule, for while, is implemented as follows:
 \end{lstlisting}
 
 Here the interesting thing is the function \texttt{abstract\_effects}. This function quantifies over all assigned variables in the body of the loop and substitute the quantifiers with the free variables in the formula
-$((cond \wedge inv) \Rightarrow wp(body,inv)) \wedge ((\neg cond \wedge inv) \Rightarrow Q)$. like \texttt{fresh\_from} this function is inspired by \cite{TODO}. The story is the same. They used axioms to define the function, whereas we have to implement it.
-\texttt{abstract\_effects} takes a statement $s$ and formula $f$.
-If the statement is an assignment
-a fresh variable is made and substituted into $f$, and we then quantify the freshly made variable.
-This is not the most efficient solution, as multiple assignment to the same variable will create unused quantifiers.
-All the cases will traverse the abstract syntaxt tree or is a leaf and does nothing.
+$((cond \wedge inv) \Rightarrow wp(body,inv)) \wedge ((\neg cond \wedge inv) \Rightarrow Q)$.
+We need this because the $wlp$ rules dictates that all assigned variables in $s$ should be
+substituted with fresh variables, and this function helps us do that.
 
-\begin{lstlisting}
+
+Like \texttt{fresh\_from} this function is inspired by \cite{wp-revisited}.
+Again they use axioms to define the function, whereas we have to actually implement it.
+\texttt{abstract\_effects} takes a statement $s$ and formula $f$, and updates the formula if the statement is an assignment.
+This is done by creating a fresh variable and substituting it into $f$, and then quantify the freshly made variable.
+This is not the most efficient solution, as multiple assignment to the same variable will create unused quantifiers.
+All the cases will traverse the abstract syntaxt tree, or end in a leaf and do nothing.
+The implementation of \texttt{abstract\_effects} is shown in \autoref{lst:abstracteff}.
+
+\begin{lstlisting}[caption={Implementation of the \texttt{abstract\_effects} function},label={lst:abstracteff},language=sml]
 let rec function abstract_effects (s : stmt int) (f : formula int) : formula int
   variant { s }
 = match s with
@@ -45,17 +53,29 @@ let rec function abstract_effects (s : stmt int) (f : formula int) : formula int
 \end{lstlisting}
 
 Whilst we implemented this function directly, we still want the properties for the function to hold.
-\parapgraph{specialization.} Firstly, we have
+The following paragraphs describes the different properties. We were not able to prove any of these automatically, for further details see \ref{sec:results}.
+
+\paragraph{Specialization.} Firstly, we have
 
 \begin{lstlisting}
   lemma abstract_effects_specialize : forall st : store int, s f.
     eval_formula (abstract_effects s f) st -> eval_formula f st
 \end{lstlisting}
 
+\textbf{TODOOOO}
 which states that evaluation of applying abstract effects off s on f in state st implies that f evaluates to true in st. Essentially it states that if we quantify the variables in f and the formula is true under the quantification, then $f$ also hold if the variables are not quantified.
 THIS DOES NOT MAKE ANY SENSE??? PLEASE LOOK AT IT TOMORROW.
+%%% NOTES %%%
+abstract effects property about specialize seems weird, but as the function is defined
+from these axioms, it simply states that it must hold for the function, ie. the formula f
+must be closed, or else the axiom wouldn't hold.
+We can fix this in our implementation by havin a \texttt{requires} that says the formula
+must be closed.
+Technically we could include all these axioms in an \texttt{ensures}, as they should hold
+for the function???? anyways, the way they define the function is wack, but pretty cool.
+But obviously we had to do it differently, as we want to be able to extract code.
 
-\paragraph{Quatification over conjunction.}
+\paragraph{Quantification over conjunction.}
 Secondly, we have
 \begin{lstlisting}
 lemma abstract_effects_distrib_conj : forall s p q st.
@@ -63,8 +83,8 @@ lemma abstract_effects_distrib_conj : forall s p q st.
    eval_formula (abstract_effects s (Fand p q)) st
  \end{lstlisting}
 
-Which states that if we apply abstract effects of s on two formulas p and q and they both evaluates to true,
-then evaluating the result of applying the abstract effects of s over the conjunction of p and q, must also be true.
+Which states that if we apply abstract effects of $s$ on two formulas $p$ and $q$ and they both evaluate to true,
+then evaluating the result of applying the abstract effects of $s$ over the conjunction of $p$ and $q$, must also be true.
 
 \paragraph{Monotonicity.}
 Thirdly, we have the property of monotonicity.
@@ -80,26 +100,38 @@ Essentially what monotonicity states, is that applying additional assumptions to
 
 \paragraph{Invariance.}
 Lastly, we consider the notion of invariance.
-TODO: I DONT THINK THIS IS NECESSARY.
-
-In \cite{TODO} the axiomatized version of the following lemma, is used to define which variables should be quantified.
+In \cite{wp-revisited} the axiomatized version of the following lemma, is used to define which variables should be quantified.
 We explicitly state this in the body of \texttt{abstract\_effects},
-but for good measure we include it as a lemma. The property states that if a the formula $q$ abstracted by $s$ is true in some state, then the weakest precondition on the same abstraction on $q$ by $s$ is true should also be true. When \cite{} uses this as an axiom, it ensures, that \texttt{abstract\_effects}
-
-\paragraph{Proofs of properties for abstract\_effects}
-We have not been able to automatically prove these lemmas in why3.
-At the moment we have a partial proof for the function in Isabelle.
-???? WRITE SOME MORE ????
-
-\paragraph{Properties and Soundness of WLP}
-One of the main goals in making a formally verified Verification condition generator is to ensure the correctness of the implementation.
-We consider the correctness through its soundness.
-To do so we must consider two of the same properties we just stated for a\texttt{abstract\_effects}, namely monotonicity and conjunction distribution.
-
-Monotonicity of WLP is that if for two formulas $p$ and $q$ the formula $\vDash p \Rightarrow q$ then $\vDash wp(s, p) \Rightarrow wp(s,q)$. Notice again that this must hold for all statements and states.
-Distribution of weakest precondition over conjuction, is similar to the lemma of abstract effects only the transformation on $p$ and $q$ are now considered for $wp$.
+but for good measure we include it as a lemma.
 
 \begin{lstlisting}
+lemma abstract_effect_writes : forall st s q.
+   eval_formula (abstract_effects s q) st ->
+   eval_formula (wp s (abstract_effects s q)) st
+ \end{lstlisting}
+
+ The property states that if a the formula $q$ abstracted by $s$ is true in some state,
+ then the weakest precondition on the same abstraction on $q$ by $s$ should also be true.
+% When \cite{} uses this as an axiom, it ensures, that \texttt{abstract\_effects}
+
+% \paragraph{Proofs of properties for abstract\_effects}
+% We have not been able to automatically prove these lemmas in why3.
+% At the moment we have a partial proof for the function in Isabelle.
+% ???? WRITE SOME MORE ????
+
+\paragraph{Properties and Soundness of WLP.}
+One of the main goals in making a formally verified Verification condition generator is to ensure the correctness of the implementation.
+We consider the correctness through its soundness.
+To do so we must consider two of the same properties we just stated for \texttt{abstract\_effects}, namely monotonicity and conjunction distribution.
+
+Monotonicity of WLP means that if for two formulas $p$ and $q$ the formula $\vDash p \Rightarrow q$ holds, then $\vDash wp(s, p) \Rightarrow wp(s,q)$ also holds.
+Notice again that this must hold for all statements and states.
+
+Distribution of weakest precondition over conjuction is similar to the lemma of abstract effects, except that the transformation on $p$ and $q$ are now considered for $wp$.
+
+Both lemmas can be seen in \autoref{lst:lemmaswlp}.
+
+\begin{lstlisting}[caption={Lemmas for stating monotonicity and distribution over conjunction for wlp},label={lst:lemmaswlp},language=sml]
 lemma monotonicity: forall s p q.
       valid_formula (Fimp p q) -> valid_formula (Fimp (wp s p) (wp s q))
 
@@ -108,12 +140,13 @@ lemma distrib_conj: forall s sigma p q.
       eval_formula (wp s (Fand p q)) sigma
 \end{lstlisting}
 
-Once again we, we not able to directly show this. We tried to unfold the recursion on $s$, in a similar manner to how we proved determinism.
-We did not achieve anything by this.
+Once again we not able to directly show these lemmas.
+We tried to unfold the recursion on $s$, in a similar manner to how we proved determinism, but
+ did not achieve anything by doing this.
 We have a formalized proof of both properties in Isabelle.
 The proof for monotonicity can be seen in \autoref{lst:isamono}.
-As mentioned we prove the lemma by induction on $s$.
-And mark $p$ and $q$ as arbitrary, since the lemma should hold for any non-fixed $p$ and $q$.
+As mentioned we prove the lemma by induction on $s$,
+and mark $p$ and $q$ as arbitrary, since the lemma should hold for any non-fixed $p$ and $q$.
 The proof only shows the cases for sequences, assignments and while.
 The case for sequences are actually directly proved from the assumptions.
 We only distinguish this case because we need to simplify the other trivial cases.
@@ -161,12 +194,3 @@ The lemma states that if $s$ terminates normally in $st$ and $wp(s,q)$ then $q$ 
 This is exactly, what we formally proved by pen-and-paper in \ref{sec:wp}.
 We have not been able to prove this. But obviously we would not be able to show this automatically since it requires induction.
 
-%%% NOTES %%%
-abstract effects property about specialize seems weird, but as the function is defined
-from these axioms, it simply states that it must hold for the function, ie. the formula f
-must be closed, or else the axiom wouldn't hold.
-We can fix this in our implementation by havin a \texttt{requires} that says the formula
-must be closed.
-Technically we could include all these axioms in an \texttt{ensures}, as they should hold
-for the function???? anyways, the way they define the function is wack, but pretty cool.
-But obviously we had to do it differently, as we want to be able to extract code.
