@@ -1,9 +1,12 @@
-From \autoref{TODO} it should be clear that there are multiple situations where we want to substitute
+From \autoref{fig:wlp} it should be clear that there are multiple situations where we want to substitute
 all free occurences of a variable by an new variable.
-For instance when $s$ is $x := a$ in $wlp(s, Q)$ where $Q$ is a formula, and $s$ is the assignment of $a$ to $x$,
-we want to update each occurence of $x$ in $Q$, but do not substitute bound instances of $x$.
-The rules are as follows, we only consider cases where variables might occur. $f_{i}$ is formulas, $x,y,z$ are variables and $b_{i}, a_{i}$ describes boolean expression and arithmetic expressions respectively. Conjuction for booleans and formulas are equivalent.
+For instance when $s$ is an assignment $x := a$ in $wlp(s, Q)$ where $Q$ is a formula,
+we want to update each occurence of $x$ in $Q$, but do not want to substitute bound instances of $x$.
 
+The rules for substitution of variables are as presented in \autoref{fig:substrules},
+where $f_{i}$ is a formula, $x,y,z$ are variables, and $a_{i}$ and $b_{i}$ describes arithmetic and boolean expressions respectively. Conjunction for booleans and formulas are equivalent.
+
+\begin{figure}[h!]
 \begin{align*}
 \subst{x}{x}{y} &= y \\
 \subst{z}{x}{y} &= z \\
@@ -16,11 +19,17 @@ The rules are as follows, we only consider cases where variables might occur. $f
 \subst{(\forall x. f)}{x}{y} &=  \forall x. f\\
 \subst{(\forall z. f)}{x}{y} &=  \forall z. \subst{f}{x}{y}\\
 \end{align*}
-The $subst$ must also adhere to the rule that $y$ must be free for $x$ in whatever the expression/formula,
+\caption{Rules for substituting variables in WHILE.}
+\label{fig:substrules}
+\end{figure}
+
+The substitution must also adhere to the rule that $y$ must be free for $x$ in the expression/formula,
 meaning a free occurence of $x$ must not be bound when substituted by $y$.
 
-From the formulation of the substitution function it should be easy to see, that we recurse down the syntax tree.
+These rules can now we used for defining a substitution function.
+From the formulation of the substitution function it should be easy to see that we recurse down the syntax tree, substituting recursively on the subterms.
 The most interesting case is when we meet a quantifier. If the variable $x$ we want to substitute is bound then we stop recursion, as all occurences of $x$ will then be bound.
+Otherwise we just continue the recursion.
 
 It should be noted that we do not ensure that $x$ must be free for $y$,
 thus the function is rather unsafe.
@@ -30,7 +39,7 @@ The way we generate a fresh variable, is by traversing the syntax tree of the fo
 This works since we use integers as identifiers.
 A similar result can be obtained by all infinite enumerable sets. For instance if identifiers were strings, one could add a new character to the longest variable name.
 
-This seems rather trivial, however we formulated predicates that state whether a variable is fresh in an expression or formula. We then afterward tried making a lemmas which stated:
+This seems rather trivial, however we formulated predicates that state whether a variable is fresh in an expression or formula. We then afterward tried making a lemma which stated:
 
 \begin{lstlisting}
 lemma fresh_var_is_fresh : forall f v.
@@ -38,16 +47,22 @@ lemma fresh_var_is_fresh : forall f v.
 \end{lstlisting}
 
 The lemma simply asserts that generating a fresh variable $v$ from $f$ implies that $v$ is fresh in $f$.
-We got the inspiration for this approach from \cite{TODO: WP revisited}.
-In their work they formulate the fresh_from function using axioms.
+We got the inspiration for this approach from \cite{wp-revisited}.
+In their work they formulate the \texttt{fresh\_from} function using axioms.
 That is they provide a function declaration and then the function ``computes'' the value based on a set of axioms.
-For us this is not a viable approach, as such functions cannot be extracted. Therefore we defined the function ourself and stated axiom as a lemma to ensure that \texttt{fresh\_from} always ensures a fresh variable.
-Although this seems like a trivial result, we were not able to prove this using the SMT solvers.
-We tried to define this system in isabelle to see how difficult it was to prove using a proof assistant, where one has more control. We succeeded in proving this.
-But since, this does not entail that there might be a bug in the why3 code.
+For us this is not a viable approach, as such functions cannot be extracted.
+Therefore we defined the function ourselves and stated the axiom as a lemma to ensure that \texttt{fresh\_from} always ensures a fresh variable.
+
+Although this seems like a trivial lemma, we were not able to prove this using the SMT solvers.
+We tried to define this system in Isabelle to see how difficult it was to prove using a proof assistant, where one has more control, and we succeeded in proving this.
+
+However, just because this is provable in Isabelle it does not mean that it is also possible
+for us to do in Why3, as there might be a bug in our code.
+Also, it would probably require that the proof was discharged to an automated proof assistant, in which one could tranform the goal to find a proof.
+
 The isabelle proof might not be the cleverest way to prove it, but we proved it the following way.
-let $V$ be the set of all vars in an arithmetic expression $a$.
-Then assuming $v$ is the maximum identifier in $a$, we show that $\forall x \in V. v \ge x$. We do so by induction.
+First let $V$ be the set of all vars in an arithmetic expression $a$.
+Then assuming $v$ is the maximum identifier in $a$, we show that $\forall x \in V. v \geq x$. We do so by induction.
 By this we can then show $v + 1 \notin V$.
 We then made a lemma stating that given $v \notin V$ then $v$ is fresh in $a$.
 From this we can show that $v + 1$ is fresh in $V$.
