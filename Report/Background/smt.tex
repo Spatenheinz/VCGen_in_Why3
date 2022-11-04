@@ -1,0 +1,23 @@
+In the previous section we described how one can, build a weakest precondition from a statement $s$ and a post-condition $Q$.
+From a formula, we want the correctness by checking the validity of said formula.
+To tell if a formula $f$ is valid, we can reformulate the task to asking if $\neg f$ is satisfiable.
+That is, if there exists an assignment of variables which makes $\neg f$ satisfiable, then $f$ cannot be true
+for all states.
+Thus we can reduce the question of validity to satisfiability and use $SAT$ solvers to automatically prove the validity of a formula.
+However $SAT$ only works for boolean formulas, and boolean formulas are not expressive enough to reason about the formulas we will generate.
+Thus we must use more powerful tools. Two well known way to automatically prove a formula is Satisifiability Modulo Theories (SMT) solvers and Automated Theorem Provers (ATPs).
+
+\paragraph{SMT solvers} are as the name suggests tackles the question of satisfiability modulo a set of theories. This means that the language of SMT solvers are first order logic, and depending on which theories the SMT solver implements its reasoning follows.
+For instance, many SMT solvers include the theories of integers, equality, function symbols etc.
+We can state the validity of a formula $f$ as $M \vDash_{T} f$
+meaning the validity of $f$ from a Model $M$ with respect to the theory $T$.
+We will not go into how exactly such formulas are solved.
+
+\paragraph{ATPs} deals with a formula by considering it as a conjecture and checking if the conjecture follows from a set of sentences (Axioms and hypotheseses).
+some ATPs can also reason about higher order logic, but in our case this is uneccessary.
+\\~\\
+We dont really consider the difference between ATPs and SMT solvers,
+but only try to exploit that they can reason about first order logic.
+Not only can the automated tools be used to reason the formulas, we will generate
+with the WP algorithm, we can also (partially) use it to reason about our implementation.
+Also we dont interact with any of these directly but use them as external tools from within Why3.
