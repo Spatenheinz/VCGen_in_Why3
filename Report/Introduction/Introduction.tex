@@ -1,29 +1,32 @@
 \section{Introduction}
 
-In this project we present a small imperative language, WHILE and an Assertion language which can be used to reason about the correctness of WHILE through Hoare logic.
-We present an (partially) verified formalisation of the semantics of WHILE and an extractable evaluator adhering to the semantics.
-We also present our attempt at implementing an extractable version the predicate transformer semantic, Weakest Precondition, in Why3, which allows for automatic generation of Verification conditions of programs.
-Using the Why3 platform, it is possible to verify the correctness of our programs by their verification condition and lemmata about said programs and by ensuring the correctness of our implementation,
+In this project we present a small imperative language WHILE and an Assertion language which can be used to reason about the correctness of WHILE through Hoare logic.
+We present a (partially) verified formalisation of the semantics of WHILE and an extractable evaluator adhering to the semantics.
+We also present our attempt at implementing an extractable version the predicate transformer semantic, Weakest Precondition Calculus, which allows for automatic generation of Verification conditions of programs.
+This is all implemented in Why3.
+Using the Why3 platform, it is possible to verify the correctness of our programs by their verification condition and lemmata about said programs. By ensuring the correctness of our implementation,
 we can assure the correctness of the WHILE programs, and not accidentally mark a flawed WHILE program as correct
 because of a bug in our code.
-The main motivation for doing this project, was to investigate if using Why3 as implementation for Verification Condition Generator, is a viable option, for the eBPF language.
-We use WHILE (or sometimes reffered to as IMP) over eBPF because it has well-defined semantics and are well founded in the context of the axiomatic system of Floyd-Hoare Logic.
-This makes it an easier target to accomplish, since we dont have to define additional rules for the Hoare logic, which as will be apparent from the results would not be an achievable goal.
+
+The main motivation for doing this project, was to investigate whether using Why3 for implementation of a Verification Condition Generator for the eBPF language is a viable option.
+We use WHILE (or sometimes reffered to as IMP) over eBPF because it has well-defined semantics and is well founded in the context of the axiomatic system of Floyd-Hoare Logic.
+This makes it an easier target to accomplish, since we dont have to define additional rules for the Hoare logic. As will be apparent from the results, that would not be an achievable goal.
+
 The idea of investigating Why3 as a implementation basis for Weakest Precondition is in no way new.
-In 2012 Claude Marché and Asma Tafat, made a verified Weakest precondition generator\cite{wp-revisited}.
-And again in 2015 made another implementation of WP at Inria\cite{wp2}.
-Where this project differs is that we also investigate the ability to extract the code from Why3 to Ocaml code,
-since being able to compile the program will be benefitial in systems where it is unviable to use an interpreted language, with what can only be assumed to be pretty large runtime.
+In 2012 Claude Marché and Asma Tafat, made a verified Weakest precondition generator\cite{wp-revisited}, and made yet another implementation of WP at Inria in 2015 \cite{wp2}.
+This project differs from those in that we also investigate the ability to extract the code from Why3 to Ocaml code,
+since being able to compile the program will be beneficial in systems where it is unviable to use an interpreted language with what can only be assumed to be pretty large runtime.
+
 The report present the project as follows:
 
 \begin{itemize}
   \item In Section \ref{sec:background} we present the syntax and semantics of WHILE.
-        We furthermore give a brief introduction to how Hoare logic and weakest precondition, where we also provide a proof for the soundness of the WP.
+        We furthermore give a brief introduction to Hoare logic and weakest precondition calculus, where we also present a proof for the soundness of the WP.
         Lastly we give a short overview of the tools considered in this project: SMT solvers, ATP's, Why3 and Isabelle.
-  \item In Section \ref{sec:implementation} we show how we formalized the WHILE by its definition in Section \ref{sec:background} and how we tried to model both the programs and the lemmas to show the correctness of our implementation. We also present our implementain of the WP algorithm.
-        In that sense, this is section is a little untraditional as we present our results along the way, because it has had a substantial impact on the actual implementation.
-  \item In section \ref{sec:extract} we go over how we extract our implementation and what limitations it poses.
-  \item In this section \ref{sec:results} we summarize some of the result we found in section and make a general discussion on the difficulty in doing fully automated verification.
+  \item In Section \ref{sec:implementation} we show how we formalized the object language WHILE, and how we tried to model both the programs and the lemmas to show the correctness of our implementation. We also present our implementain of the WP algorithm.
+        In that sense, this section is a little untraditional as we present our results along the way, because it has had a substantial impact on the actual implementation.
+  \item In section \ref{sec:extract} we go over how we extract code from our implementation and what limitations it poses.
+  \item In section \ref{sec:results} we summarize the result and make a general discussion on the difficulty in doing fully automated verification.
   \item In Section \ref{sec:future} we present some options for future work.
   \item Lastly we conclude on the project in \ref{sec:conclusion}.
 \end{itemize}
